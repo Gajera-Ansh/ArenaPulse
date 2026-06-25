@@ -14,14 +14,14 @@
 
     /* ===== THEME TOKENS ===== */
     :root {
-      --bg: #FAFAFA;
+      --bg: #F8FAFC;
       --surface: #FFFFFF;
-      --border: #E5E7EB;
-      --text: #111827;
-      --text-secondary: #6B7280;
-      --primary: #16A34A;
-      --primary-hover: #15803D;
-      --primary-light: #F0FDF4;
+      --border: #E2E8F0;
+      --text: #0F172A;
+      --text-secondary: #64748B;
+      --primary: #2563EB;
+      --primary-hover: #1D4ED8;
+      --primary-light: #EFF6FF;
       --accent: #EA580C;
       --accent-hover: #C2410C;
       --accent-light: #FFF7ED;
@@ -32,7 +32,10 @@
 
     body {
       font-family: 'Inter', system-ui, sans-serif;
-      background: var(--bg);
+      background-color: var(--bg);
+      background-image: radial-gradient(circle, #CBD5E1 1.5px, transparent 1.5px);
+      background-size: 32px 32px;
+      background-attachment: fixed;
       color: var(--text);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
@@ -49,7 +52,9 @@
 
     /* ===== NAVBAR ===== */
     .navbar {
-      background: var(--surface);
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
       padding: 16px 0;
       position: sticky;
@@ -142,7 +147,7 @@
       padding: 6px 16px;
       border-radius: 50px;
       margin-bottom: 24px;
-      border: 1px solid #BBF7D0;
+      border: 1px solid #BFDBFE;
     }
     .hero h1 {
       font-size: 3.2rem;
@@ -162,11 +167,16 @@
 
     /* ===== STATS BAR ===== */
     .stats-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 48px;
       display: flex;
       justify-content: center;
-      gap: 48px;
-      padding: 40px 0;
+      gap: 56px;
       flex-wrap: wrap;
+      max-width: 800px;
+      margin: 0 auto;
     }
     .stat-item { text-align: center; }
     .stat-value {
@@ -228,7 +238,7 @@
       border-radius: 50px;
       background: var(--primary-light);
       color: var(--primary);
-      border: 1px solid #BBF7D0;
+      border: 1px solid #BFDBFE;
     }
     .status-badge {
       font-size: 0.7rem;
@@ -305,10 +315,10 @@
       font-size: 1.3rem;
       margin-bottom: 16px;
     }
-    .fi-green { background: var(--primary-light); }
+    .fi-blue { background: var(--primary-light); }
     .fi-orange { background: var(--accent-light); }
-    .fi-blue { background: #EFF6FF; }
-    .fi-purple { background: #F5F3FF; }
+    .fi-cyan { background: #ECFEFF; }
+    .fi-violet { background: #F5F3FF; }
     .feature-card h3 {
       font-size: 1rem;
       font-weight: 700;
@@ -360,7 +370,8 @@
     .footer {
       border-top: 1px solid var(--border);
       padding: 40px 0;
-      background: var(--surface);
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
     }
     .footer-content {
       display: flex;
@@ -390,7 +401,7 @@
       .hero h1 { font-size: 2.2rem; }
       .hero { padding: 48px 0 36px; }
       .nav-links { display: none; }
-      .stats-bar { gap: 28px; }
+      .stats-bar { gap: 28px; padding: 28px 24px; }
       .stat-value { font-size: 1.5rem; }
       .card-grid { grid-template-columns: 1fr; }
       .features-grid { grid-template-columns: 1fr 1fr; }
@@ -430,33 +441,35 @@
       <h1>Compete. Organize.<br><span>Dominate the Arena.</span></h1>
       <p>The all-in-one esports tournament platform for players, organizers, and admins. Create brackets, track live scores, and climb the leaderboard.</p>
       <div class="hero-actions">
-        <button class="btn btn-accent" id="browse-btn">Browse Tournaments →</button>
+        <button class="btn btn-primary" id="browse-btn">Browse Tournaments →</button>
         <button class="btn btn-outline" id="organize-btn">Organize an Event</button>
       </div>
     </div>
   </section>
 
   <!-- STATS -->
-  <div class="stats-bar" id="stats">
-    <div class="container" style="display:flex; justify-content:center; gap:48px; flex-wrap:wrap;">
-      <div class="stat-item">
-        <div class="stat-value">2,400+</div>
-        <div class="stat-label">Players</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value">180</div>
-        <div class="stat-label">Tournaments</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value">12,000+</div>
-        <div class="stat-label">Matches Played</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value">$85K</div>
-        <div class="stat-label">Prize Pool</div>
+  <section style="padding: 0 0 40px;">
+    <div class="container">
+      <div class="stats-bar" id="stats">
+        <div class="stat-item">
+          <div class="stat-value">2,400+</div>
+          <div class="stat-label">Players</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">180</div>
+          <div class="stat-label">Tournaments</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">12,000+</div>
+          <div class="stat-label">Matches Played</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">$85K</div>
+          <div class="stat-label">Prize Pool</div>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- TOURNAMENTS -->
   <section class="section" id="tournaments">
@@ -544,7 +557,7 @@
       </div>
       <div class="features-grid">
         <div class="feature-card" id="feature-brackets">
-          <div class="feature-icon fi-green">🏆</div>
+          <div class="feature-icon fi-blue">🏆</div>
           <h3>Auto Brackets</h3>
           <p>Single or double elimination brackets generated automatically from registered teams.</p>
         </div>
@@ -554,12 +567,12 @@
           <p>Real-time score updates via WebSocket. Every viewer sees results the instant they happen.</p>
         </div>
         <div class="feature-card" id="feature-analytics">
-          <div class="feature-icon fi-blue">📊</div>
+          <div class="feature-icon fi-cyan">📊</div>
           <h3>Analytics & ML</h3>
           <p>Win predictions, player tier badges, and interactive charts powered by Python ML models.</p>
         </div>
         <div class="feature-card" id="feature-qr">
-          <div class="feature-icon fi-purple">📱</div>
+          <div class="feature-icon fi-violet">📱</div>
           <h3>QR Check-in</h3>
           <p>Players verify attendance on match day with a simple QR code scan. Fast and reliable.</p>
         </div>

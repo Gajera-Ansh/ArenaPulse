@@ -1,7 +1,7 @@
 # ArenaPulse — Style Guide
 
-> **Theme Name:** Stadium Green  
-> **Philosophy:** Clean, professional, readable. No dark-mode-first, no neon, no AI clichés. White space, bold green, warm orange accents.
+> **Theme Name:** Arena Blue  
+> **Philosophy:** Clean, professional, readable. White space, bold blue brand, warm orange accents. Subtle dot grid background adds texture without distraction.
 
 ---
 
@@ -11,19 +11,19 @@
 
 | Token              | Hex       | Usage                                      |
 |--------------------|-----------|----------------------------------------------|
-| `--bg`             | `#FAFAFA` | Page background                              |
-| `--surface`        | `#FFFFFF` | Cards, navbar, footer, modals, dropdowns     |
-| `--border`         | `#E5E7EB` | Card borders, dividers, input borders        |
-| `--text`           | `#111827` | Primary text — headings, body                |
-| `--text-secondary` | `#6B7280` | Labels, meta info, placeholders, captions    |
+| `--bg`             | `#F8FAFC` | Page background (behind dot grid)            |
+| `--surface`        | `#FFFFFF` | Cards, modals, dropdowns                     |
+| `--border`         | `#E2E8F0` | Card borders, dividers, input borders        |
+| `--text`           | `#0F172A` | Primary text — headings, body                |
+| `--text-secondary` | `#64748B` | Labels, meta info, placeholders, captions    |
 
 ### Brand Colors
 
 | Token              | Hex       | Usage                                      |
 |--------------------|-----------|----------------------------------------------|
-| `--primary`        | `#16A34A` | Logo, links, primary buttons, active states  |
-| `--primary-hover`  | `#15803D` | Primary button hover                         |
-| `--primary-light`  | `#F0FDF4` | Badges, tag backgrounds, subtle highlights   |
+| `--primary`        | `#2563EB` | Logo, links, primary buttons, active states  |
+| `--primary-hover`  | `#1D4ED8` | Primary button hover                         |
+| `--primary-light`  | `#EFF6FF` | Badges, tag backgrounds, subtle highlights   |
 
 ### Accent Colors
 
@@ -40,9 +40,62 @@
 | Live      | `#FEF2F2` | `#DC2626` | `#FECACA` | Active/live matches           |
 | Open      | `#FFF7ED` | `#EA580C` | `#FED7AA` | Registration open             |
 | Upcoming  | `#F0F9FF` | `#0284C7` | `#BAE6FD` | Scheduled, not started        |
-| Completed | `#F0FDF4` | `#16A34A` | `#BBF7D0` | Finished tournaments/matches  |
+| Completed | `#EFF6FF` | `#2563EB` | `#BFDBFE` | Finished tournaments/matches  |
 | Rejected  | `#FEF2F2` | `#DC2626` | `#FECACA` | Denied registrations          |
 | Pending   | `#FFFBEB` | `#D97706` | `#FDE68A` | Awaiting approval             |
+
+---
+
+## Background — Dot Grid Pattern
+
+Every page in ArenaPulse uses a fixed dot grid background. The dots stay static while content scrolls over them, adding texture without distracting from the UI.
+
+### CSS (apply to body on every page)
+
+```css
+body {
+  background-color: #F8FAFC;
+  background-image: radial-gradient(circle, #CBD5E1 1.5px, transparent 1.5px);
+  background-size: 32px 32px;
+  background-attachment: fixed;
+}
+```
+
+### Specs
+
+| Property | Value | Why |
+|---|---|---|
+| Dot color | `#CBD5E1` | Slate-300 — visible but subtle on `#F8FAFC` |
+| Dot size | `1.5px` radius | Large enough to see, small enough to not distract |
+| Grid spacing | `32px × 32px` | Balanced density — not too tight, not too sparse |
+| Attachment | `fixed` | Dots stay still, content scrolls over them |
+
+### Rules
+- **Always apply** this background to `<body>` on every page/route
+- **Cards and surfaces** use `background: var(--surface)` (solid white) so dots don't show through
+- **Navbar** uses `rgba(255,255,255,0.85)` + `backdrop-filter: blur(12px)` for frosted glass over dots
+- **Footer** uses the same frosted glass treatment
+- **Modals/Overlays** should have solid `var(--surface)` background — never transparent over dots
+
+---
+
+## Frosted Glass (Navbar & Footer)
+
+The navbar and footer use a frosted glass effect so the dot grid is softly visible behind them.
+
+```css
+.navbar, .footer {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+```
+
+| Property | Value | Why |
+|---|---|---|
+| Background | `rgba(255,255,255,0.85)` | 85% white — mostly opaque, slight transparency |
+| Blur | `12px` | Soft blur of dots behind |
+| Border | `1px solid var(--border)` | Bottom for navbar, top for footer |
 
 ---
 
@@ -91,6 +144,8 @@ https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=
 | Badges      | `50px` | Status badges, game tags (pill)    |
 | Logo icon   | `10px` | Navbar logo square                 |
 | Avatars     | `50%`  | User profile images (circle)       |
+| Stats bar   | `16px` | Stats card container               |
+| CTA box     | `16px` | Call-to-action banner              |
 
 ---
 
@@ -152,6 +207,7 @@ border-radius: 10px;
 - Default: `border: 1px solid --border`, `background: --surface`
 - Hover: `box-shadow: --shadow-md`, `transform: translateY(-2px)`
 - Transition: `0.2s ease`
+- Background must be **solid white** — dots must not show through cards
 
 ---
 
@@ -161,7 +217,7 @@ border-radius: 10px;
 ```css
 background: var(--primary-light);
 color: var(--primary);
-border: 1px solid #BBF7D0;
+border: 1px solid #BFDBFE;
 padding: 4px 12px;
 border-radius: 50px;
 font-size: 0.75rem;
@@ -182,16 +238,17 @@ letter-spacing: 0.04em;
 
 ## Component Reference
 
-| Component        | Background   | Border          | Radius  | Shadow on hover |
-|-----------------|-------------|-----------------|---------|-----------------|
-| Navbar          | `--surface` | bottom `--border` | none    | none            |
-| Tournament Card | `--surface` | `--border`       | `12px`  | `--shadow-md`   |
-| Feature Card    | `--surface` | `--border`       | `12px`  | `--shadow-md`   |
-| Modal           | `--surface` | none             | `16px`  | `--shadow-md`   |
-| Dropdown        | `--surface` | `--border`       | `10px`  | `--shadow-md`   |
-| Input           | `--surface` | `--border`       | `10px`  | none            |
-| CTA Banner      | `--primary` | none             | `16px`  | none            |
-| Footer          | `--surface` | top `--border`   | none    | none            |
+| Component        | Background           | Border            | Radius  | Notes                  |
+|-----------------|----------------------|--------------------|---------|------------------------|
+| Navbar          | `rgba(255,255,255,0.85)` + blur | bottom `--border` | none | Frosted glass over dots |
+| Tournament Card | `--surface`          | `--border`         | `12px`  | Solid white, no dots   |
+| Feature Card    | `--surface`          | `--border`         | `12px`  | Solid white, no dots   |
+| Stats Bar       | `--surface`          | `--border`         | `16px`  | Solid white, no dots   |
+| Modal           | `--surface`          | none               | `16px`  | Solid white, no dots   |
+| Dropdown        | `--surface`          | `--border`         | `10px`  | Solid white, no dots   |
+| Input           | `--surface`          | `--border`         | `10px`  | Solid white            |
+| CTA Banner      | `--primary`          | none               | `16px`  | Solid blue             |
+| Footer          | `rgba(255,255,255,0.85)` + blur | top `--border` | none | Frosted glass over dots |
 
 ---
 
@@ -208,17 +265,20 @@ letter-spacing: 0.04em;
 ## Do's and Don'ts
 
 ### ✅ Do
-- Use white/off-white backgrounds for all main surfaces
-- Use green (`--primary`) for brand identity and positive actions
+- Use the dot grid background on every page (`background-attachment: fixed`)
+- Use solid white `var(--surface)` for all cards and surfaces (dots must not show through)
+- Use frosted glass (`backdrop-filter: blur`) for navbar and footer only
+- Use blue (`--primary`) for brand identity and positive actions
 - Use orange (`--accent`) sparingly — only for CTAs and urgency
 - Keep cards clean with generous padding and subtle borders
 - Use Inter font everywhere — no mixing fonts
 - Add hover transitions on all interactive elements (0.2s)
 
 ### ❌ Don't
+- Don't use transparent backgrounds on cards (dots will show through)
 - Don't use dark backgrounds as the default theme
 - Don't use purple, neon, or gradient-heavy designs
-- Don't use more than 2 brand colors (green + orange)
+- Don't use more than 2 brand colors (blue + orange)
 - Don't add heavy shadows — keep them subtle
 - Don't use rounded corners larger than 16px
-- Don't skip the border on cards (they need visual separation on white bg)
+- Don't use `background-attachment: scroll` — dots must always be fixed
