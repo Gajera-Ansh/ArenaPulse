@@ -1,1 +1,38 @@
-﻿# ArenaPulse monorepo gitignore - excludes node_modules, .env, __pycache__, dist, and build artifacts
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment variables (NEVER commit these)
+.env
+.env.local
+.env.production
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Uploads
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Django
+*.sqlite3
+django_service/ml_service/trained_models/*
+!django_service/ml_service/trained_models/.gitkeep
+django_service/staticfiles/
+
+# Logs
+*.log
+npm-debug.log*
