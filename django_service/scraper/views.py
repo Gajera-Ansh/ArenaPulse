@@ -1,1 +1,3 @@
-﻿# Scraper views - DRF API views to trigger scraping jobs and retrieve scraped data status
+from django.shortcuts import render
+
+# Create your views here.

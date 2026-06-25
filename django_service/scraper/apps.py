@@ -1,1 +1,5 @@
-﻿# Scraper app config - Django AppConfig for the web scraping service application
+from django.apps import AppConfig
+
+
+class ScraperConfig(AppConfig):
+    name = 'scraper'

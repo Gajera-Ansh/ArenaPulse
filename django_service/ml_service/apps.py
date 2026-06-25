@@ -1,1 +1,5 @@
-﻿# ML service app config - Django AppConfig for the machine learning service application
+from django.apps import AppConfig
+
+
+class MlServiceConfig(AppConfig):
+    name = 'ml_service'

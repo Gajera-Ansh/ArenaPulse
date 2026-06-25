@@ -1,1 +1,3 @@
-﻿# ML service views - DRF API views for match prediction, player classification, and model status
+from django.shortcuts import render
+
+# Create your views here.

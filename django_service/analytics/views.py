@@ -1,1 +1,3 @@
-﻿# Analytics views - DRF API views for EDA results, charts, leaderboard, and cross-tabulation data
+from django.shortcuts import render
+
+# Create your views here.

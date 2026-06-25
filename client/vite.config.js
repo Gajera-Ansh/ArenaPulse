@@ -1,1 +1,7 @@
-﻿// Vite build configuration - React plugin, dev server proxy, and path aliases
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+})

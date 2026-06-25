@@ -1,1 +1,5 @@
-﻿# Analytics app config - Django AppConfig for the analytics application
+from django.apps import AppConfig
+
+
+class AnalyticsConfig(AppConfig):
+    name = 'analytics'
