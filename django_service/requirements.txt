@@ -1,0 +1,35 @@
+# ArenaPulse Django Service Dependencies
+
+# Core
+Django>=4.2,<5.0
+djangorestframework>=3.14
+djangorestframework-simplejwt>=5.3
+django-cors-headers>=4.3
+
+# Database
+pymongo>=4.6
+
+# Data Analysis (FCSP-2 Unit 1)
+pandas>=2.1
+numpy>=1.26
+
+# Visualization (FCSP-2 Unit 2)
+seaborn>=0.13
+matplotlib>=3.8
+plotly>=5.18
+dash>=2.14
+networkx>=3.2
+
+# Machine Learning (FCSP-2 Units 3-6)
+scikit-learn>=1.3
+tensorflow>=2.15
+
+# Web Scraping (FCSP-2 Unit 7)
+beautifulsoup4>=4.12
+requests>=2.31
+
+# Environment
+python-dotenv>=1.0
+
+# Production Server
+gunicorn>=21.2
