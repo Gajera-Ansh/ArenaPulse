@@ -1,0 +1,1 @@
+﻿# Python dependencies - Django, DRF, pandas, seaborn, plotly, scikit-learn, beautifulsoup4, networkx
