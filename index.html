@@ -1,1548 +1,597 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ArenaPulse — Esports Tournament Platform</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg:        #0A0C12;
-    --card:      #10131C;
-    --surface:   #161922;
-    --border:    #1E2235;
-    --border2:   #252A40;
-    --purple:    #7C5CFF;
-    --purple2:   #9B7EFF;
-    --teal:      #00DDB3;
-    --red:       #FF4560;
-    --amber:     #FFB800;
-    --white:     #FFFFFF;
-    --muted:     #8892AA;
-    --hint:      #4A5270;
-    --glow:      rgba(124,92,255,0.15);
-    --glow2:     rgba(124,92,255,0.08);
-  }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--white);
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    line-height: 1.6;
-    overflow-x: hidden;
-  }
-
-  /* ── NOISE TEXTURE OVERLAY ── */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.4;
-  }
-
-  /* ── NAVBAR ── */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 40px;
-    height: 64px;
-    background: rgba(10,12,18,0.85);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 20px;
-    letter-spacing: -0.02em;
-  }
-
-  .logo-mark {
-    width: 32px; height: 32px;
-    background: var(--purple);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .logo-mark::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%);
-  }
-
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 32px;
-    list-style: none;
-  }
-
-  .nav-links a {
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    transition: color 0.2s;
-  }
-
-  .nav-links a:hover { color: var(--white); }
-
-  .nav-links a.active { color: var(--white); }
-
-  .nav-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .btn-ghost {
-    padding: 8px 18px;
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    background: transparent;
-    color: var(--muted);
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-ghost:hover { border-color: var(--purple); color: var(--white); }
-
-  .btn-primary {
-    padding: 8px 18px;
-    border: none;
-    border-radius: 8px;
-    background: var(--purple);
-    color: var(--white);
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .btn-primary::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
-  }
-
-  .btn-primary:hover { background: var(--purple2); transform: translateY(-1px); }
-
-  /* ── HERO ── */
-  .hero {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 120px 40px 80px;
-    position: relative;
-    text-align: center;
-    overflow: hidden;
-  }
-
-  .hero-glow {
-    position: absolute;
-    width: 800px; height: 500px;
-    background: radial-gradient(ellipse, rgba(124,92,255,0.12) 0%, transparent 70%);
-    top: 50%; left: 50%;
-    transform: translate(-50%, -60%);
-    pointer-events: none;
-  }
-
-  .hero-grid {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(var(--border) 1px, transparent 1px),
-      linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 60px 60px;
-    opacity: 0.3;
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
-  }
-
-  .hero-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(124,92,255,0.1);
-    border: 1px solid rgba(124,92,255,0.3);
-    border-radius: 100px;
-    padding: 6px 16px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--purple2);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 28px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .live-dot {
-    width: 6px; height: 6px;
-    background: var(--teal);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.8); }
-  }
-
-  .hero h1 {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: clamp(44px, 7vw, 80px);
-    line-height: 1.0;
-    letter-spacing: -0.03em;
-    margin-bottom: 24px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .hero h1 .accent { color: var(--purple); }
-  .hero h1 .accent2 { color: var(--teal); }
-
-  .hero-sub {
-    font-size: 17px;
-    color: var(--muted);
-    max-width: 520px;
-    line-height: 1.7;
-    margin-bottom: 40px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .hero-cta {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-bottom: 72px;
-    position: relative;
-    z-index: 1;
-    flex-wrap: wrap;
-  }
-
-  .btn-hero {
-    padding: 14px 32px;
-    border-radius: 10px;
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-hero-primary {
-    background: var(--purple);
-    color: var(--white);
-    border: none;
-    box-shadow: 0 0 30px rgba(124,92,255,0.3);
-  }
-
-  .btn-hero-primary:hover {
-    background: var(--purple2);
-    box-shadow: 0 0 40px rgba(124,92,255,0.4);
-    transform: translateY(-2px);
-  }
-
-  .btn-hero-ghost {
-    background: transparent;
-    color: var(--white);
-    border: 1px solid var(--border2);
-  }
-
-  .btn-hero-ghost:hover {
-    border-color: var(--purple);
-    background: var(--glow2);
-  }
-
-  /* ── STATS BAR ── */
-  .stats-bar {
-    display: flex;
-    gap: 0;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 700px;
-  }
-
-  .stat-item {
-    flex: 1;
-    padding: 20px 24px;
-    border-right: 1px solid var(--border);
-    text-align: center;
-  }
-
-  .stat-item:last-child { border-right: none; }
-
-  .stat-num {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 26px;
-    color: var(--white);
-    letter-spacing: -0.02em;
-    margin-bottom: 4px;
-  }
-
-  .stat-num span { color: var(--purple); }
-
-  .stat-label {
-    font-size: 11px;
-    color: var(--hint);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 600;
-  }
-
-  /* ── SECTION ── */
-  section {
-    padding: 80px 40px;
-    max-width: 1200px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-  }
-
-  .section-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--purple);
-    margin-bottom: 12px;
-  }
-
-  .section-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: clamp(28px, 3.5vw, 42px);
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-    margin-bottom: 16px;
-  }
-
-  .section-sub {
-    color: var(--muted);
-    font-size: 16px;
-    max-width: 480px;
-    line-height: 1.7;
-  }
-
-  /* ── DIVIDER ── */
-  .divider {
-    height: 1px;
-    background: var(--border);
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  /* ── TOURNAMENT CARDS ── */
-  .tournaments-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 16px;
-    margin-top: 48px;
-  }
-
-  .t-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    transition: all 0.25s;
-    cursor: pointer;
-    position: relative;
-  }
-
-  .t-card:hover {
-    border-color: var(--purple);
-    transform: translateY(-3px);
-    box-shadow: 0 12px 40px rgba(124,92,255,0.12);
-  }
-
-  .t-card-banner {
-    height: 7px;
-  }
-
-  .t-card-banner.live { background: linear-gradient(90deg, var(--red), #FF8066); }
-  .t-card-banner.open { background: linear-gradient(90deg, var(--purple), var(--teal)); }
-  .t-card-banner.upcoming { background: linear-gradient(90deg, var(--amber), #FF8800); }
-
-  .t-card-body { padding: 20px; }
-
-  .t-card-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 14px;
-  }
-
-  .t-card-game {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--hint);
-    margin-bottom: 6px;
-  }
-
-  .t-card-name {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 17px;
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-  }
-
-  .status-badge {
-    padding: 4px 10px;
-    border-radius: 100px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    flex-shrink: 0;
-  }
-
-  .status-live { background: rgba(255,69,96,0.15); color: var(--red); border: 1px solid rgba(255,69,96,0.3); }
-  .status-open { background: rgba(124,92,255,0.15); color: var(--purple2); border: 1px solid rgba(124,92,255,0.3); }
-  .status-upcoming { background: rgba(255,184,0,0.15); color: var(--amber); border: 1px solid rgba(255,184,0,0.3); }
-
-  .t-card-meta {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-
-  .t-meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  .t-meta-label { font-size: 11px; color: var(--hint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
-  .t-meta-val { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; color: var(--white); }
-  .t-meta-val.prize { color: var(--amber); }
-  .t-meta-val.teal { color: var(--teal); }
-
-  .t-card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 14px;
-    border-top: 1px solid var(--border);
-  }
-
-  .team-avatars {
-    display: flex;
-    align-items: center;
-  }
-
-  .team-avatar {
-    width: 26px; height: 26px;
-    border-radius: 50%;
-    border: 2px solid var(--card);
-    margin-left: -8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    font-weight: 700;
-  }
-
-  .team-avatar:first-child { margin-left: 0; }
-
-  .team-count {
-    font-size: 12px;
-    color: var(--muted);
-    margin-left: 8px;
-  }
-
-  .join-btn {
-    padding: 7px 16px;
-    background: transparent;
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .join-btn:hover { border-color: var(--purple); color: var(--white); background: var(--glow2); }
-
-  /* ── LIVE MATCH ── */
-  .live-match-section {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 32px;
-    margin-top: 48px;
-  }
-
-  .live-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 28px;
-  }
-
-  .live-tag {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--red);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .live-dot-big {
-    width: 8px; height: 8px;
-    background: var(--red);
-    border-radius: 50%;
-    animation: pulse 1.5s infinite;
-  }
-
-  .match-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px 24px;
-    margin-bottom: 12px;
-    transition: border-color 0.2s;
-  }
-
-  .match-row:hover { border-color: var(--border2); }
-
-  .team-side {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex: 1;
-  }
-
-  .team-side.right {
-    flex-direction: row-reverse;
-    text-align: right;
-  }
-
-  .team-logo {
-    width: 44px; height: 44px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    font-weight: 800;
-    font-family: 'Syne', sans-serif;
-    flex-shrink: 0;
-  }
-
-  .team-info { display: flex; flex-direction: column; gap: 3px; }
-  .team-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: -0.01em; }
-  .team-tag { font-size: 11px; color: var(--hint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
-
-  .score-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 0 28px;
-    flex-shrink: 0;
-  }
-
-  .score-display {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 32px;
-    font-weight: 600;
-  }
-
-  .score-a { color: var(--white); }
-  .score-b { color: var(--muted); }
-  .score-sep { color: var(--hint); font-size: 20px; }
-  .score-round { font-size: 11px; color: var(--hint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
-
-  /* ── LEADERBOARD ── */
-  .leaderboard {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    overflow: hidden;
-    margin-top: 48px;
-  }
-
-  .lb-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .lb-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-    letter-spacing: -0.01em;
-  }
-
-  .lb-tabs {
-    display: flex;
-    gap: 4px;
-    background: var(--surface);
-    border-radius: 8px;
-    padding: 3px;
-  }
-
-  .lb-tab {
-    padding: 5px 14px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    color: var(--hint);
-    transition: all 0.2s;
-    border: none;
-    background: transparent;
-  }
-
-  .lb-tab.active { background: var(--purple); color: var(--white); }
-
-  .lb-row {
-    display: grid;
-    grid-template-columns: 44px 1fr 80px 80px 80px 80px;
-    align-items: center;
-    padding: 14px 24px;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-    gap: 8px;
-  }
-
-  .lb-row:last-child { border-bottom: none; }
-  .lb-row:hover { background: var(--surface); }
-
-  .lb-rank {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--hint);
-    text-align: center;
-  }
-
-  .lb-rank.top1 { color: var(--amber); }
-  .lb-rank.top2 { color: #C0C0C0; }
-  .lb-rank.top3 { color: #CD7F32; }
-
-  .lb-team {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .lb-logo {
-    width: 34px; height: 34px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 13px;
-    font-family: 'Syne', sans-serif;
-  }
-
-  .lb-name { font-weight: 600; font-size: 14px; }
-  .lb-tag { font-size: 11px; color: var(--hint); }
-
-  .lb-stat {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    font-weight: 500;
-    text-align: center;
-  }
-
-  .lb-stat.win { color: var(--teal); }
-  .lb-stat.loss { color: var(--red); }
-  .lb-stat.kd { color: var(--white); }
-  .lb-stat.pts { color: var(--purple2); font-weight: 700; }
-
-  .lb-col-head {
-    display: grid;
-    grid-template-columns: 44px 1fr 80px 80px 80px 80px;
-    padding: 10px 24px;
-    gap: 8px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .lb-col-label {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--hint);
-    text-align: center;
-  }
-
-  .lb-col-label.left { text-align: left; }
-
-  /* ── TIER BADGE ── */
-  .tier-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 10px;
-    border-radius: 100px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .tier-elite { background: rgba(124,92,255,0.2); color: var(--purple2); border: 1px solid rgba(124,92,255,0.4); }
-  .tier-gold { background: rgba(255,184,0,0.15); color: var(--amber); border: 1px solid rgba(255,184,0,0.3); }
-  .tier-silver { background: rgba(168,168,168,0.1); color: #C0C0C0; border: 1px solid rgba(168,168,168,0.2); }
-
-  /* ── HOW IT WORKS ── */
-  .how-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    overflow: hidden;
-    margin-top: 48px;
-  }
-
-  .how-step {
-    background: var(--card);
-    padding: 32px 28px;
-    transition: background 0.2s;
-  }
-
-  .how-step:hover { background: var(--surface); }
-
-  .step-num {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--purple);
-    letter-spacing: 0.08em;
-    margin-bottom: 16px;
-  }
-
-  .step-icon {
-    width: 44px; height: 44px;
-    background: var(--glow);
-    border: 1px solid rgba(124,92,255,0.2);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    margin-bottom: 16px;
-  }
-
-  .step-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-    letter-spacing: -0.01em;
-    margin-bottom: 8px;
-  }
-
-  .step-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
-
-  /* ── ML PREDICTION ── */
-  .predict-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 32px;
-    margin-top: 48px;
-  }
-
-  .predict-teams {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin: 28px 0;
-    flex-wrap: wrap;
-  }
-
-  .predict-team {
-    flex: 1;
-    min-width: 200px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
-  }
-
-  .predict-team.winner { border-color: var(--teal); background: rgba(0,221,179,0.05); }
-
-  .predict-team-name {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 17px;
-    margin-bottom: 12px;
-  }
-
-  .predict-bar-wrap {
-    height: 6px;
-    background: var(--border);
-    border-radius: 100px;
-    overflow: hidden;
-    margin-bottom: 8px;
-  }
-
-  .predict-bar {
-    height: 100%;
-    border-radius: 100px;
-    transition: width 1s ease;
-  }
-
-  .predict-bar.a { background: var(--purple); }
-  .predict-bar.b { background: var(--muted); }
-
-  .predict-pct {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 28px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .predict-pct.winner-pct { color: var(--teal); }
-  .predict-pct.loser-pct { color: var(--muted); }
-
-  .predict-label { font-size: 12px; color: var(--hint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
-
-  .predict-vs {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 18px;
-    color: var(--hint);
-    flex-shrink: 0;
-  }
-
-  .predict-summary {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--purple);
-    border-radius: 0 12px 12px 0;
-    padding: 16px 20px;
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.7;
-    margin-top: 20px;
-  }
-
-  .predict-summary strong { color: var(--white); }
-
-  /* ── BRACKET ── */
-  .bracket-preview {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 32px;
-    margin-top: 48px;
-    overflow-x: auto;
-  }
-
-  .bracket-tree {
-    display: flex;
-    gap: 40px;
-    min-width: 600px;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .bracket-round { display: flex; flex-direction: column; gap: 16px; }
-
-  .bracket-round-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--hint);
-    text-align: center;
-    margin-bottom: 8px;
-  }
-
-  .bracket-match {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-    width: 180px;
-    transition: border-color 0.2s;
-  }
-
-  .bracket-match:hover { border-color: var(--border2); }
-  .bracket-match.live-match { border-color: rgba(255,69,96,0.4); }
-
-  .bracket-team {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 12px;
-    font-size: 13px;
-    font-weight: 600;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .bracket-team:last-child { border-bottom: none; }
-  .bracket-team.won { color: var(--white); }
-  .bracket-team.lost { color: var(--hint); }
-  .bracket-team.tbd { color: var(--hint); font-style: italic; font-weight: 400; }
-
-  .bracket-score {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .bracket-score.won { color: var(--teal); }
-  .bracket-score.lost { color: var(--hint); }
-
-  .bracket-connector {
-    width: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--border2);
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-
-  /* ── FOOTER ── */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 40px;
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: gap;
-    gap: 16px;
-  }
-
-  .footer-logo {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 16px;
-    color: var(--muted);
-  }
-
-  .footer-copy { font-size: 13px; color: var(--hint); }
-
-  /* ── SCROLLBAR ── */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--purple); }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArenaPulse — Esports Tournament Platform</title>
+  <meta name="description" content="ArenaPulse is a professional esports tournament management platform for players, organizers, and admins." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== RESET ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ===== THEME TOKENS ===== */
+    :root {
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --border: #E5E7EB;
+      --text: #111827;
+      --text-secondary: #6B7280;
+      --primary: #16A34A;
+      --primary-hover: #15803D;
+      --primary-light: #F0FDF4;
+      --accent: #EA580C;
+      --accent-hover: #C2410C;
+      --accent-light: #FFF7ED;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ===== NAVBAR ===== */
+    .navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .navbar .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--primary);
+    }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.1rem;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-actions { display: flex; gap: 12px; align-items: center; }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .btn-accent {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-accent:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ===== HERO ===== */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 50px;
+      margin-bottom: 24px;
+      border: 1px solid #BBF7D0;
+    }
+    .hero h1 {
+      font-size: 3.2rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      letter-spacing: -0.03em;
+    }
+    .hero h1 span { color: var(--primary); }
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin: 0 auto 36px;
+    }
+    .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+    /* ===== STATS BAR ===== */
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      padding: 40px 0;
+      flex-wrap: wrap;
+    }
+    .stat-item { text-align: center; }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* ===== SECTION ===== */
+    .section {
+      padding: 60px 0;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .section-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    /* ===== TOURNAMENT CARDS ===== */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    .tournament-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .tournament-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .game-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 50px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid #BBF7D0;
+    }
+    .status-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 50px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .status-live { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+    .status-open { background: var(--accent-light); color: var(--accent); border: 1px solid #FED7AA; }
+    .status-upcoming { background: #F0F9FF; color: #0284C7; border: 1px solid #BAE6FD; }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .card-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+    .card-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .card-meta-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .prize-pool {
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 1rem;
+    }
+    .teams-count {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* ===== FEATURES ===== */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      transition: box-shadow 0.2s;
+    }
+    .feature-card:hover { box-shadow: var(--shadow-md); }
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 16px;
+    }
+    .fi-green { background: var(--primary-light); }
+    .fi-orange { background: var(--accent-light); }
+    .fi-blue { background: #EFF6FF; }
+    .fi-purple { background: #F5F3FF; }
+    .feature-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .feature-card p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ===== CTA ===== */
+    .cta-section {
+      padding: 60px 0;
+    }
+    .cta-box {
+      background: var(--primary);
+      border-radius: 16px;
+      padding: 56px 48px;
+      text-align: center;
+      color: #fff;
+    }
+    .cta-box h2 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    .cta-box p {
+      font-size: 1rem;
+      opacity: 0.85;
+      max-width: 480px;
+      margin: 0 auto 28px;
+    }
+    .btn-white {
+      background: #fff;
+      color: var(--primary);
+      font-weight: 700;
+      padding: 12px 28px;
+      border-radius: 10px;
+      border: none;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn-white:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      background: var(--surface);
+    }
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-left {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+    .footer-links a {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--primary); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.2rem; }
+      .hero { padding: 48px 0 36px; }
+      .nav-links { display: none; }
+      .stats-bar { gap: 28px; }
+      .stat-value { font-size: 1.5rem; }
+      .card-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .cta-box { padding: 36px 24px; }
+      .cta-box h2 { font-size: 1.4rem; }
+    }
+    @media (max-width: 480px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
-<nav>
-  <div class="logo">
-    <div class="logo-mark">⚡</div>
-    ArenaPulse
-  </div>
-  <ul class="nav-links">
-    <li><a href="#tournaments" class="active">Tournaments</a></li>
-    <li><a href="#leaderboard">Leaderboard</a></li>
-    <li><a href="#bracket">Bracket</a></li>
-    <li><a href="#predict">Predictions</a></li>
-  </ul>
-  <div class="nav-right">
-    <button class="btn-ghost">Log in</button>
-    <button class="btn-primary">Register</button>
-  </div>
-</nav>
-
-<!-- HERO -->
-<div class="hero">
-  <div class="hero-glow"></div>
-  <div class="hero-grid"></div>
-
-  <div class="hero-eyebrow">
-    <div class="live-dot"></div>
-    3 tournaments live right now
-  </div>
-
-  <h1>
-    Compete.<br>
-    <span class="accent">Dominate.</span><br>
-    <span class="accent2">Rise.</span>
-  </h1>
-
-  <p class="hero-sub">
-    ArenaPulse is the tournament platform built for serious teams —
-    live brackets, real-time scores, and AI-powered match insights.
-  </p>
-
-  <div class="hero-cta">
-    <button class="btn-hero btn-hero-primary">Create your team →</button>
-    <button class="btn-hero btn-hero-ghost">Browse tournaments</button>
-  </div>
-
-  <div class="stats-bar">
-    <div class="stat-item">
-      <div class="stat-num">2<span>,</span>840</div>
-      <div class="stat-label">Players</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">340</div>
-      <div class="stat-label">Teams</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">48</div>
-      <div class="stat-label">Tournaments</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num" style="color:var(--amber)">₹4.2L</div>
-      <div class="stat-label">Prize pool</div>
-    </div>
-  </div>
-</div>
-
-<div class="divider"></div>
-
-<!-- TOURNAMENTS -->
-<section id="tournaments">
-  <div class="section-label">Featured</div>
-  <div class="section-title">Active tournaments</div>
-  <p class="section-sub">Open for registration or currently live. Join before the deadline.</p>
-
-  <div class="tournaments-grid">
-
-    <div class="t-card">
-      <div class="t-card-banner live"></div>
-      <div class="t-card-body">
-        <div class="t-card-top">
-          <div>
-            <div class="t-card-game">Valorant</div>
-            <div class="t-card-name">AP Winter Invitational 2025</div>
-          </div>
-          <span class="status-badge status-live">● Live</span>
-        </div>
-        <div class="t-card-meta">
-          <div class="t-meta-item">
-            <span class="t-meta-label">Prize pool</span>
-            <span class="t-meta-val prize">₹50,000</span>
-          </div>
-          <div class="t-meta-item">
-            <span class="t-meta-label">Teams</span>
-            <span class="t-meta-val teal">16 / 16</span>
-          </div>
-          <div class="t-meta-item">
-            <span class="t-meta-label">Format</span>
-            <span class="t-meta-val">Single Elim</span>
-          </div>
-        </div>
-        <div class="t-card-footer">
-          <div class="team-avatars">
-            <div class="team-avatar" style="background:#7C5CFF">NX</div>
-            <div class="team-avatar" style="background:#00DDB3">PH</div>
-            <div class="team-avatar" style="background:#FF4560">GH</div>
-            <div class="team-avatar" style="background:#FFB800">SH</div>
-            <span class="team-count">+12 teams</span>
-          </div>
-          <button class="join-btn">Watch live</button>
-        </div>
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="/" class="logo">
+        <div class="logo-icon">⚡</div>
+        ArenaPulse
+      </a>
+      <ul class="nav-links">
+        <li><a href="#tournaments">Tournaments</a></li>
+        <li><a href="#leaderboard">Leaderboard</a></li>
+        <li><a href="#features">Features</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="btn btn-outline" id="login-btn">Log In</button>
+        <button class="btn btn-primary" id="signup-btn">Sign Up</button>
       </div>
     </div>
+  </nav>
 
-    <div class="t-card">
-      <div class="t-card-banner open"></div>
-      <div class="t-card-body">
-        <div class="t-card-top">
-          <div>
-            <div class="t-card-game">CS2</div>
-            <div class="t-card-name">Gujarat Open Championship</div>
-          </div>
-          <span class="status-badge status-open">Open</span>
-        </div>
-        <div class="t-card-meta">
-          <div class="t-meta-item">
-            <span class="t-meta-label">Prize pool</span>
-            <span class="t-meta-val prize">₹25,000</span>
-          </div>
-          <div class="t-meta-item">
-            <span class="t-meta-label">Teams</span>
-            <span class="t-meta-val teal">6 / 12</span>
-          </div>
-          <div class="t-meta-item">
-            <span class="t-meta-label">Deadline</span>
-            <span class="t-meta-val">Jan 28</span>
-          </div>
-        </div>
-        <div class="t-card-footer">
-          <div class="team-avatars">
-            <div class="team-avatar" style="background:#3B6D11">ST</div>
-            <div class="team-avatar" style="background:#534AB7">VK</div>
-            <div class="team-avatar" style="background:#993C1D">BL</div>
-            <span class="team-count">+3 teams</span>
-          </div>
-          <button class="join-btn">Register →</button>
-        </div>
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero-badge">🏆 Season 4 Now Live</div>
+      <h1>Compete. Organize.<br><span>Dominate the Arena.</span></h1>
+      <p>The all-in-one esports tournament platform for players, organizers, and admins. Create brackets, track live scores, and climb the leaderboard.</p>
+      <div class="hero-actions">
+        <button class="btn btn-accent" id="browse-btn">Browse Tournaments →</button>
+        <button class="btn btn-outline" id="organize-btn">Organize an Event</button>
       </div>
     </div>
+  </section>
 
-    <div class="t-card">
-      <div class="t-card-banner upcoming"></div>
-      <div class="t-card-body">
-        <div class="t-card-top">
-          <div>
-            <div class="t-card-game">BGMI</div>
-            <div class="t-card-name">Campus Battle Series #4</div>
-          </div>
-          <span class="status-badge status-upcoming">Soon</span>
-        </div>
-        <div class="t-card-meta">
-          <div class="t-meta-item">
-            <span class="t-meta-label">Prize pool</span>
-            <span class="t-meta-val prize">₹15,000</span>
-          </div>
-          <div class="t-meta-item">
-            <span class="t-meta-label">Teams</span>
-            <span class="t-meta-val teal">0 / 8</span>
-          </div>
-          <div class="t-meta-item">
-            <span class="t-meta-label">Starts</span>
-            <span class="t-meta-val">Feb 5</span>
-          </div>
-        </div>
-        <div class="t-card-footer">
-          <div class="team-avatars">
-            <span class="team-count" style="margin-left:0">No teams yet — be first</span>
-          </div>
-          <button class="join-btn">Register →</button>
-        </div>
+  <!-- STATS -->
+  <div class="stats-bar" id="stats">
+    <div class="container" style="display:flex; justify-content:center; gap:48px; flex-wrap:wrap;">
+      <div class="stat-item">
+        <div class="stat-value">2,400+</div>
+        <div class="stat-label">Players</div>
       </div>
-    </div>
-
-  </div>
-
-  <!-- LIVE MATCHES -->
-  <div class="live-match-section">
-    <div class="live-header">
-      <div class="live-tag">
-        <div class="live-dot-big"></div>
-        Live matches
+      <div class="stat-item">
+        <div class="stat-value">180</div>
+        <div class="stat-label">Tournaments</div>
       </div>
-      <span style="font-size:12px;color:var(--hint)">Updates in real time via Socket.IO</span>
-    </div>
-
-    <div class="match-row">
-      <div class="team-side">
-        <div class="team-logo" style="background:rgba(124,92,255,0.15);color:var(--purple2)">NX</div>
-        <div class="team-info">
-          <span class="team-name">Team Nexus</span>
-          <span class="team-tag">NX · Valorant</span>
-        </div>
+      <div class="stat-item">
+        <div class="stat-value">12,000+</div>
+        <div class="stat-label">Matches Played</div>
       </div>
-      <div class="score-center">
-        <div class="score-display">
-          <span class="score-a">13</span>
-          <span class="score-sep">:</span>
-          <span class="score-b">9</span>
-        </div>
-        <span class="score-round">QF · Round 4</span>
-      </div>
-      <div class="team-side right">
-        <div class="team-logo" style="background:rgba(255,69,96,0.15);color:var(--red)">GH</div>
-        <div class="team-info" style="align-items:flex-end">
-          <span class="team-name">Ghost Hawks</span>
-          <span class="team-tag">GH · Valorant</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="match-row">
-      <div class="team-side">
-        <div class="team-logo" style="background:rgba(0,221,179,0.12);color:var(--teal)">PH</div>
-        <div class="team-info">
-          <span class="team-name">Phoenix Rising</span>
-          <span class="team-tag">PH · Valorant</span>
-        </div>
-      </div>
-      <div class="score-center">
-        <div class="score-display">
-          <span class="score-a">8</span>
-          <span class="score-sep">:</span>
-          <span class="score-b">8</span>
-        </div>
-        <span class="score-round">QF · Round 2</span>
-      </div>
-      <div class="team-side right">
-        <div class="team-logo" style="background:rgba(255,184,0,0.12);color:var(--amber)">SH</div>
-        <div class="team-info" style="align-items:flex-end">
-          <span class="team-name">Storm Hawks</span>
-          <span class="team-tag">SH · Valorant</span>
-        </div>
+      <div class="stat-item">
+        <div class="stat-value">$85K</div>
+        <div class="stat-label">Prize Pool</div>
       </div>
     </div>
   </div>
-</section>
 
-<div class="divider"></div>
-
-<!-- LEADERBOARD -->
-<section id="leaderboard">
-  <div class="section-label">Rankings</div>
-  <div class="section-title">Global leaderboard</div>
-  <p class="section-sub">Top performing teams this season across all tournaments.</p>
-
-  <div class="leaderboard">
-    <div class="lb-header">
-      <span class="lb-title">Team standings</span>
-      <div class="lb-tabs">
-        <button class="lb-tab active">Teams</button>
-        <button class="lb-tab">Players</button>
+  <!-- TOURNAMENTS -->
+  <section class="section" id="tournaments">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Featured Tournaments</h2>
+        <a href="#" class="btn btn-outline" id="view-all-btn" style="padding:8px 18px; font-size:0.8rem;">View All →</a>
       </div>
-    </div>
-    <div class="lb-col-head">
-      <div class="lb-col-label">#</div>
-      <div class="lb-col-label left">Team</div>
-      <div class="lb-col-label">W</div>
-      <div class="lb-col-label">L</div>
-      <div class="lb-col-label">K/D</div>
-      <div class="lb-col-label">Pts</div>
-    </div>
-
-    <div class="lb-row">
-      <div class="lb-rank top1">01</div>
-      <div class="lb-team">
-        <div class="lb-logo" style="background:rgba(124,92,255,0.15);color:var(--purple2)">NX</div>
-        <div>
-          <div class="lb-name">Team Nexus <span class="tier-badge tier-elite">Elite</span></div>
-          <div class="lb-tag">Valorant · Ahmedabad</div>
-        </div>
-      </div>
-      <div class="lb-stat win">24</div>
-      <div class="lb-stat loss">4</div>
-      <div class="lb-stat kd">2.41</div>
-      <div class="lb-stat pts">3,820</div>
-    </div>
-
-    <div class="lb-row">
-      <div class="lb-rank top2">02</div>
-      <div class="lb-team">
-        <div class="lb-logo" style="background:rgba(0,221,179,0.12);color:var(--teal)">PH</div>
-        <div>
-          <div class="lb-name">Phoenix Rising <span class="tier-badge tier-elite">Elite</span></div>
-          <div class="lb-tag">Valorant · Surat</div>
-        </div>
-      </div>
-      <div class="lb-stat win">21</div>
-      <div class="lb-stat loss">6</div>
-      <div class="lb-stat kd">2.18</div>
-      <div class="lb-stat pts">3,410</div>
-    </div>
-
-    <div class="lb-row">
-      <div class="lb-rank top3">03</div>
-      <div class="lb-team">
-        <div class="lb-logo" style="background:rgba(255,184,0,0.12);color:var(--amber)">SH</div>
-        <div>
-          <div class="lb-name">Storm Hawks <span class="tier-badge tier-gold">Gold</span></div>
-          <div class="lb-tag">CS2 · Vadodara</div>
-        </div>
-      </div>
-      <div class="lb-stat win">19</div>
-      <div class="lb-stat loss">8</div>
-      <div class="lb-stat kd">1.97</div>
-      <div class="lb-stat pts">2,980</div>
-    </div>
-
-    <div class="lb-row">
-      <div class="lb-rank">04</div>
-      <div class="lb-team">
-        <div class="lb-logo" style="background:rgba(255,69,96,0.12);color:var(--red)">GH</div>
-        <div>
-          <div class="lb-name">Ghost Hawks <span class="tier-badge tier-gold">Gold</span></div>
-          <div class="lb-tag">Valorant · Rajkot</div>
-        </div>
-      </div>
-      <div class="lb-stat win">16</div>
-      <div class="lb-stat loss">10</div>
-      <div class="lb-stat kd">1.74</div>
-      <div class="lb-stat pts">2,540</div>
-    </div>
-
-    <div class="lb-row">
-      <div class="lb-rank">05</div>
-      <div class="lb-team">
-        <div class="lb-logo" style="background:rgba(59,109,17,0.2);color:#97C459">ST</div>
-        <div>
-          <div class="lb-name">Stealth Unit <span class="tier-badge tier-silver">Silver</span></div>
-          <div class="lb-tag">CS2 · Ahmedabad</div>
-        </div>
-      </div>
-      <div class="lb-stat win">14</div>
-      <div class="lb-stat loss">12</div>
-      <div class="lb-stat kd">1.52</div>
-      <div class="lb-stat pts">2,100</div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- BRACKET -->
-<section id="bracket">
-  <div class="section-label">Tournament bracket</div>
-  <div class="section-title">AP Winter Invitational</div>
-  <p class="section-sub">Single elimination — Quarterfinals currently live.</p>
-
-  <div class="bracket-preview">
-    <div class="bracket-tree">
-
-      <div class="bracket-round">
-        <div class="bracket-round-label">Quarterfinals</div>
-        <div class="bracket-match live-match">
-          <div class="bracket-team won">
-            <span>Team Nexus</span>
-            <span class="bracket-score won">13</span>
+      <div class="card-grid">
+        <!-- Card 1 -->
+        <div class="tournament-card" id="tournament-1">
+          <div class="card-top">
+            <span class="game-badge">Valorant</span>
+            <span class="status-badge status-live">● Live</span>
           </div>
-          <div class="bracket-team lost">
-            <span>Ghost Hawks</span>
-            <span class="bracket-score lost">9</span>
+          <h3 class="card-title">Pulse Invitational S4</h3>
+          <div class="card-meta">
+            <div class="card-meta-item">
+              <svg class="card-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Jun 20 – Jun 28, 2026
+            </div>
+            <div class="card-meta-item">
+              <svg class="card-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Single Elimination · 5v5
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="prize-pool">$5,000</span>
+            <span class="teams-count">32 / 32 Teams</span>
           </div>
         </div>
-        <div class="bracket-match live-match">
-          <div class="bracket-team">
-            <span>Phoenix Rising</span>
-            <span class="bracket-score" style="color:var(--white)">8</span>
+        <!-- Card 2 -->
+        <div class="tournament-card" id="tournament-2">
+          <div class="card-top">
+            <span class="game-badge">CS2</span>
+            <span class="status-badge status-open">Open</span>
           </div>
-          <div class="bracket-team">
-            <span>Storm Hawks</span>
-            <span class="bracket-score" style="color:var(--white)">8</span>
+          <h3 class="card-title">Counter-Strike Arena Cup</h3>
+          <div class="card-meta">
+            <div class="card-meta-item">
+              <svg class="card-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Jul 5 – Jul 12, 2026
+            </div>
+            <div class="card-meta-item">
+              <svg class="card-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Double Elimination · 5v5
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="prize-pool">$3,000</span>
+            <span class="teams-count">18 / 24 Teams</span>
           </div>
         </div>
-        <div class="bracket-match">
-          <div class="bracket-team won">
-            <span>Stealth Unit</span>
-            <span class="bracket-score won">13</span>
+        <!-- Card 3 -->
+        <div class="tournament-card" id="tournament-3">
+          <div class="card-top">
+            <span class="game-badge">League of Legends</span>
+            <span class="status-badge status-upcoming">Upcoming</span>
           </div>
-          <div class="bracket-team lost">
-            <span>Iron Wolves</span>
-            <span class="bracket-score lost">7</span>
+          <h3 class="card-title">LoL Rift Showdown</h3>
+          <div class="card-meta">
+            <div class="card-meta-item">
+              <svg class="card-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Aug 1 – Aug 10, 2026
+            </div>
+            <div class="card-meta-item">
+              <svg class="card-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Single Elimination · 5v5
+            </div>
           </div>
-        </div>
-        <div class="bracket-match">
-          <div class="bracket-team won">
-            <span>Venom Kings</span>
-            <span class="bracket-score won">13</span>
-          </div>
-          <div class="bracket-team lost">
-            <span>Dark Matter</span>
-            <span class="bracket-score lost">11</span>
+          <div class="card-footer">
+            <span class="prize-pool">$2,500</span>
+            <span class="teams-count">0 / 16 Teams</span>
           </div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <div class="bracket-connector">→</div>
-
-      <div class="bracket-round">
-        <div class="bracket-round-label">Semifinals</div>
-        <div class="bracket-match">
-          <div class="bracket-team tbd"><span>QF1 winner</span><span class="bracket-score" style="color:var(--hint)">—</span></div>
-          <div class="bracket-team tbd"><span>QF2 winner</span><span class="bracket-score" style="color:var(--hint)">—</span></div>
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Everything You Need</h2>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card" id="feature-brackets">
+          <div class="feature-icon fi-green">🏆</div>
+          <h3>Auto Brackets</h3>
+          <p>Single or double elimination brackets generated automatically from registered teams.</p>
         </div>
-        <div class="bracket-match">
-          <div class="bracket-team tbd"><span>QF3 winner</span><span class="bracket-score" style="color:var(--hint)">—</span></div>
-          <div class="bracket-team tbd"><span>QF4 winner</span><span class="bracket-score" style="color:var(--hint)">—</span></div>
+        <div class="feature-card" id="feature-live">
+          <div class="feature-icon fi-orange">⚡</div>
+          <h3>Live Scores</h3>
+          <p>Real-time score updates via WebSocket. Every viewer sees results the instant they happen.</p>
+        </div>
+        <div class="feature-card" id="feature-analytics">
+          <div class="feature-icon fi-blue">📊</div>
+          <h3>Analytics & ML</h3>
+          <p>Win predictions, player tier badges, and interactive charts powered by Python ML models.</p>
+        </div>
+        <div class="feature-card" id="feature-qr">
+          <div class="feature-icon fi-purple">📱</div>
+          <h3>QR Check-in</h3>
+          <p>Players verify attendance on match day with a simple QR code scan. Fast and reliable.</p>
         </div>
       </div>
-
-      <div class="bracket-connector">→</div>
-
-      <div class="bracket-round">
-        <div class="bracket-round-label">Grand Final</div>
-        <div class="bracket-match">
-          <div class="bracket-team tbd"><span>SF1 winner</span><span class="bracket-score" style="color:var(--hint)">—</span></div>
-          <div class="bracket-team tbd"><span>SF2 winner</span><span class="bracket-score" style="color:var(--hint)">—</span></div>
-        </div>
-      </div>
-
     </div>
-  </div>
-</section>
+  </section>
 
-<div class="divider"></div>
-
-<!-- ML PREDICTION -->
-<section id="predict">
-  <div class="section-label">AI powered</div>
-  <div class="section-title">Match prediction</div>
-  <p class="section-sub">Our Random Forest model analyses K/D ratio, win streaks, and head-to-head history to call the match before it starts.</p>
-
-  <div class="predict-card">
-    <div style="font-size:13px;color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:0.08em">
-      Upcoming · QF Semifinal · Valorant
-    </div>
-
-    <div class="predict-teams">
-      <div class="predict-team winner">
-        <div class="predict-team-name">Team Nexus</div>
-        <div class="predict-bar-wrap">
-          <div class="predict-bar a" style="width:72%"></div>
-        </div>
-        <div class="predict-pct winner-pct">72%</div>
-        <div class="predict-label">Win probability</div>
-      </div>
-
-      <div class="predict-vs">VS</div>
-
-      <div class="predict-team">
-        <div class="predict-team-name">Phoenix Rising</div>
-        <div class="predict-bar-wrap">
-          <div class="predict-bar b" style="width:28%"></div>
-        </div>
-        <div class="predict-pct loser-pct">28%</div>
-        <div class="predict-label">Win probability</div>
+  <!-- CTA -->
+  <section class="cta-section" id="cta">
+    <div class="container">
+      <div class="cta-box">
+        <h2>Ready to Enter the Arena?</h2>
+        <p>Create your account, build your team, and start competing in tournaments today.</p>
+        <button class="btn-white" id="cta-signup-btn">Get Started Free →</button>
       </div>
     </div>
+  </section>
 
-    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:20px">
-      <div>
-        <div style="font-size:11px;color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Model used</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--purple2)">Random Forest · 94.2% accuracy</div>
+  <!-- FOOTER -->
+  <footer class="footer" id="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-left">© 2026 ArenaPulse. Built for competitive gamers.</div>
+        <ul class="footer-links">
+          <li><a href="#">About</a></li>
+          <li><a href="#">Terms</a></li>
+          <li><a href="#">Privacy</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
       </div>
-      <div>
-        <div style="font-size:11px;color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Features</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted)">K/D · Win streak · Recent form · H2H</div>
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Confidence</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--teal)">High · ±4.1%</div>
-      </div>
     </div>
+  </footer>
 
-    <div class="predict-summary">
-      <strong>AI match summary —</strong> Team Nexus enter this semifinal on a 7-match win streak with a tournament K/D of 2.41, significantly above Phoenix Rising's 2.18. Their head-to-head record stands 3–1 in Nexus's favour. Phoenix Rising's recent form shows improvement — they've won 4 of their last 5 — but the gap in individual performance metrics gives Nexus the statistical edge going into this match.
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- HOW IT WORKS -->
-<section>
-  <div class="section-label">Platform</div>
-  <div class="section-title">How ArenaPulse works</div>
-
-  <div class="how-grid">
-    <div class="how-step">
-      <div class="step-num">01</div>
-      <div class="step-icon">⚔️</div>
-      <div class="step-title">Form your team</div>
-      <p class="step-desc">Register, create your team, and invite players by username. Your Captain manages the roster.</p>
-    </div>
-    <div class="how-step">
-      <div class="step-num">02</div>
-      <div class="step-icon">🏆</div>
-      <div class="step-title">Join a tournament</div>
-      <p class="step-desc">Browse open tournaments, submit your team application, and wait for organizer approval.</p>
-    </div>
-    <div class="how-step">
-      <div class="step-num">03</div>
-      <div class="step-icon">📲</div>
-      <div class="step-title">Check in on match day</div>
-      <p class="step-desc">Scan your unique QR code before each match. Your organizer verifies all players before the game starts.</p>
-    </div>
-    <div class="how-step">
-      <div class="step-num">04</div>
-      <div class="step-icon">⚡</div>
-      <div class="step-title">Play live</div>
-      <p class="step-desc">Scores update in real time. Win your match and advance automatically in the bracket.</p>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- FOOTER -->
-<footer>
-  <div class="footer-logo">⚡ ArenaPulse</div>
-  <div class="footer-copy">Semester IV Combined Project · FSD-2 + FCSP-2 · Lok Jagruti University</div>
-  <div style="font-size:12px;color:var(--hint)">Built with MERN + Django + ML</div>
-</footer>
-
-<script>
-  document.querySelectorAll('.lb-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-    });
-  });
-
-  const bars = document.querySelectorAll('.predict-bar');
-  setTimeout(() => {
-    bars.forEach(b => {
-      const w = b.style.width;
-      b.style.width = '0%';
-      setTimeout(() => { b.style.width = w; }, 100);
-    });
-  }, 500);
-
-  document.querySelectorAll('a[href^="#"]').forEach(a => {
-    a.addEventListener('click', e => {
-      e.preventDefault();
-      document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
-    });
-  });
-</script>
 </body>
 </html>
