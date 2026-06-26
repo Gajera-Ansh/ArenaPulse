@@ -24,8 +24,13 @@ const Login = () => {
     onSuccess: async (tokenResponse) => {
       console.log('Google token:', tokenResponse);
       if (googleLogin) {
-        await googleLogin(tokenResponse.access_token);
-        navigate('/dashboard');
+        try {
+          await googleLogin(tokenResponse.access_token);
+          navigate('/dashboard');
+        } catch (error) {
+          alert('Google login failed. Please check the backend server console for errors.');
+          console.error(error);
+        }
       }
     },
     onError: () => console.log('Login Failed'),

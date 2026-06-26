@@ -63,9 +63,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const googleLogin = async (googleToken) => {
+  const googleLogin = async (googleToken, role = 'player') => {
     try {
-      const res = await expressApi.post('/api/auth/google', { token: googleToken });
+      const res = await expressApi.post('/api/auth/google', { token: googleToken, role });
       if (res.data.success) {
         login(res.data.data.user, res.data.data.token);
         return true;

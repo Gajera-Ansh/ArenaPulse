@@ -135,7 +135,7 @@ export const getMe = async (req, res, next) => {
 // POST /api/auth/google
 export const googleLogin = async (req, res, next) => {
   try {
-    const { token } = req.body;
+    const { token, role } = req.body;
 
     if (!token) {
       return res.status(400).json({ success: false, message: 'No Google token provided.' });
@@ -160,11 +160,14 @@ export const googleLogin = async (req, res, next) => {
       // Generate a random password since they use Google
       const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
       
+      const allowedRoles = ['player', 'organizer'];
+      const userRole = allowedRoles.includes(role) ? role : 'player';
+
       user = await User.create({
         name,
         email,
         password: randomPassword,
-        role: 'player', // Default role
+        role: userRole,
         avatar: picture
       });
     }
