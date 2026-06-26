@@ -6,12 +6,10 @@ const Navbar = () => {
   const { user, logout } = useAuth();
 
   return (
-    <nav className="glass-panel border-b border-border py-4 sticky top-0 z-50">
+    <nav className="glass-panel border-b border-border py-3 sticky top-0 z-50">
       <div className="container flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 font-extrabold text-[1.25rem] text-primary">
-          <div className="w-9 h-9 bg-primary rounded-[10px] flex items-center justify-center text-white text-[1.1rem]">
-            ⚡
-          </div>
+          <img src="/logo.png" alt="ArenaPulse Logo" className="w-10 h-10 object-contain drop-shadow-md" />
           ArenaPulse
         </Link>
         

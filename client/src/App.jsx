@@ -5,9 +5,10 @@ import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import Home from './pages/public/Home';
 
-// Placeholders for auth pages
-const Login = () => <div className="container pt-20"><h1>Login</h1></div>;
-const Register = () => <div className="container pt-20"><h1>Register</h1></div>;
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+
+// Placeholders for other pages
 const Dashboard = () => <div className="container pt-20"><h1>Dashboard</h1></div>;
 const Tournaments = () => <div className="container pt-20"><h1>Tournaments</h1></div>;
 const Leaderboard = () => <div className="container pt-20"><h1>Leaderboard</h1></div>;

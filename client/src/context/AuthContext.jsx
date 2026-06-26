@@ -37,13 +37,52 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
   };
 
+  const loginAccount = async (email, password) => {
+    try {
+      const res = await expressApi.post('/api/auth/login', { email, password });
+      if (res.data.success) {
+        login(res.data.data.user, res.data.data.token);
+        return true;
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  };
+
+  const registerAccount = async (formData) => {
+    try {
+      const res = await expressApi.post('/api/auth/register', formData);
+      if (res.data.success) {
+        login(res.data.data.user, res.data.data.token);
+        return true;
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  };
+
+  const googleLogin = async (googleToken) => {
+    try {
+      const res = await expressApi.post('/api/auth/google', { token: googleToken });
+      if (res.data.success) {
+        login(res.data.data.user, res.data.data.token);
+        return true;
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
+      throw error;
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, setUser }}>
+    <AuthContext.Provider value={{ user, loginAccount, registerAccount, googleLogin, logout, loading, setUser }}>
       {children}
     </AuthContext.Provider>
   );

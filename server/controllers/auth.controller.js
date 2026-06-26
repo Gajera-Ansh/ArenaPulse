@@ -131,3 +131,65 @@ export const getMe = async (req, res, next) => {
     next(error);
   }
 };
+
+// POST /api/auth/google
+export const googleLogin = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'No Google token provided.' });
+    }
+
+    // Fetch user info using the Google access token
+    const googleResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!googleResponse.ok) {
+      return res.status(401).json({ success: false, message: 'Invalid Google token.' });
+    }
+
+    const { email, name, picture } = await googleResponse.json();
+
+    // Check if user already exists
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create new user if they don't exist
+      // Generate a random password since they use Google
+      const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
+      
+      user = await User.create({
+        name,
+        email,
+        password: randomPassword,
+        role: 'player', // Default role
+        avatar: picture
+      });
+    }
+
+    if (user.banned) {
+      return res.status(403).json({ success: false, message: 'Your account has been banned.' });
+    }
+
+    // Generate our own JWT token
+    const jwtToken = generateToken(user._id, user.role);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        token: jwtToken,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          avatar: user.avatar,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -10,6 +10,7 @@
 | `VITE_DJANGO_URL` | `http://localhost:8000` | Default Django dev server URL. Change to your Render URL after deployment. |
 | `VITE_SOCKET_URL` | `http://localhost:5000` | Same as Express URL — Socket.IO runs on the same server. |
 | `VITE_APP_NAME` | `ArenaPulse` | App name used in page titles and meta tags. No setup needed. |
+| `VITE_GOOGLE_CLIENT_ID` | `12345.apps.google...` | See **Google OAuth** section below. |
 
 > **Note:** All client variables MUST start with `VITE_` or Vite won't expose them to the browser.
 
@@ -31,6 +32,7 @@
 | `CLOUDINARY_CLOUD_NAME` | Your cloud name | See **Cloudinary** section below. |
 | `CLOUDINARY_API_KEY` | Your API key | See **Cloudinary** section below. |
 | `CLOUDINARY_API_SECRET` | Your API secret | See **Cloudinary** section below. |
+| `GOOGLE_CLIENT_ID` | `12345.apps.google...` | See **Google OAuth** section below. |
 
 ---
 
@@ -165,6 +167,24 @@ CLOUDINARY_API_SECRET=abcdefghijklmnopqrstuvwxyz
 
 ---
 
+### 6. Google OAuth (Google Client ID)
+
+Used to enable "Continue with Google" one-click login and registration.
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project (e.g. `ArenaPulse-Auth`)
+3. Go to **APIs & Services → OAuth consent screen**
+   - Choose **External** → Create
+   - Fill in app name (ArenaPulse), user support email, and developer contact email. Save and Continue.
+4. Go to **Credentials → Create Credentials → OAuth client ID**
+5. Select **Web application**
+6. Under **Authorized JavaScript origins**, click Add URI and enter: `http://localhost:5173`
+7. Click **Create**
+8. Copy the **Client ID** (it looks like `123456789-abcxyz.apps.googleusercontent.com`)
+9. Paste it into both `client/.env` (`VITE_GOOGLE_CLIENT_ID`) and `server/.env` (`GOOGLE_CLIENT_ID`).
+
+---
+
 ## Quick Checklist
 
 - [ ] Created MongoDB Atlas cluster (free M0)
@@ -175,4 +195,5 @@ CLOUDINARY_API_SECRET=abcdefghijklmnopqrstuvwxyz
 - [ ] Generated Django secret key and added to `django_service/.env`
 - [ ] Set up Gmail App Password and added to `server/.env`
 - [ ] Created Cloudinary account and added credentials to `server/.env`
+- [ ] Created Google Cloud Project, got Client ID, and added to both `client/.env` and `server/.env`
 - [ ] All `.env` files are in `.gitignore` (never commit secrets!)
