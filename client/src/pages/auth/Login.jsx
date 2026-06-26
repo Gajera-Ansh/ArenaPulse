@@ -47,10 +47,10 @@ const Login = () => {
         <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[24px] p-8 sm:p-10 shadow-2xl">
           
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-primary rounded-[12px] text-white text-[1.5rem] mb-4 shadow-lg shadow-primary/20">
-              ⚡
+            <div className="flex justify-center mb-4">
+              <img src="/logo.png" alt="ArenaPulse Logo" className="w-16 h-16 object-contain drop-shadow-lg" />
             </div>
-            <h1 className="text-[2rem] font-black text-text mb-2">Welcome Back</h1>
+            <h1 className="text-[2rem] font-bold text-text mb-2">Welcome Back</h1>
             <p className="text-text-secondary text-[0.95rem]">Enter your credentials to access the system.</p>
           </div>
 

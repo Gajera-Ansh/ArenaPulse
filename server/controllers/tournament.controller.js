@@ -5,17 +5,20 @@ import Tournament from '../models/Tournament.js';
 // POST /api/tournaments
 export const createTournament = async (req, res, next) => {
   try {
-    const { title, game, bracketType, maxTeams, startDate, endDate, prizePool, rules } = req.body;
+    const { title, game, bracketType, maxTeams, playersPerTeam, startDate, endDate, registrationDeadline, prizePool, rules, status } = req.body;
 
     const tournament = await Tournament.create({
       title,
       game,
       bracketType,
       maxTeams,
+      playersPerTeam,
       startDate,
       endDate,
+      registrationDeadline,
       prizePool,
       rules,
+      status: status || 'open',
       organizer: req.user._id,
     });
 
@@ -28,11 +31,12 @@ export const createTournament = async (req, res, next) => {
 // GET /api/tournaments
 export const getAllTournaments = async (req, res, next) => {
   try {
-    const { game, status } = req.query;
+    const { game, status, organizer } = req.query;
     const filter = {};
 
     if (game) filter.game = { $regex: game, $options: 'i' };
     if (status) filter.status = status;
+    if (organizer) filter.organizer = organizer;
 
     const tournaments = await Tournament.find(filter)
       .populate('organizer', 'name email')

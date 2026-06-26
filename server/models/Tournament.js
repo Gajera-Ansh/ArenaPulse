@@ -31,6 +31,13 @@ const tournamentSchema = new mongoose.Schema(
       min: 4,
       max: 64,
     },
+    playersPerTeam: {
+      type: Number,
+      required: true,
+      default: 5,
+      min: 1,
+      max: 10,
+    },
     startDate: {
       type: Date,
       required: [true, 'Start date is required'],
@@ -38,6 +45,10 @@ const tournamentSchema = new mongoose.Schema(
     endDate: {
       type: Date,
       required: [true, 'End date is required'],
+    },
+    registrationDeadline: {
+      type: Date,
+      required: [true, 'Registration deadline is required'],
     },
     prizePool: {
       type: String,

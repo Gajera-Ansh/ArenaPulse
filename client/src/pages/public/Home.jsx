@@ -46,7 +46,7 @@ const Home = () => {
               <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-border group-hover:-translate-y-1 transition-transform">
                 <i className="fa-solid fa-shield-halved text-[2.2rem] text-primary"></i>
               </div>
-              <div className="font-black text-[1.1rem]">Sentinels</div>
+              <div className="font-bold text-[1.1rem]">Sentinels</div>
               <div className="flex gap-1 mt-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
                 <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
@@ -57,7 +57,7 @@ const Home = () => {
             {/* Score */}
             <div className="flex flex-col items-center px-4">
               <div className="text-[0.85rem] font-bold text-accent uppercase tracking-widest mb-1">Map 3: Ascent</div>
-              <div className="text-[4rem] leading-none font-black text-text tracking-tighter flex items-center">
+              <div className="text-[4rem] leading-none font-bold text-text tracking-tighter flex items-center">
                 13<span className="text-border mx-3 font-light text-[3rem]">-</span>11
               </div>
               <div className="text-[0.8rem] text-text-secondary font-medium mt-2 flex items-center gap-2 bg-bg px-3 py-1 rounded-full">
@@ -70,7 +70,7 @@ const Home = () => {
               <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-border group-hover:-translate-y-1 transition-transform delay-75">
                 <i className="fa-solid fa-crosshairs text-[2.2rem] text-slate-700"></i>
               </div>
-              <div className="font-black text-[1.1rem]">Fnatic</div>
+              <div className="font-bold text-[1.1rem]">Fnatic</div>
               <div className="flex gap-1 mt-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
                 <div className="w-2 h-2 rounded-full bg-rose-400"></div>
@@ -140,7 +140,7 @@ const Home = () => {
               <div>
                 <div className="flex justify-between text-[0.85rem] mb-2 text-white">
                   <span className="font-medium text-white/70">Win Probability Matrix</span>
-                  <span className="font-black text-primary-light">78%</span>
+                  <span className="font-bold text-primary-light">78%</span>
                 </div>
                 <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
                   <div className="bg-primary h-full rounded-full w-[78%] relative">
@@ -152,7 +152,7 @@ const Home = () => {
               <div>
                 <div className="flex justify-between text-[0.85rem] mb-2 text-white">
                   <span className="font-medium text-white/70">K/D/A Spread</span>
-                  <span className="font-black text-accent">1.45 Ratio</span>
+                  <span className="font-bold text-accent">1.45 Ratio</span>
                 </div>
                 <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
                   <div className="bg-accent h-full rounded-full w-[65%]"></div>
@@ -160,12 +160,12 @@ const Home = () => {
               </div>
 
               <div className="mt-auto pt-4 border-t border-white/10 flex items-center gap-5">
-                <div className="w-12 h-12 rounded-full border-[3px] border-amber-400 bg-amber-400/10 flex items-center justify-center font-black text-[1.3rem] text-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)]">
+                <div className="w-12 h-12 rounded-full border-[3px] border-amber-400 bg-amber-400/10 flex items-center justify-center font-bold text-[1.3rem] text-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)]">
                   G
                 </div>
                 <div>
                   <div className="text-[0.65rem] text-white/50 uppercase tracking-widest font-bold mb-0.5">Neural Net Classification</div>
-                  <div className="font-black text-[1.1rem] text-amber-400 tracking-wide">GOLD III <span className="text-white/30 font-normal text-sm ml-1">(Top 14%)</span></div>
+                  <div className="font-bold text-[1.1rem] text-amber-400 tracking-wide">GOLD III <span className="text-white/30 font-normal text-sm ml-1">(Top 14%)</span></div>
                 </div>
               </div>
             </div>
@@ -197,7 +197,7 @@ const Home = () => {
             </span>
           </div>
           <p className="text-text-secondary text-[1rem] leading-relaxed max-w-[400px]">
-            The ultimate command center for competitive esports. Choose a module to initialize system operations.
+            The ultimate command center for competitive esports. Choose a module to initialize system tournaments.
           </p>
         </div>
 
@@ -209,7 +209,7 @@ const Home = () => {
                 key={key}
                 onMouseEnter={() => handleTabChange(key)}
                 onClick={() => handleTabChange(key)}
-                className={`w-fit text-left text-[3rem] sm:text-[4rem] lg:text-[4rem] xl:text-[5rem] font-black uppercase tracking-tighter leading-[0.85] transition-all duration-500 ease-out relative group flex items-center
+                className={`w-fit text-left text-[3rem] sm:text-[4rem] lg:text-[4rem] xl:text-[5rem] font-bold uppercase tracking-tighter leading-[0.85] transition-all duration-500 ease-out relative group flex items-center
                   ${isActive ? 'text-text scale-[1.03] translate-x-4' : 'text-transparent hover:text-text/20 hover:translate-x-2'}`}
                 style={!isActive ? { WebkitTextStroke: '2px rgba(100, 116, 139, 0.2)' } : {}}
               >
@@ -235,7 +235,7 @@ const Home = () => {
             ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
 
             <div className="mb-6">
-              <h2 className="text-[2.2rem] lg:text-[2.8rem] font-black text-text mb-3 leading-[1.1] tracking-tight">
+              <h2 className="text-[2.2rem] lg:text-[2.8rem] font-bold text-text mb-3 leading-[1.1] tracking-tight">
                 {panelContent[activeTab].title}
               </h2>
               <p className="text-[1rem] lg:text-[1.05rem] text-text-secondary leading-relaxed max-w-[480px]">

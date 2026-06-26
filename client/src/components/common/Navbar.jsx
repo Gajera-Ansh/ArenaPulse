@@ -28,6 +28,9 @@ const Navbar = () => {
         
         <ul className="hidden md:flex items-center gap-8 list-none">
           <li><Link to="/tournaments" className="text-[0.9rem] font-medium text-text-secondary hover:text-text transition-colors">Tournaments</Link></li>
+          {user?.role !== 'organizer' && (
+            <li><Link to="/teams" className="text-[0.9rem] font-medium text-text-secondary hover:text-text transition-colors">Teams</Link></li>
+          )}
           <li><Link to="/leaderboard" className="text-[0.9rem] font-medium text-text-secondary hover:text-text transition-colors">Leaderboard</Link></li>
         </ul>
 

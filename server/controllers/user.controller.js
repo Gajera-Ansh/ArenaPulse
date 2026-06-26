@@ -63,10 +63,16 @@ export const searchUsers = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Search query required.' });
     }
 
-    const users = await User.find({
+    const query = {
       name: { $regex: q, $options: 'i' },
       banned: false,
-    })
+    };
+
+    if (req.query.role) {
+      query.role = req.query.role;
+    }
+
+    const users = await User.find(query)
       .select('name email avatar role')
       .limit(10);
 

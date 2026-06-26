@@ -6,14 +6,19 @@ import Notification from '../models/Notification.js';
 // POST /api/teams
 export const createTeam = async (req, res, next) => {
   try {
-    const { name, tag, game } = req.body;
+    const { name, tag, game, players } = req.body;
+
+    let playersArray = [req.user._id.toString()];
+    if (players && Array.isArray(players)) {
+      playersArray = [...new Set([req.user._id.toString(), ...players])];
+    }
 
     const team = await Team.create({
       name,
       tag,
       game,
       captain: req.user._id,
-      players: [req.user._id], // Captain is also a player
+      players: playersArray,
     });
 
     res.status(201).json({ success: true, data: team });
@@ -28,6 +33,20 @@ export const getMyTeams = async (req, res, next) => {
     const teams = await Team.find({ players: req.user._id })
       .populate('captain', 'name email avatar')
       .populate('players', 'name email avatar');
+
+    res.status(200).json({ success: true, data: teams });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/teams/all
+export const getAllTeams = async (req, res, next) => {
+  try {
+    const teams = await Team.find()
+      .populate('captain', 'name email avatar')
+      .populate('players', 'name email avatar')
+      .sort('-createdAt');
 
     res.status(200).json({ success: true, data: teams });
   } catch (error) {
