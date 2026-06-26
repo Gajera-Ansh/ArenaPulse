@@ -28,6 +28,9 @@
 | `DJANGO_SERVICE_URL` | `http://localhost:8000` | Django dev server URL. Change after deployment. |
 | `CLIENT_URL` | `http://localhost:5173` | Vite dev server URL (for CORS). Change after deployment. |
 | `NODE_ENV` | `development` | Set to `production` on Render. |
+| `CLOUDINARY_CLOUD_NAME` | Your cloud name | See **Cloudinary** section below. |
+| `CLOUDINARY_API_KEY` | Your API key | See **Cloudinary** section below. |
+| `CLOUDINARY_API_SECRET` | Your API secret | See **Cloudinary** section below. |
 
 ---
 
@@ -140,6 +143,28 @@ EMAIL_PASS=abcdefghijklmnop
 
 ---
 
+### 5. Cloudinary (Image Uploads)
+
+Cloudinary stores user avatars and team logos in the cloud so images don't get lost on server restart.
+
+1. Go to [cloudinary.com](https://cloudinary.com) → **Sign up free**
+2. After signup, you land on the **Dashboard**
+3. You'll see three values right on the dashboard:
+   - **Cloud Name** → copy it
+   - **API Key** → copy it
+   - **API Secret** → click the eye icon to reveal, then copy
+4. Paste them in `server/.env`:
+
+```
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=123456789012345
+CLOUDINARY_API_SECRET=abcdefghijklmnopqrstuvwxyz
+```
+
+> **Free tier:** 25GB storage, 25GB bandwidth/month — more than enough for a college project.
+
+---
+
 ## Quick Checklist
 
 - [ ] Created MongoDB Atlas cluster (free M0)
@@ -149,4 +174,5 @@ EMAIL_PASS=abcdefghijklmnop
 - [ ] Generated JWT secret and added to `server/.env`
 - [ ] Generated Django secret key and added to `django_service/.env`
 - [ ] Set up Gmail App Password and added to `server/.env`
+- [ ] Created Cloudinary account and added credentials to `server/.env`
 - [ ] All `.env` files are in `.gitignore` (never commit secrets!)

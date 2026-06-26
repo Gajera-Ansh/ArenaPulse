@@ -8,6 +8,15 @@ import errorHandler from './middleware/errorHandler.js';
 
 // Route imports
 import authRoutes from './routes/auth.routes.js';
+import userRoutes from './routes/user.routes.js';
+import teamRoutes from './routes/team.routes.js';
+import tournamentRoutes from './routes/tournament.routes.js';
+import registrationRoutes from './routes/registration.routes.js';
+import matchRoutes from './routes/match.routes.js';
+import checkinRoutes from './routes/checkin.routes.js';
+import leaderboardRoutes from './routes/leaderboard.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 // Load environment variables
 dotenv.config();
@@ -23,20 +32,26 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static('uploads'));
 
-// Health check route
+// Health check
 app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'ArenaPulse API is running',
-    timestamp: new Date().toISOString(),
-  });
+  res.status(200).json({ success: true, message: 'ArenaPulse API is running' });
 });
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/teams', teamRoutes);
+app.use('/api/tournaments', tournamentRoutes);
+app.use('/api/registrations', registrationRoutes);
+app.use('/api/matches', matchRoutes);
+app.use('/api/checkins', checkinRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/admin', adminRoutes);
 
-// Error handler (must be after routes)
+// Error handler (must be last)
 app.use(errorHandler);
 
 // Connect to DB and start server
