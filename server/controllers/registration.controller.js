@@ -5,7 +5,7 @@ import Tournament from '../models/Tournament.js';
 import Team from '../models/Team.js';
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
-import { sendTournamentEnrollmentEmail, sendRegistrationStatusEmail, sendPlayerDeclinedEmail } from '../utils/emailService.js';
+import { sendTournamentEnrollmentEmail, sendRegistrationStatusEmail, sendPlayerDeclinedEmail, sendOrganizerRegistrationRequestEmail } from '../utils/emailService.js';
 
 // POST /api/registrations
 export const registerForTournament = async (req, res, next) => {
@@ -81,15 +81,23 @@ export const updateRegistrationStatus = async (req, res, next) => {
     const { status, note } = req.body;
     const registration = await Registration.findById(req.params.id)
       .populate('team')
-      .populate('tournament', 'title');
+      .populate('tournament', 'title enrolledCount maxTeams');
 
     if (!registration) {
       return res.status(404).json({ success: false, message: 'Registration not found.' });
     }
 
+    const previousStatus = registration.status;
     registration.status = status;
     registration.note = note || '';
     await registration.save();
+
+    // Update Tournament enrolledCount
+    if (status === 'approved' && previousStatus !== 'approved') {
+      await Tournament.findByIdAndUpdate(registration.tournament._id, { $inc: { enrolledCount: 1 } });
+    } else if (status === 'rejected' && previousStatus === 'approved') {
+      await Tournament.findByIdAndUpdate(registration.tournament._id, { $inc: { enrolledCount: -1 } });
+    }
 
     // Notify the team captain
     await Notification.create({
@@ -151,10 +159,30 @@ export const getPendingEnrollments = async (req, res, next) => {
   }
 };
 
+// GET /api/registrations/my-active-enrollments
+export const getMyActiveEnrollments = async (req, res, next) => {
+  try {
+    const registrations = await Registration.find({ status: { $in: ['pending', 'approved'] } })
+      .populate('team', 'name tag players')
+      .populate('tournament', 'title game status startDate endDate registrationDeadline prizePool enrolledCount maxTeams')
+      .sort({ createdAt: -1 });
+
+    const myRegistrations = registrations.filter(reg => 
+      reg.team && reg.team.players.some(p => p.toString() === req.user._id.toString())
+    );
+
+    res.status(200).json({ success: true, data: myRegistrations });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // POST /api/registrations/:id/accept
 export const acceptEnrollment = async (req, res, next) => {
   try {
-    const registration = await Registration.findById(req.params.id).populate('team');
+    const registration = await Registration.findById(req.params.id)
+      .populate('team')
+      .populate({ path: 'tournament', populate: { path: 'organizer', select: 'name email' } });
 
     if (!registration) {
       return res.status(404).json({ success: false, message: 'Registration not found.' });
@@ -177,6 +205,17 @@ export const acceptEnrollment = async (req, res, next) => {
         message: `Your entire roster has accepted the enrollment request. Your team is officially registered for the tournament!`,
         type: 'success',
       });
+
+      // Email the organizer
+      const organizer = registration.tournament.organizer;
+      if (organizer && organizer.email) {
+        sendOrganizerRegistrationRequestEmail(
+          organizer.email,
+          organizer.name,
+          registration.team.name,
+          registration.tournament.title
+        );
+      }
     }
 
     await registration.save();

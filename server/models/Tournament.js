@@ -63,6 +63,10 @@ const tournamentSchema = new mongoose.Schema(
       enum: ['draft', 'open', 'closed', 'live', 'completed'],
       default: 'draft',
     },
+    enrolledCount: {
+      type: Number,
+      default: 0,
+    },
     featured: {
       type: Boolean,
       default: false,

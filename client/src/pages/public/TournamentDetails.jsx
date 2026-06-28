@@ -98,23 +98,35 @@ const TournamentDetails = () => {
   };
 
   const [myRegistration, setMyRegistration] = useState(null);
+  const [allRegistrations, setAllRegistrations] = useState([]);
+  const [actionLoading, setActionLoading] = useState(null);
 
   useEffect(() => {
     const fetchTournamentAndRegistration = async () => {
       try {
         const res = await expressApi.get(`/api/tournaments/${id}`);
+        let fetchedTournament = null;
         if (res.data.success) {
-          setTournament(res.data.data);
+          fetchedTournament = res.data.data;
+          setTournament(fetchedTournament);
         }
 
         if (user) {
           const regRes = await expressApi.get(`/api/registrations/tournament/${id}`);
           if (regRes.data.success) {
-            const registration = regRes.data.data.find(reg => 
+            const allRegs = regRes.data.data;
+            
+            // Set myRegistration for players
+            const registration = allRegs.find(reg => 
               reg.team && (reg.team.captain === user.id || reg.team.players.some(p => typeof p === 'object' ? p._id === user.id : p === user.id))
             );
             if (registration) {
               setMyRegistration(registration);
+            }
+
+            // If user is organizer, set allRegistrations
+            if (fetchedTournament && fetchedTournament.organizer?._id === user.id) {
+              setAllRegistrations(allRegs);
             }
           }
         }
@@ -126,6 +138,21 @@ const TournamentDetails = () => {
     };
     fetchTournamentAndRegistration();
   }, [id, user]);
+
+  const handleOrganizerAction = async (regId, status) => {
+    try {
+      setActionLoading(regId);
+      const res = await expressApi.patch(`/api/registrations/${regId}/status`, { status });
+      if (res.data.success) {
+        setAllRegistrations(prev => prev.map(reg => reg._id === regId ? { ...reg, status } : reg));
+      }
+    } catch (err) {
+      console.error("Failed to update registration status", err);
+      alert(err.response?.data?.message || "Failed to update registration status");
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -221,6 +248,87 @@ const TournamentDetails = () => {
               </p>
             </div>
           </div>
+
+          {/* Organizer Registration Management Section */}
+          {isOrganizer && (
+            <div className="glass-panel border border-border rounded-[24px] p-6 sm:p-8 shadow-xl mt-8">
+              <h3 className="text-[1.2rem] font-bold text-text uppercase border-b border-border pb-3 mb-6 flex items-center gap-3">
+                <i className="fa-solid fa-clipboard-check text-primary"></i> Manage Registrations
+              </h3>
+              
+              {allRegistrations.length === 0 ? (
+                <div className="bg-white/5 border border-dashed border-border rounded-xl p-8 text-center flex flex-col items-center justify-center">
+                  <i className="fa-solid fa-users-slash text-text-secondary text-2xl mb-3"></i>
+                  <p className="text-text-secondary text-[0.95rem]">No teams have applied for this tournament yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {allRegistrations.map(reg => (
+                    <div key={reg._id} className="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-3 mb-2">
+                          <h4 className="text-[1.1rem] font-bold text-text">{reg.team?.name}</h4>
+                          <span className="text-[0.7rem] bg-accent/20 text-accent font-bold px-2 py-0.5 rounded uppercase tracking-wider">[{reg.team?.tag}]</span>
+                        </div>
+                        
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className={`px-2 py-1 rounded text-[0.7rem] font-bold uppercase tracking-widest ${
+                            reg.status === 'approved' ? 'bg-green-500/20 text-green-500 border border-green-500/30' :
+                            reg.status === 'rejected' ? 'bg-red-500/20 text-red-500 border border-red-500/30' :
+                            reg.status === 'awaiting_players' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' :
+                            'bg-primary/20 text-primary border border-primary/30'
+                          }`}>
+                            {reg.status.replace('_', ' ')}
+                          </span>
+                          <span className="text-[0.8rem] text-text-secondary">
+                            <i className="fa-solid fa-user-group mr-1"></i> {reg.team?.players?.length || 0} Players
+                          </span>
+                          {reg.status === 'awaiting_players' && reg.pendingPlayers && (
+                            <span className="text-[0.8rem] text-orange-400">
+                              <i className="fa-solid fa-clock mr-1"></i> Waiting on {reg.pendingPlayers.length} player(s)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 w-full md:w-auto">
+                        {reg.status === 'pending' && (
+                          <>
+                            <button 
+                              onClick={() => handleOrganizerAction(reg._id, 'approved')} 
+                              disabled={actionLoading === reg._id}
+                              className="flex-1 md:flex-none bg-green-500/20 hover:bg-green-500 text-green-500 hover:text-white border border-green-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
+                            >
+                              {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-check"></i>}
+                              Approve
+                            </button>
+                            <button 
+                              onClick={() => handleOrganizerAction(reg._id, 'rejected')} 
+                              disabled={actionLoading === reg._id}
+                              className="flex-1 md:flex-none bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
+                            >
+                              {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-xmark"></i>}
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        {reg.status === 'approved' && (
+                          <button 
+                              onClick={() => handleOrganizerAction(reg._id, 'rejected')} 
+                              disabled={actionLoading === reg._id}
+                              className="flex-1 md:flex-none bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-transparent hover:border-red-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
+                            >
+                              {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-ban"></i>}
+                              Revoke
+                            </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
         </div>
 

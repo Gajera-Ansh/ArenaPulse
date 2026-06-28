@@ -29,13 +29,21 @@ const Dashboard = () => {
         }
 
         if (user?.role === 'player') {
-          const [invRes, enrRes] = await Promise.all([
+          const [invRes, enrRes, activeEnrRes] = await Promise.all([
             expressApi.get('/api/teams/invitations'),
-            expressApi.get('/api/registrations/pending-enrollments')
+            expressApi.get('/api/registrations/pending-enrollments'),
+            expressApi.get('/api/registrations/my-active-enrollments')
           ]);
 
           if (invRes.data.success) setInvitations(invRes.data.data);
           if (enrRes.data.success) setEnrollments(enrRes.data.data);
+          if (activeEnrRes.data.success) {
+            // Map registrations to just the tournament objects for the grid
+            const enrolledTournaments = activeEnrRes.data.data
+              .filter(reg => reg.tournament)
+              .map(reg => reg.tournament);
+            setTournaments(enrolledTournaments);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch dashboard data", err);

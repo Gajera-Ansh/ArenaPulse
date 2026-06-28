@@ -339,3 +339,62 @@ export const sendTeamCompleteEmail = async (captainEmail, captainName, teamName)
     return false;
   }
 };
+
+export const sendOrganizerRegistrationRequestEmail = async (organizerEmail, organizerName, teamName, tournamentName) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return false;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+
+    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/tournaments` : 'http://localhost:5173/tournaments';
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { margin: 0; padding: 0; background-color: #0F172A; font-family: 'Inter', sans-serif; color: #f1f5f9; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #1E293B; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
+        .header { background: #3b82f6; padding: 30px; text-align: center; }
+        .header h1 { margin: 0; color: #fff; font-size: 24px; font-weight: 800; text-transform: uppercase; }
+        .content { padding: 40px 30px; text-align: center; }
+        .message { font-size: 16px; line-height: 1.6; color: #94a3b8; margin-bottom: 20px; }
+        .btn { display: inline-block; background-color: #3b82f6; color: #fff !important; text-decoration: none; font-size: 16px; font-weight: 700; padding: 14px 32px; border-radius: 8px; text-transform: uppercase; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header"><h1>New Team Enrollment</h1></div>
+        <div class="content">
+          <div class="message">
+            Hello <strong>${organizerName}</strong>,<br><br>
+            A new team, <strong>${teamName}</strong>, has fully confirmed their roster and requested to enroll in your tournament: <strong>${tournamentName}</strong>.<br><br>
+            Please log in to your dashboard to review their registration and approve or reject it.
+          </div>
+          <a href="${loginUrl}" class="btn">Manage Registrations</a>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    const mailOptions = {
+      from: `"ArenaPulse HQ" <${process.env.EMAIL_USER}>`,
+      to: organizerEmail,
+      subject: `New Team Enrollment: ${teamName} wants to join ${tournamentName}!`,
+      html: htmlContent,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('Error sending organizer registration request email:', error);
+    return false;
+  }
+};
