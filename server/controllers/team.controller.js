@@ -2,24 +2,31 @@
 
 import Team from '../models/Team.js';
 import Notification from '../models/Notification.js';
+import User from '../models/User.js';
+import { sendTeamInvitationEmail } from '../utils/emailService.js';
 
 // POST /api/teams
 export const createTeam = async (req, res, next) => {
   try {
     const { name, tag, game, players } = req.body;
 
-    let playersArray = [req.user._id.toString()];
-    if (players && Array.isArray(players)) {
-      playersArray = [...new Set([req.user._id.toString(), ...players])];
-    }
+    const pendingPlayers = players && Array.isArray(players) ? players.filter(p => p !== req.user._id.toString()) : [];
 
     const team = await Team.create({
       name,
       tag,
       game,
       captain: req.user._id,
-      players: playersArray,
+      players: [req.user._id.toString()],
+      pendingPlayers,
     });
+
+    if (pendingPlayers.length > 0) {
+      const usersToEmail = await User.find({ _id: { $in: pendingPlayers } });
+      for (const u of usersToEmail) {
+        sendTeamInvitationEmail(u.email, u.name, req.user.name, team.name, team.tag);
+      }
+    }
 
     res.status(201).json({ success: true, data: team });
   } catch (error) {
@@ -35,6 +42,19 @@ export const getMyTeams = async (req, res, next) => {
       .populate('players', 'name email avatar');
 
     res.status(200).json({ success: true, data: teams });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/teams/invitations
+export const getInvitations = async (req, res, next) => {
+  try {
+    const invitations = await Team.find({ pendingPlayers: req.user._id })
+      .populate('captain', 'name avatar')
+      .select('name tag game logo captain createdAt');
+
+    res.status(200).json({ success: true, data: invitations });
   } catch (error) {
     next(error);
   }
@@ -85,10 +105,28 @@ export const updateTeam = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Only the captain can update the team.' });
     }
 
-    const { name, tag, game } = req.body;
+    const { name, tag, game, players } = req.body;
     team.name = name || team.name;
     team.tag = tag || team.tag;
     team.game = game || team.game;
+
+    if (players && Array.isArray(players)) {
+      const incomingPlayers = players.filter(p => p !== req.user._id.toString());
+      const confirmedPlayers = team.players.map(p => p.toString());
+      const existingPending = team.pendingPlayers.map(p => p.toString());
+
+      const newlyInvited = incomingPlayers.filter(p => !confirmedPlayers.includes(p) && !existingPending.includes(p));
+
+      team.pendingPlayers = incomingPlayers.filter(p => !confirmedPlayers.includes(p));
+      team.players = [req.user._id.toString(), ...incomingPlayers.filter(p => confirmedPlayers.includes(p))];
+
+      if (newlyInvited.length > 0) {
+        const usersToEmail = await User.find({ _id: { $in: newlyInvited } });
+        for (const u of usersToEmail) {
+          sendTeamInvitationEmail(u.email, u.name, req.user.name, team.name, team.tag);
+        }
+      }
+    }
 
     await team.save();
     res.status(200).json({ success: true, data: team });
@@ -191,6 +229,62 @@ export const deleteTeam = async (req, res, next) => {
 
     await Team.findByIdAndDelete(req.params.id);
     res.status(200).json({ success: true, message: 'Team deleted.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /api/teams/:id/accept
+export const acceptInvite = async (req, res, next) => {
+  try {
+    const team = await Team.findById(req.params.id);
+
+    if (!team) {
+      return res.status(404).json({ success: false, message: 'Team not found.' });
+    }
+
+    if (!team.pendingPlayers.includes(req.user._id)) {
+      return res.status(400).json({ success: false, message: 'No pending invitation found for this team.' });
+    }
+
+    // Move from pending to active
+    team.pendingPlayers = team.pendingPlayers.filter(p => p.toString() !== req.user._id.toString());
+    team.players.push(req.user._id);
+
+    await team.save();
+
+    // Notify Captain
+    await Notification.create({
+      user: team.captain,
+      message: `${req.user.name} has accepted your invitation to join ${team.name}!`,
+      type: 'success',
+    });
+
+    res.status(200).json({ success: true, message: 'Invitation accepted successfully.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /api/teams/:id/decline
+export const declineInvite = async (req, res, next) => {
+  try {
+    const team = await Team.findById(req.params.id);
+
+    if (!team) {
+      return res.status(404).json({ success: false, message: 'Team not found.' });
+    }
+
+    if (!team.pendingPlayers.includes(req.user._id)) {
+      return res.status(400).json({ success: false, message: 'No pending invitation found for this team.' });
+    }
+
+    // Remove from pending
+    team.pendingPlayers = team.pendingPlayers.filter(p => p.toString() !== req.user._id.toString());
+
+    await team.save();
+
+    res.status(200).json({ success: true, message: 'Invitation declined.' });
   } catch (error) {
     next(error);
   }

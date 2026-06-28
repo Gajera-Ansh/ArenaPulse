@@ -53,7 +53,13 @@ const TournamentDetails = () => {
       const currentSize = team.players?.length || 1;
 
       if (currentSize !== requiredSize) {
-        setEnrollError(`Invalid Roster! This tournament strictly requires ${requiredSize} players per team. Your team currently has ${currentSize}. Please update your team roster in the My Teams page.`);
+        setEnrollError(`Invalid Roster! This tournament strictly requires ${requiredSize} players per team. Your team currently has ${currentSize} confirmed players. Please update your team roster in the My Teams page.`);
+        return;
+      }
+
+      // Check if team has pending invitations
+      if (team.pendingPlayers && team.pendingPlayers.length > 0) {
+        setEnrollError(`Pending Invitations! Your team has ${team.pendingPlayers.length} pending player(s). All players must accept their invitations before you can enroll in a tournament.`);
         return;
       }
 

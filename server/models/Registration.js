@@ -16,9 +16,15 @@ const registrationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
-      default: 'pending',
+      enum: ['awaiting_players', 'pending', 'approved', 'rejected'],
+      default: 'awaiting_players',
     },
+    pendingPlayers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
     note: {
       type: String,
       default: '',

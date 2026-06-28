@@ -7,34 +7,67 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [tournaments, setTournaments] = useState([]);
+  const [invitations, setInvitations] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'TBD';
-    return new Date(dateString).toLocaleString(undefined, { 
-      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' 
+    return new Date(dateString).toLocaleString(undefined, {
+      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
     });
   };
 
   useEffect(() => {
-    const fetchTournaments = async () => {
+    const fetchData = async () => {
       try {
-        // The user object from AuthContext uses 'id', not '_id'
         if (user?.role === 'organizer' && user?.id) {
           const res = await expressApi.get(`/api/tournaments?organizer=${user.id}`);
           if (res.data.success) {
             setTournaments(res.data.data);
           }
         }
+
+        if (user?.role === 'player') {
+          const [invRes, enrRes] = await Promise.all([
+            expressApi.get('/api/teams/invitations'),
+            expressApi.get('/api/registrations/pending-enrollments')
+          ]);
+
+          if (invRes.data.success) setInvitations(invRes.data.data);
+          if (enrRes.data.success) setEnrollments(enrRes.data.data);
+        }
       } catch (err) {
-        console.error("Failed to fetch tournaments", err);
+        console.error("Failed to fetch dashboard data", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTournaments();
+    fetchData();
   }, [user]);
+
+  const handleInviteAction = async (teamId, action) => {
+    try {
+      const res = await expressApi.post(`/api/teams/${teamId}/${action}`);
+      if (res.data.success) {
+        setInvitations(prev => prev.filter(inv => inv._id !== teamId));
+      }
+    } catch (err) {
+      console.error(`Failed to ${action} invite`, err);
+    }
+  };
+
+  const handleEnrollmentAction = async (registrationId, action) => {
+    try {
+      const res = await expressApi.post(`/api/registrations/${registrationId}/${action}`);
+      if (res.data.success) {
+        setEnrollments(prev => prev.filter(enr => enr._id !== registrationId));
+      }
+    } catch (err) {
+      console.error(`Failed to ${action} enrollment`, err);
+    }
+  };
 
   const getRoleBadgeClass = (role) => {
     if (role === 'organizer') return 'bg-accent/10 text-accent border border-accent/20';
@@ -60,7 +93,7 @@ const Dashboard = () => {
                 : 'text-text-secondary hover:bg-white/10 hover:text-text'
                 }`}
             >
-              {tab} 
+              {tab}
             </button>
           ))}
         </div>
@@ -70,6 +103,73 @@ const Dashboard = () => {
 
           {activeTab === 'overview' && (
             <div className="animate-fade-in flex flex-col flex-grow">
+
+              {/* Pending Invitations Section */}
+              {user?.role === 'player' && invitations.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-[1.25rem] font-bold text-text uppercase mb-4 flex items-center gap-2">
+                    <i className="fa-solid fa-envelope-open-text text-accent"></i> Pending Draft Requests
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {invitations.map(inv => (
+                      <div key={inv._id} className="bg-white/5 border border-accent/30 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-[0_0_15px_rgba(251,191,36,0.05)] transition-all hover:bg-white/10 hover:border-accent/50">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-[1.1rem] font-bold text-text">{inv.name}</h4>
+                            <span className="text-[0.7rem] bg-accent/20 text-accent font-bold px-2 py-0.5 rounded uppercase tracking-wider">{inv.tag}</span>
+                          </div>
+                          <p className="text-[0.85rem] text-text-secondary">
+                            Invited by <strong className="text-white">{inv.captain?.name}</strong> for {inv.game}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                          <button onClick={() => handleInviteAction(inv._id, 'accept')} className="flex-1 sm:flex-none bg-primary hover:bg-primary-hover text-white font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-primary/20">
+                            <i className="fa-solid fa-check"></i> Accept
+                          </button>
+                          <button onClick={() => handleInviteAction(inv._id, 'decline')} className="flex-1 sm:flex-none bg-white/5 hover:bg-red-500/20 hover:text-red-500 text-text-secondary hover:border-red-500/30 border border-transparent font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-colors flex items-center justify-center gap-2">
+                            <i className="fa-solid fa-xmark"></i> Decline
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Pending Deployments Section */}
+              {user?.role === 'player' && enrollments.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-[1.25rem] font-bold text-text uppercase mb-4 flex items-center gap-2">
+                    <i className="fa-solid fa-rocket text-primary"></i> Pending Tournament Enrollments
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {enrollments.map(enr => (
+                      <div key={enr._id} className="bg-white/5 border border-primary/30 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-[0_0_15px_rgba(34,197,94,0.05)] transition-all hover:bg-white/10 hover:border-primary/50">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-[1.1rem] font-bold text-text line-clamp-1">{enr.tournament?.title}</h4>
+                          </div>
+                          <p className="text-[0.85rem] text-text-secondary">
+                            Team <strong className="text-white">{enr.team?.name}</strong> wants to enroll here. Are you available to play?
+                          </p>
+                          <p className="text-[0.75rem] text-primary mt-1 font-medium">
+                            <i className="fa-regular fa-calendar mr-1"></i> {formatDate(enr.tournament?.startDate)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                          <button onClick={() => handleEnrollmentAction(enr._id, 'accept')} className="flex-1 sm:flex-none bg-primary hover:bg-primary-hover text-white font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-primary/20">
+                            <i className="fa-solid fa-check"></i> Ready
+                          </button>
+                          <button onClick={() => handleEnrollmentAction(enr._id, 'decline')} className="flex-1 sm:flex-none bg-white/5 hover:bg-red-500/20 hover:text-red-500 text-text-secondary hover:border-red-500/30 border border-transparent font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-colors flex items-center justify-center gap-2">
+                            <i className="fa-solid fa-xmark"></i> Unavailable
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-[1.25rem] font-bold text-text uppercase">
                   {user?.role === 'organizer' ? 'Active Tournaments' : 'My Enrollments'}
@@ -92,11 +192,10 @@ const Dashboard = () => {
                       {/* Card Banner */}
                       <div className="h-20 bg-gradient-to-r from-background-light to-background relative p-4 border-b border-white/5">
                         <div className="absolute top-3 right-3">
-                          <span className={`px-2.5 py-1 rounded-full text-[0.65rem] font-bold uppercase tracking-widest shadow-sm ${
-                            (t.status === 'open' && new Date(t.registrationDeadline) >= new Date()) ? 'bg-primary text-white' : 
-                            t.status === 'live' ? 'bg-red-500 text-white animate-pulse' : 
-                            'bg-white/10 text-text-secondary'
-                          }`}>
+                          <span className={`px-2.5 py-1 rounded-full text-[0.65rem] font-bold uppercase tracking-widest shadow-sm ${(t.status === 'open' && new Date(t.registrationDeadline) >= new Date()) ? 'bg-primary text-white' :
+                              t.status === 'live' ? 'bg-red-500 text-white animate-pulse' :
+                                'bg-white/10 text-text-secondary'
+                            }`}>
                             {t.status === 'open' && new Date(t.registrationDeadline) < new Date() ? 'closed' : t.status}
                           </span>
                         </div>
@@ -110,7 +209,7 @@ const Dashboard = () => {
                         <h4 className="text-[1.1rem] font-bold text-text leading-tight mb-3 group-hover:text-primary transition-colors line-clamp-2">
                           {t.title}
                         </h4>
-                        
+
                         <div className="space-y-2 mt-auto">
                           <div className="flex items-center text-[0.85rem] text-text-secondary">
                             <i className="fa-solid fa-clock w-5 text-center mr-2 text-primary"></i>

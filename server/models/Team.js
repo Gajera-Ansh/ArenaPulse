@@ -34,6 +34,12 @@ const teamSchema = new mongoose.Schema(
         ref: 'User',
       },
     ],
+    pendingPlayers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
     logo: {
       type: String,
       default: '',
