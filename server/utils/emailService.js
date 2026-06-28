@@ -82,11 +82,10 @@ export const sendTeamInvitationEmail = async (userEmail, userName, captainName, 
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Invitation email sent: %s', info.messageId);
+    await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
-    console.error('Error sending invitation email:', error);
+    console.error('[Email Service] Error sending invitation email:', error);
     return false;
   }
 };
@@ -152,11 +151,10 @@ export const sendTournamentEnrollmentEmail = async (userEmail, userName, captain
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Enrollment email sent: %s', info.messageId);
+    await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
-    console.error('Error sending enrollment email:', error);
+    console.error('[Email Service] Error sending enrollment email:', error);
     return false;
   }
 };
@@ -221,7 +219,7 @@ export const sendRegistrationStatusEmail = async (userEmails, teamName, tourname
     await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
-    console.error('Error sending status email:', error);
+    console.error('[Email Service] Error sending status email:', error);
     return false;
   }
 };
@@ -276,7 +274,7 @@ export const sendPlayerDeclinedEmail = async (captainEmail, captainName, playerN
     await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
-    console.error('Error sending declined email:', error);
+    console.error('[Email Service] Error sending declined email:', error);
     return false;
   }
 };
@@ -335,7 +333,7 @@ export const sendTeamCompleteEmail = async (captainEmail, captainName, teamName)
     await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
-    console.error('Error sending team complete email:', error);
+    console.error('[Email Service] Error sending team complete email:', error);
     return false;
   }
 };
@@ -385,7 +383,7 @@ export const sendOrganizerRegistrationRequestEmail = async (organizerEmail, orga
     `;
 
     const mailOptions = {
-      from: `"ArenaPulse HQ" <${process.env.EMAIL_USER}>`,
+      from: `"ArenaPulse" <${process.env.EMAIL_USER}>`,
       to: organizerEmail,
       subject: `New Team Enrollment: ${teamName} wants to join ${tournamentName}!`,
       html: htmlContent,
@@ -394,7 +392,69 @@ export const sendOrganizerRegistrationRequestEmail = async (organizerEmail, orga
     await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
-    console.error('Error sending organizer registration request email:', error);
+    console.error('[Email Service] Error sending organizer registration request email:', error);
+    return false;
+  }
+};
+
+export const sendWelcomeEmail = async (email, name) => {
+  try {    
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.warn('[Email Service] Missing EMAIL_USER or EMAIL_PASS in environment variables.');
+      return false;
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+
+    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/login` : 'http://localhost:5173/login';
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { margin: 0; padding: 0; background-color: #0F172A; font-family: 'Inter', sans-serif; color: #f1f5f9; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #1E293B; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
+        .header { background: #3b82f6; padding: 30px; text-align: center; }
+        .header h1 { margin: 0; color: #fff; font-size: 24px; font-weight: 800; text-transform: uppercase; }
+        .content { padding: 40px 30px; text-align: center; }
+        .message { font-size: 16px; line-height: 1.6; color: #94a3b8; margin-bottom: 20px; }
+        .btn { display: inline-block; background-color: #3b82f6; color: #fff !important; text-decoration: none; font-size: 16px; font-weight: 700; padding: 14px 32px; border-radius: 8px; text-transform: uppercase; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header"><h1>Welcome to ArenaPulse!</h1></div>
+        <div class="content">
+          <div class="message">
+            Welcome to the arena, <strong>${name}</strong>!<br><br>
+            We are thrilled to have you join ArenaPulse. Whether you're here to dominate the competition, build your dream team, or organize epic tournaments, you are in the right place.<br><br>
+            Get started by logging in and exploring the tournament board!
+          </div>
+          <a href="${loginUrl}" class="btn">Go to Dashboard</a>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    const mailOptions = {
+      from: `"ArenaPulse" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: `Welcome to ArenaPulse, ${name}!`,
+      html: htmlContent,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('[Email Service] Error sending welcome email:', error);
     return false;
   }
 };

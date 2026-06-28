@@ -2,6 +2,7 @@
 
 import User from '../models/User.js';
 import { generateToken } from '../utils/jwtHelper.js';
+import { sendWelcomeEmail } from '../utils/emailService.js';
 
 // POST /api/auth/register
 export const register = async (req, res, next) => {
@@ -28,6 +29,9 @@ export const register = async (req, res, next) => {
       password,
       role: userRole,
     });
+
+    // Send welcome email asynchronously
+    sendWelcomeEmail(user.email, user.name);
 
     // Generate token
     const token = generateToken(user._id, user.role);
@@ -170,6 +174,8 @@ export const googleLogin = async (req, res, next) => {
         role: userRole,
         avatar: picture
       });
+
+      sendWelcomeEmail(user.email, user.name);
     }
 
     if (user.banned) {
