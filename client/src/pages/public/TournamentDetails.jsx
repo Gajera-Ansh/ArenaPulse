@@ -71,6 +71,17 @@ const TournamentDetails = () => {
         setEnrollSuccess(true);
         // Optimistically increment enrolled count
         setTournament(prev => ({ ...prev, enrolledCount: (prev.enrolledCount || 0) + 1 }));
+
+        // Fetch registration immediately so the UI updates without refresh
+        const regRes = await expressApi.get(`/api/registrations/tournament/${id}`);
+        if (regRes.data.success) {
+          const registration = regRes.data.data.find(reg => 
+            reg.team && (reg.team.captain === user.id || reg.team.players.some(p => typeof p === 'object' ? p._id === user.id : p === user.id))
+          );
+          if (registration) {
+            setMyRegistration(registration);
+          }
+        }
       }
     } catch (err) {
       setEnrollError(err.response?.data?.message || 'Failed to enroll team.');
@@ -86,21 +97,35 @@ const TournamentDetails = () => {
     });
   };
 
+  const [myRegistration, setMyRegistration] = useState(null);
+
   useEffect(() => {
-    const fetchTournament = async () => {
+    const fetchTournamentAndRegistration = async () => {
       try {
         const res = await expressApi.get(`/api/tournaments/${id}`);
         if (res.data.success) {
           setTournament(res.data.data);
         }
+
+        if (user) {
+          const regRes = await expressApi.get(`/api/registrations/tournament/${id}`);
+          if (regRes.data.success) {
+            const registration = regRes.data.data.find(reg => 
+              reg.team && (reg.team.captain === user.id || reg.team.players.some(p => typeof p === 'object' ? p._id === user.id : p === user.id))
+            );
+            if (registration) {
+              setMyRegistration(registration);
+            }
+          }
+        }
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load tournament details');
+        if (!tournament) setError(err.response?.data?.message || 'Failed to load tournament details');
       } finally {
         setLoading(false);
       }
     };
-    fetchTournament();
-  }, [id]);
+    fetchTournamentAndRegistration();
+  }, [id, user]);
 
   if (loading) {
     return (
@@ -234,6 +259,42 @@ const TournamentDetails = () => {
             ) : isOrganizer ? (
               <div className="bg-white/5 border border-border rounded-xl p-4 text-center">
                 <p className="text-[0.85rem] text-text-secondary font-medium">You are the organizer of this tournament.</p>
+              </div>
+            ) : myRegistration ? (
+              <div className="bg-white/5 border border-border rounded-xl p-5 shadow-inner">
+                <h4 className="text-[1.1rem] font-bold text-text mb-3 text-center">Team {myRegistration.team.name} Status</h4>
+                <div className="flex justify-center mb-4">
+                  <span className={`px-3 py-1 rounded text-[0.8rem] font-bold uppercase tracking-widest ${
+                    myRegistration.status === 'approved' ? 'bg-green-500/20 text-green-500 border border-green-500/30' :
+                    myRegistration.status === 'rejected' ? 'bg-red-500/20 text-red-500 border border-red-500/30' :
+                    myRegistration.status === 'awaiting_players' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' :
+                    'bg-primary/20 text-primary border border-primary/30'
+                  }`}>
+                    {myRegistration.status.replace('_', ' ')}
+                  </span>
+                </div>
+                {myRegistration.status === 'rejected' && (
+                  <p className="text-[0.85rem] text-red-400 text-center mb-4">{myRegistration.note || 'Your registration was rejected.'}</p>
+                )}
+                <div className="space-y-2 mt-4 pt-4 border-t border-white/5">
+                  <p className="text-[0.8rem] text-text-secondary uppercase font-bold tracking-wider mb-2">Roster Readiness</p>
+                  {myRegistration.team.players.map(player => {
+                    const isPending = myRegistration.pendingPlayers?.some(p => p._id === (player._id || player));
+                    const isCaptain = (player._id || player) === myRegistration.team.captain;
+                    return (
+                      <div key={player._id || player} className="flex items-center justify-between">
+                        <span className="text-[0.9rem] text-text flex items-center gap-2">
+                          <i className={`fa-solid fa-circle text-[0.5rem] ${isPending ? 'text-orange-500' : 'text-green-500'}`}></i>
+                          {player.name || 'Player'}
+                          {isCaptain && <i className="fa-solid fa-crown text-accent text-[0.7rem] ml-1" title="Captain"></i>}
+                        </span>
+                        <span className={`text-[0.75rem] font-bold ${isPending ? 'text-orange-500' : 'text-green-500'}`}>
+                          {isPending ? 'Pending' : 'Ready'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             ) : tournament.status !== 'open' || new Date(tournament.registrationDeadline) < new Date() ? (
               <button disabled className="bg-white/5 text-text-secondary font-bold py-3.5 px-4 w-full rounded-xl flex items-center justify-center gap-2 text-[1rem] cursor-not-allowed border border-border">

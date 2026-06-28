@@ -3,7 +3,7 @@
 import Team from '../models/Team.js';
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
-import { sendTeamInvitationEmail } from '../utils/emailService.js';
+import { sendTeamInvitationEmail, sendTeamCompleteEmail } from '../utils/emailService.js';
 
 // POST /api/teams
 export const createTeam = async (req, res, next) => {
@@ -79,7 +79,8 @@ export const getTeamById = async (req, res, next) => {
   try {
     const team = await Team.findById(req.params.id)
       .populate('captain', 'name email avatar')
-      .populate('players', 'name email avatar');
+      .populate('players', 'name email avatar')
+      .populate('pendingPlayers', 'name email avatar');
 
     if (!team) {
       return res.status(404).json({ success: false, message: 'Team not found.' });
@@ -259,6 +260,13 @@ export const acceptInvite = async (req, res, next) => {
       message: `${req.user.name} has accepted your invitation to join ${team.name}!`,
       type: 'success',
     });
+
+    if (team.pendingPlayers.length === 0) {
+      const captain = await User.findById(team.captain);
+      if (captain) {
+        sendTeamCompleteEmail(captain.email, captain.name, team.name);
+      }
+    }
 
     res.status(200).json({ success: true, message: 'Invitation accepted successfully.' });
   } catch (error) {

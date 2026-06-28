@@ -76,7 +76,7 @@ export const sendTeamInvitationEmail = async (userEmail, userName, captainName, 
     `;
 
     const mailOptions = {
-      from: `"ArenaPulse Headquarters" <${process.env.EMAIL_USER}>`,
+      from: `"ArenaPulse" <${process.env.EMAIL_USER}>`,
       to: userEmail,
       subject: `Draft Request: Join ${teamName} [${teamTag}]`,
       html: htmlContent,
@@ -146,7 +146,7 @@ export const sendTournamentEnrollmentEmail = async (userEmail, userName, captain
     `;
 
     const mailOptions = {
-      from: `"ArenaPulse Headquarters" <${process.env.EMAIL_USER}>`,
+      from: `"ArenaPulse" <${process.env.EMAIL_USER}>`,
       to: userEmail,
       subject: `Enrollment Request: ${teamName} entering ${tournamentName}`,
       html: htmlContent,
@@ -157,6 +157,185 @@ export const sendTournamentEnrollmentEmail = async (userEmail, userName, captain
     return true;
   } catch (error) {
     console.error('Error sending enrollment email:', error);
+    return false;
+  }
+};
+
+export const sendRegistrationStatusEmail = async (userEmails, teamName, tournamentName, status) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return false;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+
+    const isApproved = status === 'approved';
+    const color = isApproved ? '#22c55e' : '#ef4444';
+    const title = isApproved ? 'Registration Approved' : 'Registration Rejected';
+    const msg = isApproved 
+      ? `Good news! The organizer has approved your team <strong>${teamName}</strong> for the tournament!`
+      : `Unfortunately, the organizer has rejected your team <strong>${teamName}</strong> from entering the tournament.`;
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { margin: 0; padding: 0; background-color: #0F172A; font-family: 'Inter', sans-serif; color: #f1f5f9; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #1E293B; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
+        .header { background: ${color}; padding: 30px; text-align: center; }
+        .header h1 { margin: 0; color: #fff; font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .content { padding: 40px 30px; text-align: center; }
+        .message { font-size: 16px; line-height: 1.6; color: #94a3b8; margin-bottom: 20px; }
+        .box { background-color: #0F172A; border: 1px dashed ${color}; border-radius: 8px; padding: 20px; margin-bottom: 30px; }
+        .t-name { font-size: 20px; font-weight: 800; color: ${color}; margin: 0; }
+        .footer { padding: 20px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #334155; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header"><h1>${title}</h1></div>
+        <div class="content">
+          <div class="message">${msg}</div>
+          <div class="box">
+            <h2 class="t-name">${tournamentName}</h2>
+          </div>
+        </div>
+        <div class="footer">&copy; ${new Date().getFullYear()} ArenaPulse Esports.</div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    const mailOptions = {
+      from: `"ArenaPulse" <${process.env.EMAIL_USER}>`,
+      to: userEmails.join(','),
+      subject: `Tournament ${title}: ${teamName}`,
+      html: htmlContent,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('Error sending status email:', error);
+    return false;
+  }
+};
+
+export const sendPlayerDeclinedEmail = async (captainEmail, captainName, playerName, teamName, tournamentName) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return false;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { margin: 0; padding: 0; background-color: #0F172A; font-family: 'Inter', sans-serif; color: #f1f5f9; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #1E293B; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
+        .header { background: #ef4444; padding: 30px; text-align: center; }
+        .header h1 { margin: 0; color: #fff; font-size: 24px; font-weight: 800; text-transform: uppercase; }
+        .content { padding: 40px 30px; text-align: center; }
+        .message { font-size: 16px; line-height: 1.6; color: #94a3b8; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header"><h1>Enrollment Aborted</h1></div>
+        <div class="content">
+          <div class="message">
+            Hello Captain <strong>${captainName}</strong>,<br><br>
+            <strong>${playerName}</strong> has marked themselves as unavailable for <strong>${tournamentName}</strong>.<br><br>
+            As a result, your team's enrollment request has been completely aborted. You must replace the player or choose a different tournament.
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    const mailOptions = {
+      from: `"ArenaPulse" <${process.env.EMAIL_USER}>`,
+      to: captainEmail,
+      subject: `Enrollment Aborted: Player Unavailable`,
+      html: htmlContent,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('Error sending declined email:', error);
+    return false;
+  }
+};
+
+export const sendTeamCompleteEmail = async (captainEmail, captainName, teamName) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return false;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+
+    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/tournaments` : 'http://localhost:5173/tournaments';
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { margin: 0; padding: 0; background-color: #0F172A; font-family: 'Inter', sans-serif; color: #f1f5f9; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #1E293B; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
+        .header { background: #10b981; padding: 30px; text-align: center; }
+        .header h1 { margin: 0; color: #fff; font-size: 24px; font-weight: 800; text-transform: uppercase; }
+        .content { padding: 40px 30px; text-align: center; }
+        .message { font-size: 16px; line-height: 1.6; color: #94a3b8; margin-bottom: 20px; }
+        .btn { display: inline-block; background-color: #10b981; color: #fff !important; text-decoration: none; font-size: 16px; font-weight: 700; padding: 14px 32px; border-radius: 8px; text-transform: uppercase; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header"><h1>Roster Complete</h1></div>
+        <div class="content">
+          <div class="message">
+            Hello Captain <strong>${captainName}</strong>,<br><br>
+            All pending players have accepted your invitations! Your team <strong>${teamName}</strong> roster is now completely filled and ready for action.<br><br>
+            You can now enroll your team into tournaments!
+          </div>
+          <a href="${loginUrl}" class="btn">Find Tournaments</a>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    const mailOptions = {
+      from: `"ArenaPulse" <${process.env.EMAIL_USER}>`,
+      to: captainEmail,
+      subject: `Roster Complete: ${teamName} is ready!`,
+      html: htmlContent,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('Error sending team complete email:', error);
     return false;
   }
 };

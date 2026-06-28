@@ -101,16 +101,24 @@ const Teams = () => {
                   </h4>
                 </div>
                 <div className="flex gap-2">
-                  <Link to={`/teams/${t._id}/edit`} className="w-8 h-8 rounded-full bg-white/10 hover:bg-primary/20 hover:text-primary border border-transparent hover:border-primary/30 flex items-center justify-center text-text-secondary transition-colors">
-                    <i className="fa-solid fa-pen text-[0.8rem]"></i>
-                  </Link>
-                  <button 
-                    onClick={() => handleDelete(t._id)}
-                    disabled={actionLoading === t._id}
-                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-red-500/20 hover:text-red-500 border border-transparent hover:border-red-500/30 flex items-center justify-center text-text-secondary transition-colors disabled:opacity-50"
-                  >
-                    {actionLoading === t._id ? <i className="fa-solid fa-circle-notch fa-spin text-[0.8rem]"></i> : <i className="fa-solid fa-trash text-[0.8rem]"></i>}
-                  </button>
+                  {t.captain?._id === user?.id || t.captain === user?.id ? (
+                    <>
+                      <Link to={`/teams/${t._id}/edit`} className="w-8 h-8 rounded-full bg-white/10 hover:bg-primary/20 hover:text-primary border border-transparent hover:border-primary/30 flex items-center justify-center text-text-secondary transition-colors">
+                        <i className="fa-solid fa-pen text-[0.8rem]"></i>
+                      </Link>
+                      <button 
+                        onClick={() => handleDelete(t._id)}
+                        disabled={actionLoading === t._id}
+                        className="w-8 h-8 rounded-full bg-white/10 hover:bg-red-500/20 hover:text-red-500 border border-transparent hover:border-red-500/30 flex items-center justify-center text-text-secondary transition-colors disabled:opacity-50"
+                      >
+                        {actionLoading === t._id ? <i className="fa-solid fa-circle-notch fa-spin text-[0.8rem]"></i> : <i className="fa-solid fa-trash text-[0.8rem]"></i>}
+                      </button>
+                    </>
+                  ) : (
+                    <Link to={`/teams/${t._id}/edit`} className="w-8 h-8 rounded-full bg-white/10 hover:bg-primary/20 hover:text-primary border border-transparent hover:border-primary/30 flex items-center justify-center text-text-secondary transition-colors" title="View Team">
+                      <i className="fa-solid fa-eye text-[0.8rem]"></i>
+                    </Link>
+                  )}
                 </div>
               </div>
 

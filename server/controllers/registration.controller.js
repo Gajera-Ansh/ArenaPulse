@@ -5,7 +5,7 @@ import Tournament from '../models/Tournament.js';
 import Team from '../models/Team.js';
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
-import { sendTournamentEnrollmentEmail } from '../utils/emailService.js';
+import { sendTournamentEnrollmentEmail, sendRegistrationStatusEmail, sendPlayerDeclinedEmail } from '../utils/emailService.js';
 
 // POST /api/registrations
 export const registerForTournament = async (req, res, next) => {
@@ -65,7 +65,8 @@ export const registerForTournament = async (req, res, next) => {
 export const getRegistrationsByTournament = async (req, res, next) => {
   try {
     const registrations = await Registration.find({ tournament: req.params.tournamentId })
-      .populate('team', 'name tag game logo players')
+      .populate('team', 'name tag game logo players captain')
+      .populate('pendingPlayers', 'name avatar')
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, data: registrations });
@@ -78,7 +79,9 @@ export const getRegistrationsByTournament = async (req, res, next) => {
 export const updateRegistrationStatus = async (req, res, next) => {
   try {
     const { status, note } = req.body;
-    const registration = await Registration.findById(req.params.id).populate('team');
+    const registration = await Registration.findById(req.params.id)
+      .populate('team')
+      .populate('tournament', 'title');
 
     if (!registration) {
       return res.status(404).json({ success: false, message: 'Registration not found.' });
@@ -94,6 +97,15 @@ export const updateRegistrationStatus = async (req, res, next) => {
       message: `Your team registration has been ${status}.${note ? ' Note: ' + note : ''}`,
       type: status === 'approved' ? 'success' : 'warning',
     });
+
+    // Send email to all players if approved or rejected
+    if (status === 'approved' || status === 'rejected') {
+      const usersToEmail = await User.find({ _id: { $in: registration.team.players } });
+      const emails = usersToEmail.map(u => u.email);
+      if (emails.length > 0) {
+        sendRegistrationStatusEmail(emails, registration.team.name, registration.tournament.title, status);
+      }
+    }
 
     res.status(200).json({ success: true, data: registration });
   } catch (error) {
@@ -192,10 +204,15 @@ export const declineEnrollment = async (req, res, next) => {
 
     // Notify the captain that the registration was aborted
     await Notification.create({
-      user: registration.team.captain,
+      user: registration.team.captain._id ? registration.team.captain._id : registration.team.captain,
       message: `${req.user.name} has declined the enrollment request. Your team's registration for ${registration.tournament.title} has been cancelled.`,
       type: 'warning',
     });
+
+    const captain = await User.findById(registration.team.captain);
+    if (captain) {
+      sendPlayerDeclinedEmail(captain.email, captain.name, req.user.name, registration.team.name, registration.tournament.title);
+    }
 
     res.status(200).json({ success: true, message: 'Enrollment declined and registration aborted.' });
   } catch (error) {

@@ -7,11 +7,13 @@ const EditTeam = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isCustomGame, setIsCustomGame] = useState(false);
+  const [isCaptain, setIsCaptain] = useState(false);
+  const [captainInfo, setCaptainInfo] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -30,7 +32,7 @@ const EditTeam = () => {
         const res = await expressApi.get(`/api/teams/${id}`);
         if (res.data.success) {
           const t = res.data.data;
-          
+
           const standardGames = ['Valorant', 'League of Legends', 'Counter-Strike 2', 'BGMI', 'Free Fire', 'Dota 2', 'Rocket League'];
           if (!standardGames.includes(t.game)) {
             setIsCustomGame(true);
@@ -44,9 +46,29 @@ const EditTeam = () => {
 
           // Set selected players, filtering out the captain (who is the current user)
           const captainId = typeof t.captain === 'object' ? t.captain._id : t.captain;
+          const userIsCaptain = String(user?.id || user?._id) === String(captainId);
+          setIsCaptain(userIsCaptain);
+          
+          let squad = [];
           if (t.players) {
-            const squad = t.players.filter(p => String(p._id) !== String(captainId));
-            setSelectedPlayers(squad);
+            squad = [
+              ...squad,
+              ...t.players
+                .filter(p => String(p._id) !== String(captainId))
+                .map(p => ({ ...p, status: 'ready' }))
+            ];
+          }
+          if (t.pendingPlayers) {
+            squad = [
+              ...squad,
+              ...t.pendingPlayers.map(p => ({ ...p, status: 'pending' }))
+            ];
+          }
+          setSelectedPlayers(squad);
+          
+          // Also set the captain info so we can display it
+          if (typeof t.captain === 'object') {
+            setCaptainInfo(t.captain);
           }
         }
       } catch (err) {
@@ -57,7 +79,7 @@ const EditTeam = () => {
     };
 
     fetchTeam();
-  }, [id]);
+  }, [id, user]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
@@ -66,7 +88,7 @@ const EditTeam = () => {
         try {
           const res = await expressApi.get(`/api/users/search?q=${encodeURIComponent(searchQuery)}&role=player`);
           if (res.data.success) {
-            const results = res.data.data.filter(p => 
+            const results = res.data.data.filter(p =>
               String(p._id) !== String(user?.id || user?._id) && !selectedPlayers.some(sp => String(sp._id) === String(p._id))
             );
             setSearchResults(results);
@@ -86,7 +108,7 @@ const EditTeam = () => {
 
   const handleAddPlayer = (player) => {
     if (selectedPlayers.length >= 9) return;
-    setSelectedPlayers([...selectedPlayers, player]);
+    setSelectedPlayers([...selectedPlayers, { ...player, status: 'pending' }]);
     setSearchQuery('');
     setSearchResults([]);
   };
@@ -109,7 +131,7 @@ const EditTeam = () => {
         ...formData,
         players: selectedPlayers.map(p => p._id)
       };
-      
+
       const res = await expressApi.put(`/api/teams/${id}`, payload);
 
       if (res.data.success) {
@@ -141,8 +163,8 @@ const EditTeam = () => {
           <Link to="/teams" className="text-primary hover:text-primary-hover font-bold text-[0.9rem] flex items-center gap-2 mb-2 w-fit transition-transform hover:-translate-x-1">
             <i className="fa-solid fa-arrow-left"></i> Back to My Teams
           </Link>
-          <h1 className="text-[2.5rem] font-bold text-text uppercase tracking-tight">Edit Team</h1>
-          <p className="text-text-secondary font-medium">Update team details and manage your players.</p>
+          <h1 className="text-[2.5rem] font-bold text-text uppercase tracking-tight">{isCaptain ? 'Edit Team' : 'Team Details'}</h1>
+          <p className="text-text-secondary font-medium">{isCaptain ? 'Update team details and manage your players.' : 'View your team roster and details.'}</p>
         </div>
       </div>
 
@@ -165,9 +187,9 @@ const EditTeam = () => {
                 value={formData.name}
                 onChange={handleChange}
                 maxLength="30"
-                className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                disabled={!isCaptain}
+                className={`w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all ${!isCaptain ? 'opacity-70 cursor-not-allowed' : ''}`}
                 placeholder="e.g. Cloud9"
-                autoFocus
                 required
               />
             </div>
@@ -180,7 +202,8 @@ const EditTeam = () => {
                 value={formData.tag}
                 onChange={handleChange}
                 maxLength="5"
-                className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all uppercase"
+                disabled={!isCaptain}
+                className={`w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all uppercase ${!isCaptain ? 'opacity-70 cursor-not-allowed' : ''}`}
                 placeholder="e.g. C9"
                 required
               />
@@ -191,6 +214,7 @@ const EditTeam = () => {
               <select
                 name="game"
                 value={isCustomGame ? 'Custom' : formData.game}
+                disabled={!isCaptain}
                 onChange={(e) => {
                   if (e.target.value === 'Custom') {
                     setIsCustomGame(true);
@@ -200,7 +224,7 @@ const EditTeam = () => {
                     setFormData({ ...formData, game: e.target.value });
                   }
                 }}
-                className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none"
+                className={`w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none ${!isCaptain ? 'opacity-70 cursor-not-allowed' : ''}`}
                 required
               >
                 <option value="Valorant">Valorant</option>
@@ -219,7 +243,8 @@ const EditTeam = () => {
                   name="game"
                   value={formData.game}
                   onChange={handleChange}
-                  className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all mt-3 animate-fade-in"
+                  disabled={!isCaptain}
+                  className={`w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all mt-3 animate-fade-in ${!isCaptain ? 'opacity-70 cursor-not-allowed' : ''}`}
                   placeholder="Enter custom game name"
                   required
                 />
@@ -229,22 +254,39 @@ const EditTeam = () => {
             {/* Player Roster */}
             <div className="mt-8 pt-6 border-t border-border">
               <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-3">Team Roster ({selectedPlayers.length + 1}/10)</label>
-              
-              <div className="flex flex-wrap gap-3 mb-4">
-                <div className="bg-primary/20 border border-primary/30 text-primary px-4 py-2 rounded-xl text-[0.9rem] font-bold flex items-center gap-2 shadow-sm">
-                  <i className="fa-solid fa-crown text-[0.8rem]"></i> You (Captain)
+
+              <div className="flex flex-col gap-3 mb-4">
+                <div className="bg-primary/20 border border-primary/30 text-primary px-4 py-3 rounded-xl text-[0.9rem] font-bold flex items-center justify-between shadow-sm">
+                  <span className="flex items-center gap-2">
+                    <i className="fa-solid fa-crown text-[0.8rem]"></i> 
+                    {isCaptain ? 'You (Captain)' : (captainInfo?.name || 'Captain')}
+                  </span>
+                  <span className="text-[0.75rem] bg-primary/20 px-2 py-0.5 rounded text-primary">Ready</span>
                 </div>
-                {selectedPlayers.map(p => (
-                  <div key={p._id} className="bg-white/5 border border-border text-text px-4 py-2 rounded-xl text-[0.9rem] font-medium flex items-center gap-2 hover:border-red-500/50 transition-colors group">
-                    {p.name}
-                    <button type="button" onClick={() => handleRemovePlayer(p._id)} className="text-text-secondary group-hover:text-red-400 transition-colors ml-1">
-                      <i className="fa-solid fa-xmark text-[0.8rem]"></i>
-                    </button>
-                  </div>
-                ))}
+                {selectedPlayers.map(p => {
+                  const isMe = String(p._id) === String(user?.id || user?._id);
+                  return (
+                    <div key={p._id} className="bg-white/5 border border-border text-text px-4 py-3 rounded-xl text-[0.9rem] font-medium flex items-center justify-between group">
+                      <span className="flex items-center gap-2">
+                        <i className={`fa-solid fa-circle text-[0.5rem] ${p.status === 'pending' ? 'text-orange-500' : 'text-green-500'}`}></i>
+                        {p.name} {isMe && <span className="text-text-secondary text-[0.75rem]">(You)</span>}
+                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-[0.75rem] font-bold uppercase tracking-wider ${p.status === 'pending' ? 'text-orange-500' : 'text-green-500'}`}>
+                          {p.status}
+                        </span>
+                        {isCaptain && (
+                          <button type="button" onClick={() => handleRemovePlayer(p._id)} className="text-text-secondary hover:text-red-400 transition-colors bg-white/5 hover:bg-red-500/10 w-6 h-6 rounded flex items-center justify-center">
+                            <i className="fa-solid fa-xmark text-[0.8rem]"></i>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
-              {selectedPlayers.length < 9 && (
+              {isCaptain && selectedPlayers.length < 9 && (
                 <div className="relative mt-2">
                   <i className="fa-solid fa-user-plus absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary"></i>
                   <input
@@ -274,20 +316,22 @@ const EditTeam = () => {
 
           </div>
 
-          <div className="mt-10 pt-6 border-t border-border flex justify-end">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-primary hover:bg-primary-hover text-white font-bold py-3.5 px-8 rounded-xl transition-all shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 disabled:opacity-50 flex items-center gap-2 w-full justify-center"
-            >
-              {loading ? (
-                <i className="fa-solid fa-circle-notch fa-spin"></i>
-              ) : (
-                <i className="fa-solid fa-check"></i>
-              )}
-              {loading ? 'Saving Changes...' : 'Save Changes'}
-            </button>
-          </div>
+          {isCaptain && (
+            <div className="mt-10 pt-6 border-t border-border flex justify-end">
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-primary hover:bg-primary-hover text-white font-bold py-3.5 px-8 rounded-xl transition-all shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 disabled:opacity-50 flex items-center gap-2 w-full justify-center"
+              >
+                {loading ? (
+                  <i className="fa-solid fa-circle-notch fa-spin"></i>
+                ) : (
+                  <i className="fa-solid fa-check"></i>
+                )}
+                {loading ? 'Saving Changes...' : 'Save Changes'}
+              </button>
+            </div>
+          )}
 
         </form>
       </div>

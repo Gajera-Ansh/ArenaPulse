@@ -110,7 +110,7 @@ const Dashboard = () => {
                   <h3 className="text-[1.25rem] font-bold text-text uppercase mb-4 flex items-center gap-2">
                     <i className="fa-solid fa-envelope-open-text text-accent"></i> Pending Draft Requests
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-4">
                     {invitations.map(inv => (
                       <div key={inv._id} className="bg-white/5 border border-accent/30 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-[0_0_15px_rgba(251,191,36,0.05)] transition-all hover:bg-white/10 hover:border-accent/50">
                         <div>
@@ -119,7 +119,7 @@ const Dashboard = () => {
                             <span className="text-[0.7rem] bg-accent/20 text-accent font-bold px-2 py-0.5 rounded uppercase tracking-wider">{inv.tag}</span>
                           </div>
                           <p className="text-[0.85rem] text-text-secondary">
-                            Invited by <strong className="text-white">{inv.captain?.name}</strong> for {inv.game}
+                            Invited by <strong className="text-black">{inv.captain?.name}</strong> for {inv.game}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
@@ -142,7 +142,7 @@ const Dashboard = () => {
                   <h3 className="text-[1.25rem] font-bold text-text uppercase mb-4 flex items-center gap-2">
                     <i className="fa-solid fa-rocket text-primary"></i> Pending Tournament Enrollments
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-4">
                     {enrollments.map(enr => (
                       <div key={enr._id} className="bg-white/5 border border-primary/30 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-[0_0_15px_rgba(34,197,94,0.05)] transition-all hover:bg-white/10 hover:border-primary/50">
                         <div>
@@ -150,7 +150,7 @@ const Dashboard = () => {
                             <h4 className="text-[1.1rem] font-bold text-text line-clamp-1">{enr.tournament?.title}</h4>
                           </div>
                           <p className="text-[0.85rem] text-text-secondary">
-                            Team <strong className="text-white">{enr.team?.name}</strong> wants to enroll here. Are you available to play?
+                            Team <strong className="text-black">{enr.team?.name}</strong> wants to enroll here. Are you available to play?
                           </p>
                           <p className="text-[0.75rem] text-primary mt-1 font-medium">
                             <i className="fa-regular fa-calendar mr-1"></i> {formatDate(enr.tournament?.startDate)}
