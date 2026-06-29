@@ -157,7 +157,9 @@ const Settings = () => {
   return (
     <div className="container mx-auto px-6 py-12 animate-fade-in relative flex-grow">
       {/* Ambient Backgrounds (Standard dark UI) */}
-      <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-accent/5 rounded-full blur-[150px] pointer-events-none -z-10"></div>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-accent/5 rounded-full blur-[150px]"></div>
+      </div>
       
       <div className="mb-8 max-w-5xl mx-auto">
         <h1 className="text-[2.5rem] font-bold text-text uppercase tracking-tight">Settings</h1>
