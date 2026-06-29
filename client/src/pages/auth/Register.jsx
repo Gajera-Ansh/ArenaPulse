@@ -62,7 +62,7 @@ const Register = () => {
       <div className="absolute bottom-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
 
       <div className="w-full max-w-[480px] relative z-10">
-        <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[24px] p-8 sm:p-10 shadow-2xl">
+        <div className="bg-white/5 backdrop-blur-2xl border border-border rounded-[24px] p-8 sm:p-10 shadow-2xl">
 
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
@@ -74,7 +74,7 @@ const Register = () => {
 
           <button
             type="button"
-            onClick={handleGoogleLogin}
+            onClick={handleGoogleLogin()}
             className="w-full bg-white text-slate-800 hover:bg-slate-200 font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-3 shadow-sm mb-8"
           >
             <i className="fa-brands fa-google text-red-600 text-[1.1rem]"></i>
@@ -93,8 +93,8 @@ const Register = () => {
                 type="button"
                 onClick={() => setFormData({ ...formData, role: 'player' })}
                 className={`py-3 rounded-xl border font-bold text-[0.85rem] transition-all ${formData.role === 'player'
-                    ? 'bg-primary border-primary text-white shadow-lg shadow-primary/25'
-                    : 'bg-white/5 border-white/10 text-text-secondary hover:text-text hover:border-white/20'
+                  ? 'bg-primary border-primary text-white shadow-lg shadow-primary/25'
+                  : 'bg-white/5 border-border text-text-secondary hover:text-text hover:border-white/20'
                   }`}
               >
                 <i className="fa-solid fa-gamepad mr-2"></i> Player
@@ -103,8 +103,8 @@ const Register = () => {
                 type="button"
                 onClick={() => setFormData({ ...formData, role: 'organizer' })}
                 className={`py-3 rounded-xl border font-bold text-[0.85rem] transition-all ${formData.role === 'organizer'
-                    ? 'bg-accent border-accent text-white shadow-lg shadow-accent/25'
-                    : 'bg-white/5 border-white/10 text-text-secondary hover:text-text hover:border-white/20'
+                  ? 'bg-accent border-accent text-white shadow-lg shadow-accent/25'
+                  : 'bg-white/5 border-border text-text-secondary hover:text-text hover:border-white/20'
                   }`}
               >
                 <i className="fa-solid fa-trophy mr-2"></i> Organizer
@@ -118,7 +118,7 @@ const Register = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 placeholder="e.g. Faker"
                 autoFocus
                 required
@@ -132,7 +132,7 @@ const Register = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 placeholder="commander@squad.com"
                 required
               />
@@ -147,7 +147,7 @@ const Register = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 pr-10 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 pr-10 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     placeholder="••••••••"
                     required
                   />
@@ -168,7 +168,7 @@ const Register = () => {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 pr-10 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 pr-10 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     placeholder="••••••••"
                     required
                   />

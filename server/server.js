@@ -3,6 +3,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+
+// Load environment variables FIRST before any route or config imports
+dotenv.config();
+
 import connectDB from './config/db.js';
 import errorHandler from './middleware/errorHandler.js';
 
@@ -17,9 +21,6 @@ import checkinRoutes from './routes/checkin.routes.js';
 import leaderboardRoutes from './routes/leaderboard.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import adminRoutes from './routes/admin.routes.js';
-
-// Load environment variables
-dotenv.config();
 
 // Initialize Express
 const app = express();

@@ -1,5 +1,73 @@
 import nodemailer from 'nodemailer';
 
+export const sendOTPEmail = async (userEmail, userName, otp) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.warn("EMAIL_USER or EMAIL_PASS not configured. Skipping OTP email to", userEmail);
+      return;
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>ArenaPulse Password Reset OTP</title>
+      <style>
+        body { margin: 0; padding: 0; background-color: #0F172A; font-family: 'Inter', sans-serif; color: #f1f5f9; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #1E293B; border-radius: 12px; overflow: hidden; margin-top: 40px; margin-bottom: 40px; border: 1px solid #334155; }
+        .header { background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); padding: 30px 20px; text-align: center; }
+        .header h1 { margin: 0; color: #0F172A; font-size: 28px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+        .content { padding: 40px 30px; text-align: center; }
+        .otp-box { background-color: #0F172A; border: 1px dashed #fbbf24; border-radius: 8px; padding: 20px; margin: 20px auto; display: inline-block;}
+        .otp-code { font-size: 32px; font-weight: 800; color: #fbbf24; letter-spacing: 4px; margin: 0; }
+        .footer { padding: 20px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #334155; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>ArenaPulse</h1>
+        </div>
+        <div class="content">
+          <p style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">Hello, ${userName}!</p>
+          <p style="color: #94a3b8; font-size: 16px; margin-bottom: 20px;">You requested a password change. Use the OTP code below to verify your request.</p>
+          <div class="otp-box">
+            <h2 class="otp-code">${otp}</h2>
+          </div>
+          <p style="color: #94a3b8; font-size: 14px; margin-top: 20px;">This code will expire in 2 minutes. If you did not request this change, please ignore this email.</p>
+        </div>
+        <div class="footer">
+          &copy; ${new Date().getFullYear()} ArenaPulse Esports. All rights reserved.
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    await transporter.sendMail({
+      from: '"ArenaPulse" <' + process.env.EMAIL_USER + '>',
+      to: userEmail,
+      subject: 'Your Password Reset OTP - ArenaPulse',
+      html: htmlContent,
+    });
+    console.log("OTP email sent successfully to", userEmail);
+  } catch (error) {
+    console.error("Error sending OTP email:", error);
+  }
+};
+
 export const sendTeamInvitationEmail = async (userEmail, userName, captainName, teamName, teamTag) => {
   try {
     // Check if SMTP is configured

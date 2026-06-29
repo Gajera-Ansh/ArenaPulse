@@ -19,6 +19,7 @@ import Tournaments from './pages/public/Tournaments';
 import TournamentDetails from './pages/public/TournamentDetails';
 import TournamentBracket from './pages/public/TournamentBracket';
 import Teams from './pages/public/Teams';
+import Settings from './pages/protected/Settings';
 
 // Placeholders for other pages
 const Leaderboard = () => <div className="container pt-20"><h1>Leaderboard</h1></div>;
@@ -35,13 +36,19 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              
+
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
               } />
-              
+
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } />
+
               <Route path="/tournaments/create" element={
                 <ProtectedRoute allowedRoles={['organizer']}>
                   <CreateTournament />
@@ -65,13 +72,13 @@ function App() {
                   <EditTeam />
                 </ProtectedRoute>
               } />
-              
+
               <Route path="/teams" element={
                 <ProtectedRoute allowedRoles={['player']}>
                   <Teams />
                 </ProtectedRoute>
               } />
-              
+
               <Route path="/tournaments" element={<Tournaments />} />
               <Route path="/tournaments/:id" element={
                 <ProtectedRoute>

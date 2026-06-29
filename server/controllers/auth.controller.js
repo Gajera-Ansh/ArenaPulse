@@ -2,7 +2,7 @@
 
 import User from '../models/User.js';
 import { generateToken } from '../utils/jwtHelper.js';
-import { sendWelcomeEmail } from '../utils/emailService.js';
+import { sendWelcomeEmail, sendOTPEmail } from '../utils/emailService.js';
 
 // POST /api/auth/register
 export const register = async (req, res, next) => {
@@ -198,6 +198,92 @@ export const googleLogin = async (req, res, next) => {
         },
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /api/auth/forgot-password-otp
+export const requestForgotPasswordOTP = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, message: 'No account found with this email' });
+
+    // Generate 6 digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // 2 minutes from now
+    const otpExpires = new Date(Date.now() + 2 * 60 * 1000); 
+
+    user.otp = otp;
+    user.otpExpires = otpExpires;
+    await user.save();
+
+    // Send email
+    await sendOTPEmail(user.email, user.name, otp);
+
+    res.status(200).json({ success: true, message: 'OTP sent to your email.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /api/auth/verify-forgot-password-otp
+export const verifyForgotPasswordOTP = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ success: false, message: 'Email and OTP are required.' });
+
+    const user = await User.findOne({ email }).select('+otp +otpExpires');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    
+    if (!user.otp || user.otp !== otp) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP.' });
+    }
+
+    if (user.otpExpires < new Date()) {
+      return res.status(400).json({ success: false, message: 'OTP has expired.' });
+    }
+
+    // Extend the expiration by 5 minutes so they have time to type their new password
+    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'OTP verified.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /api/auth/reset-password
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Email, OTP, and new password are required.' });
+    }
+
+    const user = await User.findOne({ email }).select('+otp +otpExpires +password');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    if (!user.otp || user.otp !== otp) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP.' });
+    }
+
+    if (user.otpExpires < new Date()) {
+      return res.status(400).json({ success: false, message: 'OTP has expired.' });
+    }
+
+    // Update password
+    user.password = newPassword;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'Password reset successfully!' });
   } catch (error) {
     next(error);
   }
