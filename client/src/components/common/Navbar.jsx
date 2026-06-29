@@ -99,7 +99,7 @@ const Navbar = () => {
 
                 {isNotifOpen && (
                   <div className="absolute right-0 top-[120%] mt-1 w-80 max-w-[90vw] bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50 animate-fade-in">
-                    <div className="p-3 border-b border-white/10 flex justify-between items-center bg-black/20">
+                    <div className="p-3 border-b border-white/10 flex justify-between items-center bg-black/10">
                       <h3 className="font-bold text-text text-[0.95rem]">Notifications</h3>
                       {notifications.length > 0 && (
                         <button
@@ -191,7 +191,7 @@ const Navbar = () => {
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50 animate-fade-in">
-                    <div className="p-4 border-b border-border bg-black/20">
+                    <div className="p-4 border-b border-border bg-black/10">
                       <p className="text-[0.75rem] font-medium text-text-secondary">Signed in as</p>
                       <p className="text-[0.85rem] font-bold text-text truncate">{user.email}</p>
                     </div>

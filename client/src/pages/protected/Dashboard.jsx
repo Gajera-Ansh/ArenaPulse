@@ -84,9 +84,6 @@ const Dashboard = () => {
 
   return (
     <div className="container py-8 sm:py-12 relative min-h-[calc(100vh-80px)] overflow-hidden">
-      {/* Ambient Backgrounds */}
-      <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-primary/5 rounded-full blur-[150px] pointer-events-none -z-10"></div>
-      <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-accent/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
 
       <div className="w-full">
 

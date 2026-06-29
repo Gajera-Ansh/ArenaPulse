@@ -57,9 +57,6 @@ const Register = () => {
   return (
     <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 relative overflow-hidden py-12">
 
-      {/* Ambient Background */}
-      <div className="absolute top-[-20%] right-[-10%] w-[70vw] h-[70vw] bg-accent/5 rounded-full blur-[150px] pointer-events-none"></div>
-      <div className="absolute bottom-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
 
       <div className="w-full max-w-[480px] relative z-10">
         <div className="bg-white/5 backdrop-blur-2xl border border-border rounded-[24px] p-8 sm:p-10 shadow-2xl">
@@ -75,7 +72,7 @@ const Register = () => {
           <button
             type="button"
             onClick={() => handleGoogleLogin()}
-            className="w-full bg-white text-slate-800 hover:bg-slate-200 font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-3 shadow-sm mb-8"
+            className="w-full bg-slate-200 text-slate-800 hover:bg-slate-300 font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-3 shadow-sm mb-8"
           >
             <i className="fa-brands fa-google text-red-600 text-[1.1rem]"></i>
             Continue with Google
