@@ -458,3 +458,67 @@ export const sendWelcomeEmail = async (email, name) => {
     return false;
   }
 };
+
+export const sendNewTournamentEmail = async (playerEmails, tournamentName, game, prizePool, organizerName) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return false;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+
+    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/tournaments` : 'http://localhost:5173/tournaments';
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { margin: 0; padding: 0; background-color: #0F172A; font-family: 'Inter', sans-serif; color: #f1f5f9; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #1E293B; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
+        .header { background: #8b5cf6; padding: 30px; text-align: center; }
+        .header h1 { margin: 0; color: #fff; font-size: 24px; font-weight: 800; text-transform: uppercase; }
+        .content { padding: 40px 30px; text-align: center; }
+        .message { font-size: 16px; line-height: 1.6; color: #94a3b8; margin-bottom: 20px; }
+        .highlight { color: #8b5cf6; font-weight: bold; }
+        .btn { display: inline-block; background-color: #8b5cf6; color: #fff !important; text-decoration: none; font-size: 16px; font-weight: 700; padding: 14px 32px; border-radius: 8px; text-transform: uppercase; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header"><h1>New Tournament Announced!</h1></div>
+        <div class="content">
+          <div class="message">
+            A new tournament has just been created by <strong class="highlight">${organizerName}</strong>!
+            <br><br>
+            <strong>Tournament:</strong> ${tournamentName}<br>
+            <strong>Game:</strong> ${game}<br>
+            <strong>Prize Pool:</strong> ${prizePool}<br>
+            <br>
+            Gather your team and register before all the slots are filled!
+          </div>
+          <a href="${loginUrl}" class="btn">View Tournaments</a>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    const mailOptions = {
+      from: `"ArenaPulse" <${process.env.EMAIL_USER}>`,
+      bcc: playerEmails,
+      subject: `New Tournament Announced: ${tournamentName}!`,
+      html: htmlContent,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('[Email Service] Error sending new tournament email:', error);
+    return false;
+  }
+};

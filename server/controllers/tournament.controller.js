@@ -1,6 +1,8 @@
 // Tournament controller - handles tournament CRUD and status transitions
 
 import Tournament from '../models/Tournament.js';
+import User from '../models/User.js';
+import { sendNewTournamentEmail } from '../utils/emailService.js';
 
 // POST /api/tournaments
 export const createTournament = async (req, res, next) => {
@@ -21,6 +23,20 @@ export const createTournament = async (req, res, next) => {
       status: status || 'open',
       organizer: req.user._id,
     });
+
+    // Fetch all players to send the new tournament announcement
+    const players = await User.find({ role: 'player' }).select('email');
+    const playerEmails = players.map(player => player.email);
+
+    if (playerEmails.length > 0) {
+      sendNewTournamentEmail(
+        playerEmails,
+        title,
+        game,
+        prizePool,
+        req.user.name // organizer's name from auth middleware
+      );
+    }
 
     res.status(201).json({ success: true, data: tournament });
   } catch (error) {
