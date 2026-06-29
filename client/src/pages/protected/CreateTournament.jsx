@@ -114,30 +114,33 @@ const CreateTournament = () => {
 
               <div>
                 <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Game Designation</label>
-                <select
-                  name="game"
-                  value={isCustomGame ? 'Custom' : formData.game}
-                  onChange={(e) => {
-                    if (e.target.value === 'Custom') {
-                      setIsCustomGame(true);
-                      setFormData({ ...formData, game: '' });
-                    } else {
-                      setIsCustomGame(false);
-                      setFormData({ ...formData, game: e.target.value });
-                    }
-                  }}
-                  className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none"
-                  required
-                >
-                  <option value="Valorant">Valorant</option>
-                  <option value="League of Legends">League of Legends</option>
-                  <option value="Counter-Strike 2">Counter-Strike 2</option>
-                  <option value="BGMI">BGMI</option>
-                  <option value="Free Fire">Free Fire</option>
-                  <option value="Dota 2">Dota 2</option>
-                  <option value="Rocket League">Rocket League</option>
-                  <option value="Custom">Custom (Type manually)</option>
-                </select>
+                <div className="relative">
+                  <select
+                    name="game"
+                    value={isCustomGame ? 'Custom' : formData.game}
+                    onChange={(e) => {
+                      if (e.target.value === 'Custom') {
+                        setIsCustomGame(true);
+                        setFormData({ ...formData, game: '' });
+                      } else {
+                        setIsCustomGame(false);
+                        setFormData({ ...formData, game: e.target.value });
+                      }
+                    }}
+                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
+                    required
+                  >
+                    <option value="Valorant">Valorant</option>
+                    <option value="League of Legends">League of Legends</option>
+                    <option value="Counter-Strike 2">Counter-Strike 2</option>
+                    <option value="BGMI">BGMI</option>
+                    <option value="Free Fire">Free Fire</option>
+                    <option value="Dota 2">Dota 2</option>
+                    <option value="Rocket League">Rocket League</option>
+                    <option value="Custom">Custom (Type manually)</option>
+                  </select>
+                  <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-sm"></i>
+                </div>
 
                 {isCustomGame && (
                   <input
@@ -156,16 +159,19 @@ const CreateTournament = () => {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Bracket Type</label>
-                  <select
-                    name="bracketType"
-                    value={formData.bracketType}
-                    onChange={handleChange}
-                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none"
-                    required
-                  >
-                    <option value="single-elimination">Single Elim</option>
-                    <option value="double-elimination">Double Elim</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      name="bracketType"
+                      value={formData.bracketType}
+                      onChange={handleChange}
+                      className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
+                      required
+                    >
+                      <option value="single-elimination">Single Elim</option>
+                      <option value="double-elimination">Double Elim</option>
+                    </select>
+                    <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-xs"></i>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Max Teams</label>
@@ -197,15 +203,18 @@ const CreateTournament = () => {
 
               <div>
                 <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Initial Status</label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none"
-                >
-                  <option value="draft">Draft (Hide from public)</option>
-                  <option value="open">Open (Live & Accepting Teams)</option>
-                </select>
+                <div className="relative">
+                  <select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="draft">Draft (Hide from public)</option>
+                    <option value="open">Open (Live & Accepting Teams)</option>
+                  </select>
+                  <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-sm"></i>
+                </div>
               </div>
             </div>
 

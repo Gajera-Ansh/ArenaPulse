@@ -153,6 +153,24 @@ const TournamentDetails = () => {
     }
   };
 
+  const handleCloseRegistrations = async () => {
+    if (!window.confirm("Are you sure you want to close registrations early? New teams will no longer be able to enroll.")) return;
+
+    try {
+      // Set the deadline slightly in the past so it evaluates to closed immediately
+      const newDeadline = new Date(Date.now() - 60000).toISOString();
+      const res = await expressApi.put(`/api/tournaments/${id}`, { registrationDeadline: newDeadline });
+
+      if (res.data.success) {
+        setTournament({ ...tournament, registrationDeadline: newDeadline });
+        alert("Registrations are now closed!");
+      }
+    } catch (err) {
+      console.error("Failed to close registrations", err);
+      alert(err.response?.data?.message || "Failed to close registrations");
+    }
+  };
+
   const handleStartTournament = async () => {
     if (!window.confirm("Are you sure you want to start the tournament? This will generate the brackets and cannot be undone.")) return;
 
@@ -228,9 +246,9 @@ const TournamentDetails = () => {
               </div>
             </div>
 
-            <div className="p-6 sm:p-8 flex items-center justify-between bg-black/20">
+            <div className="p-6 sm:p-8 flex flex-col gap-5 bg-black/20">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/5 border border-border rounded-full flex items-center justify-center text-text-secondary text-xl overflow-hidden">
+                <div className="w-12 h-12 bg-white/5 border border-border rounded-full flex items-center justify-center text-text-secondary text-xl overflow-hidden shrink-0">
                   {tournament.organizer?.avatar ? (
                     <img src={tournament.organizer.avatar} alt="Organizer" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
@@ -243,7 +261,7 @@ const TournamentDetails = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 {tournament.status !== 'open' && (
                   <Link to={`/tournaments/${id}/bracket`} className="btn-primary flex items-center gap-2 bg-gradient-to-r from-primary to-accent border-none shadow-[0_0_15px_rgba(139,92,246,0.3)]">
                     <i className={`fa-solid ${tournament.status === 'completed' ? 'fa-trophy' : 'fa-sitemap'}`}></i> {tournament.status === 'completed' ? 'View Final Bracket' : 'View Live Bracket'}
@@ -253,9 +271,26 @@ const TournamentDetails = () => {
                 {isOrganizer && (
                   <>
                     {tournament.status === 'open' && (
-                      <button onClick={handleStartTournament} className="btn-primary flex items-center gap-2">
-                        <i className="fa-solid fa-play"></i> Start Tournament
-                      </button>
+                      <>
+                        {new Date() < new Date(tournament.registrationDeadline) && (
+                          <button onClick={handleCloseRegistrations} className="btn-outline flex items-center gap-2 hover:bg-red-300/20 hover:text-red-500 hover:border-red-500/30">
+                            <i className="fa-solid fa-lock"></i> Close Reg.
+                          </button>
+                        )}
+                        {new Date() < new Date(tournament.startDate) ? (
+                          <button
+                            disabled
+                            className="btn-primary opacity-50 cursor-not-allowed flex items-center gap-2"
+                            title={`Active when Live Matches begin: ${formatDate(tournament.startDate)}`}
+                          >
+                            <i className="fa-solid fa-clock"></i> Start Tournament
+                          </button>
+                        ) : (
+                          <button onClick={handleStartTournament} className="btn-primary flex items-center gap-2">
+                            <i className="fa-solid fa-play"></i> Start Tournament
+                          </button>
+                        )}
+                      </>
                     )}
                     {['open', 'draft'].includes(tournament.status) && (
                       <Link to={`/tournaments/${id}/edit`} className="btn-outline flex items-center gap-2">
@@ -273,7 +308,7 @@ const TournamentDetails = () => {
             <div className="glass-panel border-2 border-accent/50 rounded-3xl p-8 text-center relative overflow-hidden shadow-[0_0_50px_rgba(251,191,36,0.2)] animate-fade-in mt-8">
               <div className="absolute -top-20 -left-20 w-64 h-64 bg-accent/20 rounded-full blur-[80px] pointer-events-none"></div>
               <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/20 rounded-full blur-[80px] pointer-events-none"></div>
-              
+
               <i className="fa-solid fa-trophy text-6xl text-accent mb-6 animate-bounce"></i>
               <h2 className="text-[1.2rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Tournament Champion</h2>
               <h1 className="text-[3rem] sm:text-[4rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-accent via-yellow-300 to-accent leading-tight mb-2 drop-shadow-lg">

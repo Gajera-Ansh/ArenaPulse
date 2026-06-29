@@ -242,7 +242,7 @@ const Dashboard = () => {
 
                           {/* Card Footer */}
                           <div className="p-4 border-t border-border bg-black/20">
-                            <Link to={`/tournaments/${t._id}`} className="block w-full text-center bg-white/5 hover:bg-primary/20 text-text hover:text-primary border border-white/10 hover:border-primary/50 font-bold py-2 rounded-lg transition-all text-[0.85rem] uppercase tracking-wider">
+                            <Link to={`/tournaments/${t._id}`} className="block w-full text-center bg-white/20 hover:bg-primary/20 text-text hover:text-primary border border-white/10 hover:border-primary/50 font-bold py-2 rounded-lg transition-all text-[0.85rem] uppercase tracking-wider">
                               View Details
                             </Link>
                           </div>
@@ -311,7 +311,7 @@ const Dashboard = () => {
                       </div>
 
                       <div className="p-4 border-t border-border bg-black/20">
-                        <Link to={`/tournaments/${t._id}`} className="block w-full text-center bg-white/5 hover:bg-primary/20 text-text hover:text-primary border border-white/10 hover:border-primary/50 font-bold py-2 rounded-lg transition-all text-[0.85rem] uppercase tracking-wider">
+                        <Link to={`/tournaments/${t._id}`} className="block w-full text-center bg-white/20 hover:bg-primary/20 text-text hover:text-primary border border-white/10 hover:border-primary/50 font-bold py-2 rounded-lg transition-all text-[0.85rem] uppercase tracking-wider">
                           View Details
                         </Link>
                       </div>

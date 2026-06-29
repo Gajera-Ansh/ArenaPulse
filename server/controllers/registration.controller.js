@@ -17,6 +17,10 @@ export const registerForTournament = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Tournament is not open for registration.' });
     }
 
+    if (new Date(tournament.registrationDeadline) < new Date()) {
+      return res.status(400).json({ success: false, message: 'The registration deadline for this tournament has already passed.' });
+    }
+
     const team = await Team.findById(teamId);
     if (!team) {
       return res.status(404).json({ success: false, message: 'Team not found.' });
