@@ -74,7 +74,7 @@ const Register = () => {
 
           <button
             type="button"
-            onClick={handleGoogleLogin()}
+            onClick={() => handleGoogleLogin()}
             className="w-full bg-white text-slate-800 hover:bg-slate-200 font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-3 shadow-sm mb-8"
           >
             <i className="fa-brands fa-google text-red-600 text-[1.1rem]"></i>
