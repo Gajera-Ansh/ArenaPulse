@@ -38,7 +38,8 @@ const Tournaments = () => {
   }, [filterGame]);
 
   const filteredTournaments = tournaments.filter(t => 
-    t.title.toLowerCase().includes(searchQuery.toLowerCase())
+    t.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
+    t.status === 'open'
   );
 
   return (

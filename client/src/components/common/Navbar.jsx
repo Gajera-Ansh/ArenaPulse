@@ -98,8 +98,8 @@ const Navbar = () => {
                 </button>
 
                 {isNotifOpen && (
-                  <div className="absolute right-0 top-[120%] mt-1 w-80 max-w-[90vw] bg-white border border-border rounded-xl shadow-xl overflow-hidden z-50 animate-fade-in">
-                    <div className="p-3 border-b border-border flex justify-between items-center bg-slate-50">
+                  <div className="absolute right-0 top-[120%] mt-1 w-80 max-w-[90vw] glass-panel border border-border rounded-xl shadow-xl overflow-hidden z-50 animate-fade-in">
+                    <div className="p-3 border-b border-white/10 flex justify-between items-center bg-black/20">
                       <h3 className="font-bold text-text text-[0.95rem]">Notifications</h3>
                       {notifications.length > 0 && (
                         <button
@@ -111,40 +111,57 @@ const Navbar = () => {
                       )}
                     </div>
 
-                    <div className="max-h-[350px] overflow-y-auto">
+                    <div className="max-h-[350px] overflow-y-auto hide-scrollbar">
                       {notifications.length === 0 ? (
                         <div className="p-6 text-center text-text-secondary text-[0.85rem]">
                           You have no notifications.
                         </div>
                       ) : (
-                        notifications.map((notif) => (
-                          <div
-                            key={notif._id}
-                            onClick={() => {
-                              if (!notif.read) handleMarkAsRead(notif._id);
-                            }}
-                            className={`p-3 border-b border-border/50 hover:bg-slate-50 cursor-pointer transition-colors ${!notif.read ? 'bg-primary/5' : ''}`}
-                          >
-                            <div className="flex gap-3">
-                              <div className="pt-1">
-                                {notif.type === 'success' && <i className="fa-solid fa-circle-check text-green-500"></i>}
-                                {notif.type === 'warning' && <i className="fa-solid fa-triangle-exclamation text-amber-500"></i>}
-                                {notif.type === 'info' && <i className="fa-solid fa-circle-info text-primary"></i>}
-                                {notif.type === 'invite' && <i className="fa-solid fa-envelope-open-text text-accent"></i>}
-                                {notif.type === 'match' && <i className="fa-solid fa-gamepad text-purple-500"></i>}
-                                {!['success', 'warning', 'info', 'invite', 'match'].includes(notif.type) && <i className="fa-solid fa-bell text-text-secondary"></i>}
-                              </div>
-                              <div className="flex-1">
-                                <p className={`text-[0.85rem] ${!notif.read ? 'text-text font-semibold' : 'text-text-secondary'}`}>
-                                  {notif.message}
-                                </p>
-                                <p className="text-[0.7rem] text-text-secondary mt-1">
-                                  {new Date(notif.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                </p>
+                        notifications.map((notif) => {
+                          // Calculate relative time
+                          const getRelativeTime = (dateString) => {
+                            const date = new Date(dateString);
+                            const now = new Date();
+                            const diffInSeconds = Math.floor((now - date) / 1000);
+                            
+                            if (diffInSeconds < 60) return 'Just now';
+                            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+                            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+                            return `${Math.floor(diffInSeconds / 86400)}d ago`;
+                          };
+
+                          return (
+                            <div
+                              key={notif._id}
+                              onClick={() => {
+                                if (!notif.read) handleMarkAsRead(notif._id);
+                              }}
+                              className={`p-4 border-b border-white/5 cursor-pointer transition-colors ${!notif.read ? 'bg-primary/10 hover:bg-primary/20' : 'hover:bg-white/5'}`}
+                            >
+                              <div className="flex gap-3">
+                                <div className="pt-0.5">
+                                  {notif.type === 'success' && <i className="fa-solid fa-circle-check text-green-400"></i>}
+                                  {notif.type === 'warning' && <i className="fa-solid fa-triangle-exclamation text-amber-400"></i>}
+                                  {notif.type === 'info' && <i className="fa-solid fa-circle-info text-primary"></i>}
+                                  {notif.type === 'invite' && <i className="fa-solid fa-envelope-open-text text-accent"></i>}
+                                  {notif.type === 'match' && <i className="fa-solid fa-gamepad text-purple-400"></i>}
+                                  {!['success', 'warning', 'info', 'invite', 'match'].includes(notif.type) && <i className="fa-solid fa-bell text-text-secondary"></i>}
+                                </div>
+                                <div className="flex-1">
+                                  <p className={`text-[0.85rem] leading-tight ${!notif.read ? 'text-text font-bold' : 'text-text-secondary'}`}>
+                                    {notif.message}
+                                  </p>
+                                  <p className="text-[0.7rem] text-text-secondary/70 mt-1.5 font-medium tracking-wide">
+                                    {getRelativeTime(notif.createdAt)}
+                                  </p>
+                                </div>
+                                {!notif.read && (
+                                  <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0"></div>
+                                )}
                               </div>
                             </div>
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                     </div>
                   </div>

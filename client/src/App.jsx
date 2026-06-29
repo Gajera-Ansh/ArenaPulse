@@ -17,6 +17,7 @@ import CreateTeam from './pages/protected/CreateTeam';
 import EditTeam from './pages/protected/EditTeam';
 import Tournaments from './pages/public/Tournaments';
 import TournamentDetails from './pages/public/TournamentDetails';
+import TournamentBracket from './pages/public/TournamentBracket';
 import Teams from './pages/public/Teams';
 
 // Placeholders for other pages
@@ -77,6 +78,7 @@ function App() {
                   <TournamentDetails />
                 </ProtectedRoute>
               } />
+              <Route path="/tournaments/:id/bracket" element={<TournamentBracket />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
             </Routes>
           </main>

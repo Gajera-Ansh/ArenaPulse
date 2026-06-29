@@ -1,6 +1,8 @@
 // Match controller - handles score updates and result reporting
 
 import Match from '../models/Match.js';
+import Notification from '../models/Notification.js';
+import Team from '../models/Team.js';
 
 // GET /api/matches/tournament/:tournamentId
 export const getMatchesByTournament = async (req, res, next) => {
@@ -94,6 +96,55 @@ export const submitResult = async (req, res, next) => {
           nextMatch.teamB = match.winner;
         }
         await nextMatch.save();
+      }
+    } else {
+      // This is the final match. Mark the tournament as completed.
+      const Tournament = (await import('../models/Tournament.js')).default;
+      await Tournament.findByIdAndUpdate(match.tournament, {
+        status: 'completed',
+        winner: match.winner
+      });
+      
+      // Notify about tournament completion
+      if (match.winner) {
+        const winningTeam = await Team.findById(match.winner).select('players name');
+        if (winningTeam && winningTeam.players) {
+          const notifs = winningTeam.players.map(p => ({
+            user: p,
+            message: `Congratulations! Your team "${winningTeam.name}" won the tournament!`,
+            type: 'success'
+          }));
+          await Notification.insertMany(notifs);
+        }
+      }
+    }
+
+    // Notify all players in Team A and Team B about the match result
+    if (match.teamA && match.teamB) {
+      const [teamA, teamB] = await Promise.all([
+        Team.findById(match.teamA).select('players name'),
+        Team.findById(match.teamB).select('players name')
+      ]);
+
+      const notifs = [];
+      const createMatchNotifs = (team, isWinner, otherTeamName) => {
+        if (!team || !team.players) return;
+        const msg = isWinner 
+          ? `Victory! Your team "${team.name}" defeated "${otherTeamName}".`
+          : `Defeat. Your team "${team.name}" lost to "${otherTeamName}".`;
+        const type = isWinner ? 'success' : 'info';
+        
+        team.players.forEach(p => {
+          notifs.push({ user: p, message: msg, type: 'match' });
+        });
+      };
+
+      if (teamA && teamB) {
+        createMatchNotifs(teamA, String(match.winner) === String(teamA._id), teamB.name);
+        createMatchNotifs(teamB, String(match.winner) === String(teamB._id), teamA.name);
+        if (notifs.length > 0) {
+          await Notification.insertMany(notifs);
+        }
       }
     }
 

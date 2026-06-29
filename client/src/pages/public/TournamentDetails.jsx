@@ -75,7 +75,7 @@ const TournamentDetails = () => {
         // Fetch registration immediately so the UI updates without refresh
         const regRes = await expressApi.get(`/api/registrations/tournament/${id}`);
         if (regRes.data.success) {
-          const registration = regRes.data.data.find(reg => 
+          const registration = regRes.data.data.find(reg =>
             reg.team && (reg.team.captain === user.id || reg.team.players.some(p => typeof p === 'object' ? p._id === user.id : p === user.id))
           );
           if (registration) {
@@ -96,7 +96,6 @@ const TournamentDetails = () => {
       month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
     });
   };
-
   const [myRegistration, setMyRegistration] = useState(null);
   const [allRegistrations, setAllRegistrations] = useState([]);
   const [actionLoading, setActionLoading] = useState(null);
@@ -115,9 +114,9 @@ const TournamentDetails = () => {
           const regRes = await expressApi.get(`/api/registrations/tournament/${id}`);
           if (regRes.data.success) {
             const allRegs = regRes.data.data;
-            
+
             // Set myRegistration for players
-            const registration = allRegs.find(reg => 
+            const registration = allRegs.find(reg =>
               reg.team && (reg.team.captain === user.id || reg.team.players.some(p => typeof p === 'object' ? p._id === user.id : p === user.id))
             );
             if (registration) {
@@ -151,6 +150,21 @@ const TournamentDetails = () => {
       alert(err.response?.data?.message || "Failed to update registration status");
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleStartTournament = async () => {
+    if (!window.confirm("Are you sure you want to start the tournament? This will generate the brackets and cannot be undone.")) return;
+
+    try {
+      const res = await expressApi.post(`/api/tournaments/${id}/start`);
+      if (res.data.success) {
+        alert("Bracket generated successfully!");
+        window.location.reload(); // Refresh to see matches
+      }
+    } catch (err) {
+      console.error("Failed to start tournament", err);
+      alert(err.response?.data?.message || "Failed to start tournament");
     }
   };
 
@@ -229,13 +243,45 @@ const TournamentDetails = () => {
                 </div>
               </div>
 
-              {isOrganizer && (
-                <Link to={`/tournaments/${id}/edit`} className="btn-outline flex items-center gap-2">
-                  <i className="fa-solid fa-pen"></i> Edit Mode
-                </Link>
-              )}
+              <div className="flex gap-3">
+                {tournament.status !== 'open' && (
+                  <Link to={`/tournaments/${id}/bracket`} className="btn-primary flex items-center gap-2 bg-gradient-to-r from-primary to-accent border-none shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+                    <i className={`fa-solid ${tournament.status === 'completed' ? 'fa-trophy' : 'fa-sitemap'}`}></i> {tournament.status === 'completed' ? 'View Final Bracket' : 'View Live Bracket'}
+                  </Link>
+                )}
+
+                {isOrganizer && (
+                  <>
+                    {tournament.status === 'open' && (
+                      <button onClick={handleStartTournament} className="btn-primary flex items-center gap-2">
+                        <i className="fa-solid fa-play"></i> Start Tournament
+                      </button>
+                    )}
+                    {['open', 'draft'].includes(tournament.status) && (
+                      <Link to={`/tournaments/${id}/edit`} className="btn-outline flex items-center gap-2">
+                        <i className="fa-solid fa-pen"></i> Edit Mode
+                      </Link>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* Winner Celebration Banner */}
+          {tournament.status === 'completed' && tournament.winner && (
+            <div className="glass-panel border-2 border-accent/50 rounded-3xl p-8 text-center relative overflow-hidden shadow-[0_0_50px_rgba(251,191,36,0.2)] animate-fade-in mt-8">
+              <div className="absolute -top-20 -left-20 w-64 h-64 bg-accent/20 rounded-full blur-[80px] pointer-events-none"></div>
+              <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/20 rounded-full blur-[80px] pointer-events-none"></div>
+              
+              <i className="fa-solid fa-trophy text-6xl text-accent mb-6 animate-bounce"></i>
+              <h2 className="text-[1.2rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Tournament Champion</h2>
+              <h1 className="text-[3rem] sm:text-[4rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-accent via-yellow-300 to-accent leading-tight mb-2 drop-shadow-lg">
+                {tournament.winner.name}
+              </h1>
+              <p className="text-[1.2rem] text-text font-bold">[{tournament.winner.tag}]</p>
+            </div>
+          )}
 
           {/* Rules Section */}
           <div className="glass-panel border border-border rounded-[24px] p-6 sm:p-8 shadow-xl">
@@ -255,7 +301,7 @@ const TournamentDetails = () => {
               <h3 className="text-[1.2rem] font-bold text-text uppercase border-b border-border pb-3 mb-6 flex items-center gap-3">
                 <i className="fa-solid fa-clipboard-check text-primary"></i> Manage Registrations
               </h3>
-              
+
               {allRegistrations.length === 0 ? (
                 <div className="bg-white/5 border border-dashed border-border rounded-xl p-8 text-center flex flex-col items-center justify-center">
                   <i className="fa-solid fa-users-slash text-text-secondary text-2xl mb-3"></i>
@@ -270,14 +316,13 @@ const TournamentDetails = () => {
                           <h4 className="text-[1.1rem] font-bold text-text">{reg.team?.name}</h4>
                           <span className="text-[0.7rem] bg-accent/20 text-accent font-bold px-2 py-0.5 rounded uppercase tracking-wider">[{reg.team?.tag}]</span>
                         </div>
-                        
+
                         <div className="flex flex-wrap items-center gap-3">
-                          <span className={`px-2 py-1 rounded text-[0.7rem] font-bold uppercase tracking-widest ${
-                            reg.status === 'approved' ? 'bg-green-500/20 text-green-500 border border-green-500/30' :
+                          <span className={`px-2 py-1 rounded text-[0.7rem] font-bold uppercase tracking-widest ${reg.status === 'approved' ? 'bg-green-500/20 text-green-500 border border-green-500/30' :
                             reg.status === 'rejected' ? 'bg-red-500/20 text-red-500 border border-red-500/30' :
-                            reg.status === 'awaiting_players' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' :
-                            'bg-primary/20 text-primary border border-primary/30'
-                          }`}>
+                              reg.status === 'awaiting_players' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' :
+                                'bg-primary/20 text-primary border border-primary/30'
+                            }`}>
                             {reg.status.replace('_', ' ')}
                           </span>
                           <span className="text-[0.8rem] text-text-secondary">
@@ -292,35 +337,39 @@ const TournamentDetails = () => {
                       </div>
 
                       <div className="flex items-center gap-2 w-full md:w-auto">
-                        {reg.status === 'pending' && (
+                        {tournament.status === 'open' && (
                           <>
-                            <button 
-                              onClick={() => handleOrganizerAction(reg._id, 'approved')} 
-                              disabled={actionLoading === reg._id}
-                              className="flex-1 md:flex-none bg-green-500/20 hover:bg-green-500 text-green-500 hover:text-white border border-green-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
-                            >
-                              {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-check"></i>}
-                              Approve
-                            </button>
-                            <button 
-                              onClick={() => handleOrganizerAction(reg._id, 'rejected')} 
-                              disabled={actionLoading === reg._id}
-                              className="flex-1 md:flex-none bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
-                            >
-                              {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-xmark"></i>}
-                              Reject
-                            </button>
+                            {reg.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => handleOrganizerAction(reg._id, 'approved')}
+                                  disabled={actionLoading === reg._id}
+                                  className="flex-1 md:flex-none bg-green-500/20 hover:bg-green-500 text-green-500 hover:text-white border border-green-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
+                                >
+                                  {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-check"></i>}
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleOrganizerAction(reg._id, 'rejected')}
+                                  disabled={actionLoading === reg._id}
+                                  className="flex-1 md:flex-none bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
+                                >
+                                  {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-xmark"></i>}
+                                  Reject
+                                </button>
+                              </>
+                            )}
+                            {reg.status === 'approved' && (
+                              <button
+                                onClick={() => handleOrganizerAction(reg._id, 'rejected')}
+                                disabled={actionLoading === reg._id}
+                                className="flex-1 md:flex-none bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-transparent hover:border-red-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
+                              >
+                                {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-ban"></i>}
+                                Revoke
+                              </button>
+                            )}
                           </>
-                        )}
-                        {reg.status === 'approved' && (
-                          <button 
-                              onClick={() => handleOrganizerAction(reg._id, 'rejected')} 
-                              disabled={actionLoading === reg._id}
-                              className="flex-1 md:flex-none bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-transparent hover:border-red-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
-                            >
-                              {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-ban"></i>}
-                              Revoke
-                            </button>
                         )}
                       </div>
                     </div>
@@ -329,7 +378,6 @@ const TournamentDetails = () => {
               )}
             </div>
           )}
-
         </div>
 
         {/* Sidebar (Right) */}
@@ -372,12 +420,11 @@ const TournamentDetails = () => {
               <div className="bg-white/5 border border-border rounded-xl p-5 shadow-inner">
                 <h4 className="text-[1.1rem] font-bold text-text mb-3 text-center">Team {myRegistration.team.name} Status</h4>
                 <div className="flex justify-center mb-4">
-                  <span className={`px-3 py-1 rounded text-[0.8rem] font-bold uppercase tracking-widest ${
-                    myRegistration.status === 'approved' ? 'bg-green-500/20 text-green-500 border border-green-500/30' :
+                  <span className={`px-3 py-1 rounded text-[0.8rem] font-bold uppercase tracking-widest ${myRegistration.status === 'approved' ? 'bg-green-500/20 text-green-500 border border-green-500/30' :
                     myRegistration.status === 'rejected' ? 'bg-red-500/20 text-red-500 border border-red-500/30' :
-                    myRegistration.status === 'awaiting_players' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' :
-                    'bg-primary/20 text-primary border border-primary/30'
-                  }`}>
+                      myRegistration.status === 'awaiting_players' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' :
+                        'bg-primary/20 text-primary border border-primary/30'
+                    }`}>
                     {myRegistration.status.replace('_', ' ')}
                   </span>
                 </div>
@@ -451,80 +498,82 @@ const TournamentDetails = () => {
       </div>
 
       {/* Enrollment Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
-          <div className="glass-panel border border-border rounded-[24px] w-full max-w-md overflow-hidden shadow-2xl relative">
+      {
+        showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
+            <div className="glass-panel border border-border rounded-[24px] w-full max-w-md overflow-hidden shadow-2xl relative">
 
-            {/* Modal Header */}
-            <div className="p-6 border-b border-border flex justify-between items-center bg-black/20">
-              <h3 className="text-[1.2rem] font-bold text-text uppercase">Select Team to Enroll</h3>
-              <button onClick={() => setShowModal(false)} className="text-text-secondary hover:text-red-500 transition-colors w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10">
-                <i className="fa-solid fa-xmark"></i>
-              </button>
-            </div>
+              {/* Modal Header */}
+              <div className="p-6 border-b border-border flex justify-between items-center bg-black/20">
+                <h3 className="text-[1.2rem] font-bold text-text uppercase">Select Team to Enroll</h3>
+                <button onClick={() => setShowModal(false)} className="text-text-secondary hover:text-red-500 transition-colors w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10">
+                  <i className="fa-solid fa-xmark"></i>
+                </button>
+              </div>
 
-            {/* Modal Body */}
-            <div className="p-6">
-              {enrollError && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-600 rounded-xl p-3 mb-6 text-[0.85rem] font-medium flex items-center gap-2">
-                  <i className="fa-solid fa-circle-exclamation"></i>
-                  {enrollError}
-                </div>
-              )}
-
-              {enrollSuccess ? (
-                <div className="text-center py-6">
-                  <div className="w-16 h-16 bg-primary/20 text-primary border border-primary/30 rounded-full flex items-center justify-center mx-auto text-3xl mb-4 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-                    <i className="fa-solid fa-check"></i>
+              {/* Modal Body */}
+              <div className="p-6">
+                {enrollError && (
+                  <div className="bg-red-500/10 border border-red-500/20 text-red-600 rounded-xl p-3 mb-6 text-[0.85rem] font-medium flex items-center gap-2">
+                    <i className="fa-solid fa-circle-exclamation"></i>
+                    {enrollError}
                   </div>
-                  <h4 className="text-[1.2rem] font-bold text-text mb-2">Enrollment Successful!</h4>
-                  <p className="text-text-secondary text-[0.95rem] mb-6">Your team has been enrolled successfully.</p>
-                  <button onClick={() => setShowModal(false)} className="btn-primary w-full justify-center">
-                    Acknowledge
-                  </button>
-                </div>
-              ) : teamsLoading ? (
-                <div className="py-12 flex justify-center">
-                  <i className="fa-solid fa-circle-notch fa-spin text-3xl text-primary"></i>
-                </div>
-              ) : myTeams.length === 0 ? (
-                <div className="text-center py-6">
-                  <div className="w-16 h-16 bg-white/5 text-text-secondary border border-border rounded-full flex items-center justify-center mx-auto text-3xl mb-4">
-                    <i className="fa-solid fa-users-slash"></i>
-                  </div>
-                  <h4 className="text-[1.1rem] font-bold text-text mb-2">No Team Found</h4>
-                  <p className="text-text-secondary text-[0.95rem] mb-6">You don't have any teams available for enrollment.</p>
-                  <Link to="/teams/create" className="btn-primary w-full justify-center flex items-center gap-2">
-                    <i className="fa-solid fa-plus"></i> Create a Team
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-[0.85rem] text-text-secondary mb-4">Select which team you want to lead into this tournament. Only teams where you are Captain are shown.</p>
-                  {myTeams.map(team => (
-                    <div key={team._id} className="flex items-center justify-between p-4 bg-white/5 border border-border rounded-xl hover:border-primary/50 transition-colors">
-                      <div>
-                        <h5 className="font-bold text-text text-[1rem] leading-tight">{team.name}</h5>
-                        <span className="text-[0.75rem] text-primary font-bold tracking-widest uppercase">[{team.tag}]</span>
-                      </div>
-                      <button
-                        onClick={() => handleEnroll(team)}
-                        disabled={enrolling}
-                        className="bg-primary/20 hover:bg-primary text-primary hover:text-white border border-primary/30 py-2 px-4 rounded-lg font-bold text-[0.85rem] transition-all disabled:opacity-50"
-                      >
-                        {enrolling ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Enroll'}
-                      </button>
+                )}
+
+                {enrollSuccess ? (
+                  <div className="text-center py-6">
+                    <div className="w-16 h-16 bg-primary/20 text-primary border border-primary/30 rounded-full flex items-center justify-center mx-auto text-3xl mb-4 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                      <i className="fa-solid fa-check"></i>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <h4 className="text-[1.2rem] font-bold text-text mb-2">Enrollment Successful!</h4>
+                    <p className="text-text-secondary text-[0.95rem] mb-6">Your team has been enrolled successfully.</p>
+                    <button onClick={() => setShowModal(false)} className="btn-primary w-full justify-center">
+                      Acknowledge
+                    </button>
+                  </div>
+                ) : teamsLoading ? (
+                  <div className="py-12 flex justify-center">
+                    <i className="fa-solid fa-circle-notch fa-spin text-3xl text-primary"></i>
+                  </div>
+                ) : myTeams.length === 0 ? (
+                  <div className="text-center py-6">
+                    <div className="w-16 h-16 bg-white/5 text-text-secondary border border-border rounded-full flex items-center justify-center mx-auto text-3xl mb-4">
+                      <i className="fa-solid fa-users-slash"></i>
+                    </div>
+                    <h4 className="text-[1.1rem] font-bold text-text mb-2">No Team Found</h4>
+                    <p className="text-text-secondary text-[0.95rem] mb-6">You don't have any teams available for enrollment.</p>
+                    <Link to="/teams/create" className="btn-primary w-full justify-center flex items-center gap-2">
+                      <i className="fa-solid fa-plus"></i> Create a Team
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-[0.85rem] text-text-secondary mb-4">Select which team you want to lead into this tournament. Only teams where you are Captain are shown.</p>
+                    {myTeams.map(team => (
+                      <div key={team._id} className="flex items-center justify-between p-4 bg-white/5 border border-border rounded-xl hover:border-primary/50 transition-colors">
+                        <div>
+                          <h5 className="font-bold text-text text-[1rem] leading-tight">{team.name}</h5>
+                          <span className="text-[0.75rem] text-primary font-bold tracking-widest uppercase">[{team.tag}]</span>
+                        </div>
+                        <button
+                          onClick={() => handleEnroll(team)}
+                          disabled={enrolling}
+                          className="bg-primary/20 hover:bg-primary text-primary hover:text-white border border-primary/30 py-2 px-4 rounded-lg font-bold text-[0.85rem] transition-all disabled:opacity-50"
+                        >
+                          {enrolling ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Enroll'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
             </div>
-
           </div>
-        </div>
-      )}
+        )
+      }
 
-    </div>
+    </div >
   );
 };
 
