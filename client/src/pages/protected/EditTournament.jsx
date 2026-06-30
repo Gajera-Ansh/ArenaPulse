@@ -237,7 +237,7 @@ const EditTournament = () => {
                       required
                     >
                       <option value="single-elimination">Single Elim</option>
-                      <option value="double-elimination">Double Elim</option>
+                      <option value="round-robin">Round Robin</option>
                     </select>
                     <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-xs"></i>
                   </div>

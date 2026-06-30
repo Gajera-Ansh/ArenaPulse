@@ -3,10 +3,93 @@ import { useParams, Link } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { useAuth } from '../../context/AuthContext';
 
+// Recursive Match Node Component for perfect tree alignment
+const MatchNode = ({ match, allMatches, openMatchModal }) => {
+  const children = allMatches.filter(m => m.nextMatchNumber === match.matchNumber).sort((a, b) => a.matchNumber - b.matchNumber);
+
+  return (
+    <div className="flex items-center">
+      {/* Children Subtrees */}
+      {children.length > 0 && (
+        <div className="flex flex-col justify-center relative">
+          {/* Vertical Trunk Connecting the Children */}
+          {children.length > 1 && (
+            <div className="absolute right-0 top-[25%] bottom-[25%] w-[3px] bg-slate-300 dark:bg-slate-600 rounded-full"></div>
+          )}
+          
+          {children.map((child) => (
+            <div key={child._id} className="flex items-center relative py-6 pr-8">
+              <MatchNode match={child} allMatches={allMatches} openMatchModal={openMatchModal} />
+              {/* Horizontal Line out of the child to the trunk */}
+              <div className="absolute right-0 top-1/2 w-8 border-t-[3px] border-slate-300 dark:border-slate-600 rounded-full"></div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Horizontal Line from Trunk to Parent */}
+      {children.length > 0 && (
+        <div className="w-8 border-t-[3px] border-slate-300 dark:border-slate-600 rounded-full"></div>
+      )}
+
+      {/* Current Match Box */}
+      <div 
+        onClick={() => openMatchModal(match)}
+        className={`w-[260px] flex-shrink-0 glass-panel border transition-all cursor-pointer hover:shadow-xl hover:-translate-y-1 ${match.status === 'completed' ? 'border-border' : match.status === 'live' ? 'border-primary shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'border-border/50'} rounded-xl overflow-hidden relative z-10`}
+      >
+        <div className="bg-black/5 dark:bg-black/30 px-4 py-2 flex justify-between items-center text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider border-b border-border">
+          <span>Match {match.matchNumber}</span>
+          <span className={match.status === 'live' ? 'text-primary' : ''}>
+            {match.status === 'completed' ? 'Final' : match.status}
+          </span>
+        </div>
+
+        {/* Team A */}
+        <div className={`p-4 border-b border-border/50 flex justify-between items-center ${match.winner?._id === match.teamA?._id ? 'bg-primary/10' : ''}`}>
+          <div className="flex items-center gap-3 truncate">
+            {match.teamA ? (
+              <>
+                <span className={`font-bold text-[1rem] truncate ${match.winner?._id === match.teamA._id ? 'text-primary' : 'text-text'}`}>
+                  {match.teamA.name}
+                </span>
+                {match.winner?._id === match.teamA._id && <i className="fa-solid fa-crown text-accent text-[0.8rem]"></i>}
+              </>
+            ) : (
+              <span className="font-medium text-[0.9rem] text-text-secondary italic">TBD</span>
+            )}
+          </div>
+          <span className={`font-bold text-[1.1rem] ${match.winner?._id === match.teamA?._id ? 'text-primary' : 'text-text-secondary'}`}>
+            {match.scoreA ?? '-'}
+          </span>
+        </div>
+
+        {/* Team B */}
+        <div className={`p-4 flex justify-between items-center ${match.winner?._id === match.teamB?._id ? 'bg-primary/10' : ''}`}>
+          <div className="flex items-center gap-3 truncate">
+            {match.teamB ? (
+              <>
+                <span className={`font-bold text-[1rem] truncate ${match.winner?._id === match.teamB._id ? 'text-primary' : 'text-text'}`}>
+                  {match.teamB.name}
+                </span>
+                {match.winner?._id === match.teamB._id && <i className="fa-solid fa-crown text-accent text-[0.8rem]"></i>}
+              </>
+            ) : (
+              <span className="font-medium text-[0.9rem] text-text-secondary italic">TBD</span>
+            )}
+          </div>
+          <span className={`font-bold text-[1.1rem] ${match.winner?._id === match.teamB?._id ? 'text-primary' : 'text-text-secondary'}`}>
+            {match.scoreB ?? '-'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const TournamentBracket = () => {
   const { id } = useParams();
   const { user } = useAuth();
-  
+
   const [tournament, setTournament] = useState(null);
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,21 +146,21 @@ const TournamentBracket = () => {
         scoreA: Number(scoreA),
         scoreB: Number(scoreB)
       });
-      
+
       if (res.data.success) {
         // We need to re-fetch matches and tournament because the tournament might have concluded
         const [matchRes, tournRes] = await Promise.all([
           expressApi.get(`/api/matches/tournament/${id}`),
           expressApi.get(`/api/tournaments/${id}`)
         ]);
-        
+
         if (matchRes.data.success) {
           setMatches(matchRes.data.data);
         }
         if (tournRes.data.success) {
           setTournament(tournRes.data.data);
         }
-        
+
         closeMatchModal();
       }
     } catch (err) {
@@ -126,7 +209,7 @@ const TournamentBracket = () => {
         <div className="mb-12 glass-panel border-2 border-accent/50 rounded-3xl p-8 text-center relative overflow-hidden shadow-[0_0_50px_rgba(251,191,36,0.2)] animate-fade-in">
           <div className="absolute -top-20 -left-20 w-64 h-64 bg-accent/20 rounded-full blur-[80px] pointer-events-none"></div>
           <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/20 rounded-full blur-[80px] pointer-events-none"></div>
-          
+
           <i className="fa-solid fa-trophy text-6xl text-accent mb-6 animate-bounce"></i>
           <h2 className="text-[1.2rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Tournament Champion</h2>
           <h1 className="text-[3rem] sm:text-[4rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-accent via-yellow-300 to-accent leading-tight mb-2 drop-shadow-lg">
@@ -144,68 +227,93 @@ const TournamentBracket = () => {
             <p>Bracket has not been generated yet.</p>
           </div>
         ) : (
-          <div className="flex gap-12 min-w-max">
-            {Array.from(new Set(matches.map(m => m.round))).sort().map(round => (
-              <div key={round} className="flex flex-col gap-8 justify-around min-w-[280px]">
-                <h4 className="text-center font-bold text-primary mb-4 text-[0.9rem] uppercase tracking-widest bg-primary/10 py-2.5 rounded-xl border border-primary/20 shadow-sm">
-                  {round === Math.max(...matches.map(m => m.round)) ? 'Finals' : `Round ${round}`}
-                </h4>
-                
-                {matches.filter(m => m.round === round).sort((a, b) => a.matchNumber - b.matchNumber).map(match => (
-                  <div 
-                    key={match._id} 
-                    onClick={() => openMatchModal(match)}
-                    className={`glass-panel border transition-all cursor-pointer hover:shadow-xl hover:-translate-y-1 ${match.status === 'completed' ? 'border-border' : match.status === 'live' ? 'border-primary shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'border-border/50'} rounded-xl overflow-hidden relative`}
-                  >
-                    <div className="bg-black/5 dark:bg-black/30 px-4 py-2 flex justify-between items-center text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider border-b border-border">
-                      <span>Match {match.matchNumber}</span>
-                      <span className={match.status === 'live' ? 'text-primary' : ''}>
-                        {match.status === 'completed' ? 'Final' : match.status}
-                      </span>
-                    </div>
-                    
-                    {/* Team A */}
-                    <div className={`p-4 border-b border-border/50 flex justify-between items-center ${match.winner?._id === match.teamA?._id ? 'bg-primary/10' : ''}`}>
-                      <div className="flex items-center gap-3 truncate">
-                        {match.teamA ? (
-                          <>
-                            <span className={`font-bold text-[1rem] truncate ${match.winner?._id === match.teamA._id ? 'text-primary' : 'text-text'}`}>
-                              {match.teamA.name}
-                            </span>
-                            {match.winner?._id === match.teamA._id && <i className="fa-solid fa-crown text-accent text-[0.8rem]"></i>}
-                          </>
-                        ) : (
-                          <span className="font-medium text-[0.9rem] text-text-secondary italic">TBD</span>
-                        )}
-                      </div>
-                      <span className={`font-bold text-[1.1rem] ${match.winner?._id === match.teamA?._id ? 'text-primary' : 'text-text-secondary'}`}>
-                        {match.scoreA ?? '-'}
-                      </span>
-                    </div>
+          <>
+            {tournament?.bracketType === 'round-robin' ? (
+              <div className="flex gap-12 min-w-max">
+                {Array.from(new Set(matches.map(m => m.round))).sort().map(round => (
+                  <div key={round} className="flex flex-col gap-8 justify-around min-w-[280px]">
+                    <h4 className="text-center font-bold text-primary mb-4 text-[0.9rem] uppercase tracking-widest bg-primary/10 py-2.5 rounded-xl border border-primary/20 shadow-sm">
+                      Round {round}
+                    </h4>
 
-                    {/* Team B */}
-                    <div className={`p-4 flex justify-between items-center ${match.winner?._id === match.teamB?._id ? 'bg-primary/10' : ''}`}>
-                      <div className="flex items-center gap-3 truncate">
-                        {match.teamB ? (
-                          <>
-                            <span className={`font-bold text-[1rem] truncate ${match.winner?._id === match.teamB._id ? 'text-primary' : 'text-text'}`}>
-                              {match.teamB.name}
-                            </span>
-                            {match.winner?._id === match.teamB._id && <i className="fa-solid fa-crown text-accent text-[0.8rem]"></i>}
-                          </>
-                        ) : (
-                          <span className="font-medium text-[0.9rem] text-text-secondary italic">TBD</span>
-                        )}
+                    {matches.filter(m => m.round === round).sort((a, b) => a.matchNumber - b.matchNumber).map(match => (
+                      <div
+                        key={match._id}
+                        onClick={() => openMatchModal(match)}
+                        className={`glass-panel border transition-all cursor-pointer hover:shadow-xl hover:-translate-y-1 ${match.status === 'completed' ? 'border-border' : match.status === 'live' ? 'border-primary shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'border-border/50'} rounded-xl overflow-hidden relative`}
+                      >
+                        <div className="bg-black/5 dark:bg-black/30 px-4 py-2 flex justify-between items-center text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider border-b border-border">
+                          <span>Match {match.matchNumber}</span>
+                          <span className={match.status === 'live' ? 'text-primary' : ''}>
+                            {match.status === 'completed' ? 'Final' : match.status}
+                          </span>
+                        </div>
+
+                        {/* Team A */}
+                        <div className={`p-4 border-b border-border/50 flex justify-between items-center ${match.winner?._id === match.teamA?._id ? 'bg-primary/10' : ''}`}>
+                          <div className="flex items-center gap-3 truncate">
+                            {match.teamA ? (
+                              <>
+                                <span className={`font-bold text-[1rem] truncate ${match.winner?._id === match.teamA._id ? 'text-primary' : 'text-text'}`}>
+                                  {match.teamA.name}
+                                </span>
+                                {match.winner?._id === match.teamA._id && <i className="fa-solid fa-crown text-accent text-[0.8rem]"></i>}
+                              </>
+                            ) : (
+                              <span className="font-medium text-[0.9rem] text-text-secondary italic">TBD</span>
+                            )}
+                          </div>
+                          <span className={`font-bold text-[1.1rem] ${match.winner?._id === match.teamA?._id ? 'text-primary' : 'text-text-secondary'}`}>
+                            {match.scoreA ?? '-'}
+                          </span>
+                        </div>
+
+                        {/* Team B */}
+                        <div className={`p-4 flex justify-between items-center ${match.winner?._id === match.teamB?._id ? 'bg-primary/10' : ''}`}>
+                          <div className="flex items-center gap-3 truncate">
+                            {match.teamB ? (
+                              <>
+                                <span className={`font-bold text-[1rem] truncate ${match.winner?._id === match.teamB._id ? 'text-primary' : 'text-text'}`}>
+                                  {match.teamB.name}
+                                </span>
+                                {match.winner?._id === match.teamB._id && <i className="fa-solid fa-crown text-accent text-[0.8rem]"></i>}
+                              </>
+                            ) : (
+                              <span className="font-medium text-[0.9rem] text-text-secondary italic">TBD</span>
+                            )}
+                          </div>
+                          <span className={`font-bold text-[1.1rem] ${match.winner?._id === match.teamB?._id ? 'text-primary' : 'text-text-secondary'}`}>
+                            {match.scoreB ?? '-'}
+                          </span>
+                        </div>
                       </div>
-                      <span className={`font-bold text-[1.1rem] ${match.winner?._id === match.teamB?._id ? 'text-primary' : 'text-text-secondary'}`}>
-                        {match.scoreB ?? '-'}
-                      </span>
-                    </div>
+                    ))}
                   </div>
                 ))}
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="flex flex-col">
+                {/* Headers */}
+                <div className="flex mb-6 w-max">
+                  {Array.from({ length: Math.max(...matches.map(m => m.round)) }).map((_, i) => {
+                    const isFinal = i + 1 === Math.max(...matches.map(m => m.round));
+                    return (
+                      <div key={i} className="w-[260px] mr-[4rem] flex-shrink-0 text-center font-bold text-primary text-[0.9rem] uppercase tracking-widest bg-primary/10 py-2.5 rounded-xl border border-primary/20 shadow-sm">
+                        {isFinal ? 'Final' : `Round ${i + 1}`}
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Bracket Tree */}
+                <div className="flex w-max items-center pb-20 pt-4">
+                  {matches.filter(m => m.nextMatchNumber === null).map(finalMatch => (
+                     <MatchNode key={finalMatch._id} match={finalMatch} allMatches={matches} openMatchModal={openMatchModal} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -221,7 +329,7 @@ const TournamentBracket = () => {
                 <i className="fa-solid fa-xmark text-xl"></i>
               </button>
             </div>
-            
+
             <div className="p-6">
               {!isOrganizer ? (
                 // Public View (Read-Only)
@@ -239,7 +347,7 @@ const TournamentBracket = () => {
                       {selectedMatch.winner?._id === selectedMatch.teamB?._id && <i className="fa-solid fa-crown text-accent mt-2 text-xl"></i>}
                     </div>
                   </div>
-                  
+
                   <div className="text-center bg-white/5 py-3 rounded-lg border border-white/10">
                     <p className="text-text-secondary text-sm uppercase tracking-widest font-bold">Status: <span className={selectedMatch.status === 'live' ? 'text-primary' : 'text-text'}>{selectedMatch.status}</span></p>
                   </div>
@@ -250,8 +358,8 @@ const TournamentBracket = () => {
                   <div className="flex justify-between items-center gap-4">
                     <div className="flex-1 text-center">
                       <p className="font-bold text-text mb-3 truncate">{selectedMatch.teamA?.name || 'TBD'}</p>
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         min="0"
                         value={scoreA}
                         onChange={(e) => setScoreA(e.target.value)}
@@ -259,13 +367,13 @@ const TournamentBracket = () => {
                         className="input-field text-center text-2xl font-bold p-4 w-full"
                       />
                     </div>
-                    
+
                     <div className="font-black text-text-secondary text-xl pt-8">VS</div>
-                    
+
                     <div className="flex-1 text-center">
                       <p className="font-bold text-text mb-3 truncate">{selectedMatch.teamB?.name || 'TBD'}</p>
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         min="0"
                         value={scoreB}
                         onChange={(e) => setScoreB(e.target.value)}
@@ -274,15 +382,15 @@ const TournamentBracket = () => {
                       />
                     </div>
                   </div>
-                  
+
                   {selectedMatch.status === 'completed' ? (
                     <div className="text-center p-4 bg-primary/10 border border-primary/20 rounded-xl">
                       <p className="text-primary font-bold">This match has been completed.</p>
                       <p className="text-text-secondary text-sm">Winner: {selectedMatch.winner?.name}</p>
                     </div>
                   ) : (
-                    <button 
-                      type="submit" 
+                    <button
+                      type="submit"
                       disabled={submitting || !selectedMatch.teamA || !selectedMatch.teamB}
                       className="btn-primary w-full py-4 text-lg"
                     >

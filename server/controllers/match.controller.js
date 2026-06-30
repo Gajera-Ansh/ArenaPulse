@@ -3,6 +3,7 @@
 import Match from '../models/Match.js';
 import Notification from '../models/Notification.js';
 import Team from '../models/Team.js';
+import Tournament from '../models/Tournament.js';
 
 // GET /api/matches/tournament/:tournamentId
 export const getMatchesByTournament = async (req, res, next) => {
@@ -82,39 +83,118 @@ export const submitResult = async (req, res, next) => {
 
     await match.save();
 
-    // Auto-advance winner to next match
-    if (match.nextMatchNumber) {
-      const nextMatch = await Match.findOne({
-        tournament: match.tournament,
-        matchNumber: match.nextMatchNumber,
-      });
+    // Handle tournament progression
+    const tournamentObj = await Tournament.findById(match.tournament);
 
-      if (nextMatch) {
-        if (!nextMatch.teamA) {
-          nextMatch.teamA = match.winner;
-        } else {
-          nextMatch.teamB = match.winner;
+    if (tournamentObj.bracketType === 'round-robin') {
+      // Check if all matches are completed
+      const allMatches = await Match.find({ tournament: match.tournament });
+      const allCompleted = allMatches.every(m => m.status === 'completed');
+      
+      if (allCompleted) {
+        // Calculate points (1 win = 1 point)
+        const points = {};
+        allMatches.forEach(m => {
+          if (m.winner) {
+            points[m.winner] = (points[m.winner] || 0) + 1;
+          }
+        });
+        
+        let maxPoints = -1;
+        for (const teamId in points) {
+          if (points[teamId] > maxPoints) {
+            maxPoints = points[teamId];
+          }
         }
-        await nextMatch.save();
+        
+        const tiedTeams = Object.keys(points).filter(teamId => points[teamId] === maxPoints);
+        let tournamentWinner = null;
+
+        if (tiedTeams.length === 1) {
+          // Clear winner
+          tournamentWinner = tiedTeams[0];
+        } else if (tiedTeams.length === 2) {
+          // 2-way tie: Head-to-head tiebreaker
+          const headToHeadMatch = allMatches.find(m => 
+            (String(m.teamA) === tiedTeams[0] && String(m.teamB) === tiedTeams[1]) ||
+            (String(m.teamA) === tiedTeams[1] && String(m.teamB) === tiedTeams[0])
+          );
+          if (headToHeadMatch && headToHeadMatch.winner) {
+            tournamentWinner = String(headToHeadMatch.winner);
+          } else {
+            tournamentWinner = tiedTeams[0]; // fallback
+          }
+        } else if (tiedTeams.length > 2) {
+          // 3-way or more tie: Score Differential tiebreaker
+          let bestDiff = -Infinity;
+          for (const teamId of tiedTeams) {
+            let diff = 0;
+            allMatches.forEach(m => {
+              if (String(m.teamA) === teamId) {
+                diff += (m.scoreA || 0) - (m.scoreB || 0);
+              } else if (String(m.teamB) === teamId) {
+                diff += (m.scoreB || 0) - (m.scoreA || 0);
+              }
+            });
+            if (diff > bestDiff) {
+              bestDiff = diff;
+              tournamentWinner = teamId;
+            }
+          }
+        }
+        
+        await Tournament.findByIdAndUpdate(match.tournament, {
+          status: 'completed',
+          winner: tournamentWinner
+        });
+
+        if (tournamentWinner) {
+          const winningTeam = await Team.findById(tournamentWinner).select('players name');
+          if (winningTeam && winningTeam.players) {
+            const notifs = winningTeam.players.map(p => ({
+              user: p,
+              message: `Congratulations! Your team "${winningTeam.name}" won the tournament with the highest score!`,
+              type: 'success'
+            }));
+            await Notification.insertMany(notifs);
+          }
+        }
       }
     } else {
-      // This is the final match. Mark the tournament as completed.
-      const Tournament = (await import('../models/Tournament.js')).default;
-      await Tournament.findByIdAndUpdate(match.tournament, {
-        status: 'completed',
-        winner: match.winner
-      });
-      
-      // Notify about tournament completion
-      if (match.winner) {
-        const winningTeam = await Team.findById(match.winner).select('players name');
-        if (winningTeam && winningTeam.players) {
-          const notifs = winningTeam.players.map(p => ({
-            user: p,
-            message: `Congratulations! Your team "${winningTeam.name}" won the tournament!`,
-            type: 'success'
-          }));
-          await Notification.insertMany(notifs);
+      // Single elimination logic
+      // Auto-advance winner to next match
+      if (match.nextMatchNumber) {
+        const nextMatch = await Match.findOne({
+          tournament: match.tournament,
+          matchNumber: match.nextMatchNumber,
+        });
+
+        if (nextMatch) {
+          if (!nextMatch.teamA) {
+            nextMatch.teamA = match.winner;
+          } else {
+            nextMatch.teamB = match.winner;
+          }
+          await nextMatch.save();
+        }
+      } else {
+        // This is the final match. Mark the tournament as completed.
+        await Tournament.findByIdAndUpdate(match.tournament, {
+          status: 'completed',
+          winner: match.winner
+        });
+        
+        // Notify about tournament completion
+        if (match.winner) {
+          const winningTeam = await Team.findById(match.winner).select('players name');
+          if (winningTeam && winningTeam.players) {
+            const notifs = winningTeam.players.map(p => ({
+              user: p,
+              message: `Congratulations! Your team "${winningTeam.name}" won the tournament!`,
+              type: 'success'
+            }));
+            await Notification.insertMany(notifs);
+          }
         }
       }
     }

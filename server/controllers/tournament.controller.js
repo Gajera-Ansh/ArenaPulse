@@ -6,6 +6,7 @@ import Registration from '../models/Registration.js';
 import Match from '../models/Match.js';
 import Notification from '../models/Notification.js';
 import { sendNewTournamentEmail, sendTournamentUpdateEmail } from '../utils/emailService.js';
+import { generateRoundRobin } from '../utils/bracketGenerator.js';
 
 // POST /api/tournaments
 export const createTournament = async (req, res, next) => {
@@ -239,14 +240,18 @@ export const startTournament = async (req, res, next) => {
     // Shuffle teams
     teams.sort(() => Math.random() - 0.5);
 
-    // Calculate nearest power of 2 for bracket
+    // Calculate nearest power of 2 for single elim bracket
     const N = Math.pow(2, Math.ceil(Math.log2(teams.length)));
     
-    // Pad with nulls for Byes
-    while (teams.length < N) teams.push(null);
+    let matchesToInsert = [];
 
-    const matchesToInsert = [];
-    let matchNumber = 1;
+    if (tournament.bracketType === 'round-robin') {
+      matchesToInsert = generateRoundRobin(teams, tournament._id);
+    } else {
+      // Single elimination logic
+      let byes = N - teams.length;
+      let teamIndex = 0;
+      let matchNumber = 1;
 
     const totalRounds = Math.log2(N);
     let currentRoundMatches = N / 2;
@@ -255,8 +260,19 @@ export const startTournament = async (req, res, next) => {
     for (let r = 1; r <= totalRounds; r++) {
       for (let i = 0; i < currentRoundMatches; i++) {
         const isRound1 = r === 1;
-        const teamA = isRound1 ? teams[i * 2] : null;
-        const teamB = isRound1 ? teams[i * 2 + 1] : null;
+        let teamA = null;
+        let teamB = null;
+
+        if (isRound1) {
+          if (byes > 0) {
+            teamA = teams[teamIndex++];
+            teamB = null; // Bye
+            byes--;
+          } else {
+            teamA = teams[teamIndex++];
+            teamB = teams[teamIndex++];
+          }
+        }
 
         let nextMatchNumber = null;
         if (r < totalRounds) {
@@ -267,7 +283,6 @@ export const startTournament = async (req, res, next) => {
         let status = 'upcoming';
         let winner = null;
 
-        // If it's round 1 and one team is null (a Bye)
         if (isRound1 && (teamA === null || teamB === null)) {
           status = 'completed';
           winner = teamA || teamB;
@@ -289,13 +304,14 @@ export const startTournament = async (req, res, next) => {
       currentRoundMatches /= 2;
     }
 
-    // Second pass: advance Byes to the next round automatically
-    for (const match of matchesToInsert) {
-      if (match.winner && match.nextMatchNumber) {
-        const nextMatch = matchesToInsert.find(m => m.matchNumber === match.nextMatchNumber);
-        if (nextMatch) {
-          if (!nextMatch.teamA) nextMatch.teamA = match.winner;
-          else nextMatch.teamB = match.winner;
+      // Second pass: advance Byes to the next round automatically
+      for (const match of matchesToInsert) {
+        if (match.winner && match.nextMatchNumber) {
+          const nextMatch = matchesToInsert.find(m => m.matchNumber === match.nextMatchNumber);
+          if (nextMatch) {
+            if (!nextMatch.teamA) nextMatch.teamA = match.winner;
+            else nextMatch.teamB = match.winner;
+          }
         }
       }
     }

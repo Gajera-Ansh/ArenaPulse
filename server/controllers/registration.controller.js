@@ -210,15 +210,24 @@ export const acceptEnrollment = async (req, res, next) => {
         type: 'success',
       });
 
-      // Email the organizer
+      // Notify the organizer
       const organizer = registration.tournament.organizer;
-      if (organizer && organizer.email) {
-        sendOrganizerRegistrationRequestEmail(
-          organizer.email,
-          organizer.name,
-          registration.team.name,
-          registration.tournament.title
-        );
+      if (organizer) {
+        await Notification.create({
+          user: organizer._id,
+          message: `A new team (${registration.team.name}) has applied to join your tournament: ${registration.tournament.title}.`,
+          type: 'info',
+          link: `/organizer/tournaments/${registration.tournament._id}`
+        });
+
+        if (organizer.email) {
+          sendOrganizerRegistrationRequestEmail(
+            organizer.email,
+            organizer.name,
+            registration.team.name,
+            registration.tournament.title
+          );
+        }
       }
     }
 

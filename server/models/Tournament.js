@@ -22,7 +22,7 @@ const tournamentSchema = new mongoose.Schema(
     },
     bracketType: {
       type: String,
-      enum: ['single-elimination', 'double-elimination'],
+      enum: ['single-elimination', 'round-robin'],
       default: 'single-elimination',
     },
     maxTeams: {
