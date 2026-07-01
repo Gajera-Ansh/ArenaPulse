@@ -12,7 +12,7 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     // Determine backend URL (default to localhost:5000 in dev)
-    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const backendUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_EXPRESS_URL || 'http://localhost:5000';
     
     // Initialize socket connection
     const newSocket = io(backendUrl, {
