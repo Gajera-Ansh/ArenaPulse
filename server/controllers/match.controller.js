@@ -42,26 +42,26 @@ export const getMatchById = async (req, res, next) => {
 export const updateScore = async (req, res, next) => {
   try {
     const { scoreA, scoreB } = req.body;
-    const match = await Match.findById(req.params.id)
+    
+    const updatedMatch = await Match.findByIdAndUpdate(
+      req.params.id,
+      { scoreA, scoreB, status: 'live' },
+      { new: true }
+    )
       .populate('teamA', 'name tag logo')
       .populate('teamB', 'name tag logo');
 
-    if (!match) {
+    if (!updatedMatch) {
       return res.status(404).json({ success: false, message: 'Match not found.' });
     }
-
-    match.scoreA = scoreA;
-    match.scoreB = scoreB;
-    match.status = 'live';
-    await match.save();
 
     // Socket.IO emit
     const io = req.app.get('io');
     if (io) {
-      io.emit('score_updated', match);
+      io.emit('score_updated', updatedMatch);
     }
     
-    res.status(200).json({ success: true, data: match });
+    res.status(200).json({ success: true, data: updatedMatch });
   } catch (error) {
     next(error);
   }

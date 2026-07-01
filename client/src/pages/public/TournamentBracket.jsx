@@ -131,9 +131,13 @@ const TournamentBracket = () => {
     if (!socket) return;
 
     const handleScoreUpdated = (updatedMatch) => {
-      // Only process updates for this tournament
+      // Re-fetch all matches to ensure full populated data is consistent across all clients
       if (updatedMatch.tournament === id) {
-        setMatches(prevMatches => prevMatches.map(m => m._id === updatedMatch._id ? { ...m, ...updatedMatch } : m));
+        expressApi.get(`/api/matches/tournament/${id}`).then(res => {
+          if (res.data.success) {
+            setMatches(res.data.data);
+          }
+        });
       }
     };
 
@@ -199,8 +203,12 @@ const TournamentBracket = () => {
         scoreB: Number(scoreB)
       });
       if (res.data.success) {
-        // Just update local match without closing modal
-        setMatches(prevMatches => prevMatches.map(m => m._id === selectedMatch._id ? { ...m, ...res.data.data } : m));
+        // Just update local match without closing modal by refetching to ensure full team population
+        expressApi.get(`/api/matches/tournament/${id}`).then(resMatches => {
+          if (resMatches.data.success) {
+            setMatches(resMatches.data.data);
+          }
+        });
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to update live score');
