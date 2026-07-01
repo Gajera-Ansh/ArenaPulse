@@ -3,6 +3,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import http from 'http';
+import { Server } from 'socket.io';
 
 // Load environment variables FIRST before any route or config imports
 dotenv.config();
@@ -26,9 +28,31 @@ import adminRoutes from './routes/admin.routes.js';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Create HTTP Server & Socket.io
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+    credentials: true,
+  }
+});
+
+// Inject io into Express app
+app.set('io', io);
+
+// Socket connection logic
+io.on('connection', (socket) => {
+  console.log(`⚡ Client connected to socket: ${socket.id}`);
+
+  socket.on('disconnect', () => {
+    console.log(`🔌 Client disconnected: ${socket.id}`);
+  });
+});
+
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5174',
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true,
 }));
 app.use(express.json());
@@ -58,8 +82,8 @@ app.use(errorHandler);
 // Connect to DB and start server
 const startServer = async () => {
   await connectDB();
-  app.listen(PORT, () => {
-    console.log(`🚀 ArenaPulse API running on http://localhost:${PORT}`);
+  httpServer.listen(PORT, () => {
+    console.log(`🚀 ArenaPulse API & Socket.io running on http://localhost:${PORT}`);
   });
 };
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -27,71 +28,73 @@ const Leaderboard = () => <div className="container pt-20"><h1>Leaderboard</h1><
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <ScrollToTop />
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
-          <main className="flex-grow">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+      <SocketProvider>
+        <BrowserRouter>
+          <ScrollToTop />
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-grow">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
 
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
 
-              <Route path="/settings" element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              } />
+                <Route path="/settings" element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                } />
 
-              <Route path="/tournaments/create" element={
-                <ProtectedRoute allowedRoles={['organizer']}>
-                  <CreateTournament />
-                </ProtectedRoute>
-              } />
+                <Route path="/tournaments/create" element={
+                  <ProtectedRoute allowedRoles={['organizer']}>
+                    <CreateTournament />
+                  </ProtectedRoute>
+                } />
 
-              <Route path="/tournaments/:id/edit" element={
-                <ProtectedRoute allowedRoles={['organizer']}>
-                  <EditTournament />
-                </ProtectedRoute>
-              } />
+                <Route path="/tournaments/:id/edit" element={
+                  <ProtectedRoute allowedRoles={['organizer']}>
+                    <EditTournament />
+                  </ProtectedRoute>
+                } />
 
-              <Route path="/teams/create" element={
-                <ProtectedRoute allowedRoles={['player']}>
-                  <CreateTeam />
-                </ProtectedRoute>
-              } />
+                <Route path="/teams/create" element={
+                  <ProtectedRoute allowedRoles={['player']}>
+                    <CreateTeam />
+                  </ProtectedRoute>
+                } />
 
-              <Route path="/teams/:id/edit" element={
-                <ProtectedRoute allowedRoles={['player']}>
-                  <EditTeam />
-                </ProtectedRoute>
-              } />
+                <Route path="/teams/:id/edit" element={
+                  <ProtectedRoute allowedRoles={['player']}>
+                    <EditTeam />
+                  </ProtectedRoute>
+                } />
 
-              <Route path="/teams" element={
-                <ProtectedRoute allowedRoles={['player']}>
-                  <Teams />
-                </ProtectedRoute>
-              } />
+                <Route path="/teams" element={
+                  <ProtectedRoute allowedRoles={['player']}>
+                    <Teams />
+                  </ProtectedRoute>
+                } />
 
-              <Route path="/tournaments" element={<Tournaments />} />
-              <Route path="/tournaments/:id" element={
-                <ProtectedRoute>
-                  <TournamentDetails />
-                </ProtectedRoute>
-              } />
-              <Route path="/tournaments/:id/bracket" element={<TournamentBracket />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </BrowserRouter>
+                <Route path="/tournaments" element={<Tournaments />} />
+                <Route path="/tournaments/:id" element={
+                  <ProtectedRoute>
+                    <TournamentDetails />
+                  </ProtectedRoute>
+                } />
+                <Route path="/tournaments/:id/bracket" element={<TournamentBracket />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </BrowserRouter>
+      </SocketProvider>
     </AuthProvider>
   );
 }

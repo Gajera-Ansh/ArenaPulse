@@ -138,6 +138,18 @@ const TournamentDetails = () => {
     fetchTournamentAndRegistration();
   }, [id, user]);
 
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (showModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showModal]);
+
   const handleOrganizerAction = async (regId, status) => {
     try {
       setActionLoading(regId);

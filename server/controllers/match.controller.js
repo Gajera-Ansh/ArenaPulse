@@ -53,7 +53,12 @@ export const updateScore = async (req, res, next) => {
     match.status = 'live';
     await match.save();
 
-    // Socket.IO emit will be added here later
+    // Socket.IO emit
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('score_updated', match);
+    }
+    
     res.status(200).json({ success: true, data: match });
   } catch (error) {
     next(error);
@@ -148,6 +153,12 @@ export const submitResult = async (req, res, next) => {
           winner: tournamentWinner
         });
 
+        const io = req.app.get('io');
+        if (io) {
+          const populatedWinner = await Team.findById(tournamentWinner).select('name tag');
+          io.emit('tournament_completed', { tournamentId: match.tournament, winner: populatedWinner });
+        }
+
         if (tournamentWinner) {
           const winningTeam = await Team.findById(tournamentWinner).select('players name');
           if (winningTeam && winningTeam.players) {
@@ -183,6 +194,12 @@ export const submitResult = async (req, res, next) => {
           status: 'completed',
           winner: match.winner
         });
+        
+        const io = req.app.get('io');
+        if (io) {
+          const populatedWinner = await Team.findById(match.winner).select('name tag');
+          io.emit('tournament_completed', { tournamentId: match.tournament, winner: populatedWinner });
+        }
         
         // Notify about tournament completion
         if (match.winner) {
@@ -226,6 +243,11 @@ export const submitResult = async (req, res, next) => {
           await Notification.insertMany(notifs);
         }
       }
+    }
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('match_completed', match);
     }
 
     res.status(200).json({ success: true, data: match });

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 
 // Recursive Match Node Component for perfect tree alignment
 const MatchNode = ({ match, allMatches, openMatchModal }) => {
@@ -35,9 +36,9 @@ const MatchNode = ({ match, allMatches, openMatchModal }) => {
       {/* Current Match Box */}
       <div 
         onClick={() => openMatchModal(match)}
-        className={`w-[260px] flex-shrink-0 glass-panel border transition-all cursor-pointer hover:shadow-xl hover:-translate-y-1 ${match.status === 'completed' ? 'border-border' : match.status === 'live' ? 'border-primary shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'border-border/50'} rounded-xl overflow-hidden relative z-10`}
+        className={`w-[260px] flex-shrink-0 bg-surface border transition-all cursor-pointer hover:shadow-lg hover:-translate-y-1 ${match.status === 'completed' ? 'border-slate-300' : match.status === 'live' ? 'border-primary shadow-sm' : 'border-slate-300/50'} rounded-[8px] overflow-hidden relative z-10`}
       >
-        <div className="bg-black/5 dark:bg-black/30 px-4 py-2 flex justify-between items-center text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider border-b border-border">
+        <div className="bg-slate-50 px-4 py-2 flex justify-between items-center text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider border-b border-slate-300">
           <span>Match {match.matchNumber}</span>
           <span className={match.status === 'live' ? 'text-primary' : ''}>
             {match.status === 'completed' ? 'Final' : match.status}
@@ -89,6 +90,7 @@ const MatchNode = ({ match, allMatches, openMatchModal }) => {
 const TournamentBracket = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const { socket } = useSocket();
 
   const [tournament, setTournament] = useState(null);
   const [matches, setMatches] = useState([]);
@@ -124,6 +126,57 @@ const TournamentBracket = () => {
     fetchData();
   }, [id]);
 
+  // Real-Time Socket Listeners
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleScoreUpdated = (updatedMatch) => {
+      // Only process updates for this tournament
+      if (updatedMatch.tournament === id) {
+        setMatches(prevMatches => prevMatches.map(m => m._id === updatedMatch._id ? { ...m, ...updatedMatch } : m));
+      }
+    };
+
+    const handleMatchCompleted = (updatedMatch) => {
+      // Match completion might affect next matches, so we refetch all matches to ensure bracket lines and next round propagate properly
+      if (updatedMatch.tournament === id) {
+        expressApi.get(`/api/matches/tournament/${id}`).then(res => {
+          if (res.data.success) {
+            setMatches(res.data.data);
+          }
+        });
+      }
+    };
+
+    const handleTournamentCompleted = (data) => {
+      if (data.tournamentId === id) {
+        setTournament(prev => prev ? { ...prev, status: 'completed', winner: data.winner } : prev);
+      }
+    };
+
+    socket.on('score_updated', handleScoreUpdated);
+    socket.on('match_completed', handleMatchCompleted);
+    socket.on('tournament_completed', handleTournamentCompleted);
+
+    return () => {
+      socket.off('score_updated', handleScoreUpdated);
+      socket.off('match_completed', handleMatchCompleted);
+      socket.off('tournament_completed', handleTournamentCompleted);
+    };
+  }, [socket, id]);
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (selectedMatch) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedMatch]);
+
   const isOrganizer = user && tournament && tournament.organizer?._id === user.id;
 
   const openMatchModal = (match) => {
@@ -136,11 +189,31 @@ const TournamentBracket = () => {
     setSelectedMatch(null);
   };
 
-  const handleScoreSubmit = async (e) => {
+  const handleLiveScoreUpdate = async (e) => {
+    e.preventDefault();
+    if (!isOrganizer) return;
+    setSubmitting('live');
+    try {
+      const res = await expressApi.patch(`/api/matches/${selectedMatch._id}/score`, {
+        scoreA: Number(scoreA),
+        scoreB: Number(scoreB)
+      });
+      if (res.data.success) {
+        // Just update local match without closing modal
+        setMatches(prevMatches => prevMatches.map(m => m._id === selectedMatch._id ? { ...m, ...res.data.data } : m));
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update live score');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleFinalSubmit = async (e) => {
     e.preventDefault();
     if (!isOrganizer) return;
 
-    setSubmitting(true);
+    setSubmitting('final');
     try {
       const res = await expressApi.post(`/api/matches/${selectedMatch._id}/result`, {
         scoreA: Number(scoreA),
@@ -199,15 +272,15 @@ const TournamentBracket = () => {
           </Link>
           <h1 className="text-[2rem] font-bold text-text">{tournament.title} <span className="text-primary">Bracket</span></h1>
         </div>
-        <div className="bg-accent/10 border border-accent/20 px-5 py-2.5 rounded-xl text-accent text-[0.85rem] font-bold shadow-sm flex items-center">
+        <div className="bg-surface border border-border px-5 py-2.5 rounded-[4px] text-text text-[0.85rem] font-bold shadow-sm flex items-center">
           <i className="fa-solid fa-gamepad mr-2"></i> {tournament.game}
         </div>
       </div>
 
       {/* Winner Celebration Banner */}
       {tournament.status === 'completed' && tournament.winner && (
-        <div className="mb-12 glass-panel border-2 border-accent/50 rounded-3xl p-8 text-center relative overflow-hidden shadow-[0_0_50px_rgba(251,191,36,0.2)] animate-fade-in">
-          <div className="absolute -top-20 -left-20 w-64 h-64 bg-accent/20 rounded-full blur-[80px] pointer-events-none"></div>
+        <div className="mb-12 bg-surface border-2 border-accent/50 rounded-[8px] p-8 text-center relative overflow-hidden shadow-sm animate-fade-in">
+          <div className="absolute inset-0 bg-accent/5 pointer-events-none"></div>
           <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/20 rounded-full blur-[80px] pointer-events-none"></div>
 
           <i className="fa-solid fa-trophy text-6xl text-accent mb-6 animate-bounce"></i>
@@ -319,10 +392,10 @@ const TournamentBracket = () => {
 
       {/* Match Score Modal */}
       {selectedMatch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
-          <div className="glass-panel border border-border rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up">
-            <div className="bg-black/5 dark:bg-black/20 p-4 border-b border-border flex justify-between items-center">
-              <h3 className="text-lg font-bold text-text">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-surface border border-slate-300 rounded-[8px] shadow-xl w-full max-w-lg overflow-hidden animate-slide-up">
+            <div className="bg-slate-50 p-4 border-b border-slate-300 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-text uppercase tracking-widest">
                 Match {selectedMatch.matchNumber} Details
               </h3>
               <button onClick={closeMatchModal} className="text-text-secondary hover:text-red-500 transition-colors">
@@ -348,13 +421,13 @@ const TournamentBracket = () => {
                     </div>
                   </div>
 
-                  <div className="text-center bg-white/5 py-3 rounded-lg border border-white/10">
+                  <div className="text-center bg-slate-100 py-3 rounded-[4px] border border-slate-200">
                     <p className="text-text-secondary text-sm uppercase tracking-widest font-bold">Status: <span className={selectedMatch.status === 'live' ? 'text-primary' : 'text-text'}>{selectedMatch.status}</span></p>
                   </div>
                 </div>
               ) : (
                 // Organizer View (Editable Form)
-                <form onSubmit={handleScoreSubmit} className="space-y-6">
+                <form className="space-y-6">
                   <div className="flex justify-between items-center gap-4">
                     <div className="flex-1 text-center">
                       <p className="font-bold text-text mb-3 truncate">{selectedMatch.teamA?.name || 'TBD'}</p>
@@ -384,18 +457,29 @@ const TournamentBracket = () => {
                   </div>
 
                   {selectedMatch.status === 'completed' ? (
-                    <div className="text-center p-4 bg-primary/10 border border-primary/20 rounded-xl">
-                      <p className="text-primary font-bold">This match has been completed.</p>
-                      <p className="text-text-secondary text-sm">Winner: {selectedMatch.winner?.name}</p>
+                    <div className="text-center p-4 bg-primary/10 border border-primary/20 rounded-[4px]">
+                      <p className="text-primary font-bold uppercase tracking-widest text-[0.9rem]">This match has been completed.</p>
+                      <p className="text-text-secondary text-sm font-bold mt-1">Winner: <span className="text-text">{selectedMatch.winner?.name}</span></p>
                     </div>
                   ) : (
-                    <button
-                      type="submit"
-                      disabled={submitting || !selectedMatch.teamA || !selectedMatch.teamB}
-                      className="btn-primary w-full py-4 text-lg"
-                    >
-                      {submitting ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Submit Final Score'}
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button
+                        type="button"
+                        onClick={handleLiveScoreUpdate}
+                        disabled={submitting || !selectedMatch.teamA || !selectedMatch.teamB}
+                        className="flex-1 bg-white/5 hover:bg-white/10 text-text border border-border hover:border-slate-400 py-4 rounded-[4px] font-bold text-[1rem] transition-all"
+                      >
+                        {submitting === 'live' ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Update Live Score'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleFinalSubmit}
+                        disabled={submitting || !selectedMatch.teamA || !selectedMatch.teamB}
+                        className="flex-1 btn-primary py-4 text-[1rem]"
+                      >
+                        {submitting === 'final' ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Submit Final Result'}
+                      </button>
+                    </div>
                   )}
                 </form>
               )}
