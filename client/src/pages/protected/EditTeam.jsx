@@ -154,9 +154,6 @@ const EditTeam = () => {
 
   return (
     <div className="container py-8 sm:py-12 relative min-h-[calc(100vh-80px)] overflow-hidden">
-      {/* Ambient Backgrounds */}
-      <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-accent/5 rounded-full blur-[150px] pointer-events-none -z-10"></div>
-      <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
 
       <div className="mb-8 flex items-center justify-between max-w-xl mx-auto">
         <div>
@@ -294,14 +291,14 @@ const EditTeam = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search players by username..."
-                    className="w-full bg-black/20 border border-border rounded-xl pl-12 pr-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-[0.95rem]"
+                    className="w-full bg-white border border-border rounded-xl pl-12 pr-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-[0.95rem]"
                   />
-                  {isSearching && <i className="fa-solid fa-circle-notch fa-spin absolute right-4 top-1/2 -translate-y-1/2 text-primary"></i>}
+                  {isSearching && <i className="fa-solid fa-circle-notch fa-spin absolute right-4 top-1/3 -translate-y-1/2 text-primary"></i>}
 
                   {searchResults.length > 0 && (
-                    <div className="absolute z-10 w-full mt-2 bg-background border border-border rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-2 bg-white border border-border rounded-xl shadow-xl max-h-48 overflow-y-auto">
                       {searchResults.map(u => (
-                        <div key={u._id} className="flex items-center justify-between p-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-0 transition-colors" onClick={() => handleAddPlayer(u)}>
+                        <div key={u._id} className="flex items-center justify-between p-3 hover:bg-black/10 cursor-pointer border-b border-white/5 last:border-0 transition-colors" onClick={() => handleAddPlayer(u)}>
                           <span className="text-[0.95rem] font-medium text-text">{u.name}</span>
                           <button type="button" className="text-primary bg-primary/10 hover:bg-primary/20 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
                             <i className="fa-solid fa-plus text-[0.8rem]"></i>

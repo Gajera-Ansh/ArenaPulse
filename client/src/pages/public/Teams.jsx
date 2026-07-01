@@ -52,9 +52,6 @@ const Teams = () => {
 
   return (
     <div className="container py-8 sm:py-12 relative min-h-[calc(100vh-80px)] overflow-hidden flex flex-col">
-      {/* Ambient Backgrounds */}
-      <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-accent/5 rounded-full blur-[150px] pointer-events-none -z-10"></div>
-      <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
 
       {/* Header Section */}
       <div className="mb-8 sm:mb-10 text-center max-w-3xl mx-auto px-4">
@@ -91,7 +88,7 @@ const Teams = () => {
       ) : filteredTeams.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in pb-10">
           {filteredTeams.map((t) => (
-            <div key={t._id} className="glass-panel border border-border rounded-[20px] overflow-hidden hover:border-primary/50 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 group flex flex-col h-full">
+            <div key={t._id} className="glass-panel shadow-lg border border-border rounded-[20px] overflow-hidden hover:border-primary/50 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 group flex flex-col h-full">
               
               {/* Card Banner */}
               <div className="h-20 bg-gradient-to-r from-background-light to-background relative p-5 border-b border-white/5 flex items-center justify-between">
