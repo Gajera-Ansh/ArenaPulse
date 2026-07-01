@@ -42,7 +42,9 @@ export const getMatchById = async (req, res, next) => {
 export const updateScore = async (req, res, next) => {
   try {
     const { scoreA, scoreB } = req.body;
-    const match = await Match.findById(req.params.id);
+    const match = await Match.findById(req.params.id)
+      .populate('teamA', 'name tag logo')
+      .populate('teamB', 'name tag logo');
 
     if (!match) {
       return res.status(404).json({ success: false, message: 'Match not found.' });
@@ -69,7 +71,9 @@ export const updateScore = async (req, res, next) => {
 export const submitResult = async (req, res, next) => {
   try {
     const { scoreA, scoreB } = req.body;
-    const match = await Match.findById(req.params.id);
+    const match = await Match.findById(req.params.id)
+      .populate('teamA', 'name tag logo')
+      .populate('teamB', 'name tag logo');
 
     if (!match) {
       return res.status(404).json({ success: false, message: 'Match not found.' });
