@@ -197,11 +197,11 @@ const TournamentDetails = () => {
   if (error || !tournament) {
     return (
       <div className="container py-20 min-h-[calc(100vh-80px)] flex items-center justify-center">
-        <div className="max-w-md w-full glass-panel p-8 rounded-[24px] border border-border text-center shadow-xl">
+        <div className="max-w-md w-full bg-surface p-8 rounded-[8px] border border-border text-center shadow-sm">
           <i className="fa-solid fa-triangle-exclamation text-5xl text-red-500/80 mb-4"></i>
           <h2 className="text-[1.5rem] font-bold text-text mb-2">Tournaments Not Found</h2>
           <p className="text-text-secondary mb-8">{error || "This tournament may have been deleted or doesn't exist."}</p>
-          <Link to="/tournaments" className="btn-primary inline-flex items-center gap-2">
+          <Link to="/tournaments" className="btn-primary w-full">
             <i className="fa-solid fa-arrow-left"></i> Return to Board
           </Link>
         </div>
@@ -213,9 +213,6 @@ const TournamentDetails = () => {
 
   return (
     <div className="container py-8 sm:py-12 relative min-h-[calc(100vh-80px)]">
-      {/* Ambient Backgrounds */}
-      <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-accent/5 rounded-full blur-[150px] pointer-events-none -z-10"></div>
-      <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
 
       {/* Back Button */}
       <Link to="/tournaments" className="text-primary hover:text-primary-hover font-bold text-[0.9rem] flex items-center gap-2 w-fit transition-transform hover:-translate-x-1 mb-6">
@@ -228,25 +225,30 @@ const TournamentDetails = () => {
         <div className="lg:col-span-2 space-y-8">
 
           {/* Header Banner */}
-          <div className="glass-panel border border-border rounded-[24px] overflow-hidden shadow-xl">
-            <div className="min-h-[10rem] sm:min-h-[14rem] pt-16 bg-gradient-to-r from-background-light to-background relative border-b border-white/5 flex items-end p-6 sm:p-8">
-              <div className="absolute top-4 right-4">
-                <span className={`px-4 py-1.5 rounded-full text-[0.75rem] font-bold uppercase tracking-widest shadow-md ${(tournament.status === 'open' && new Date(tournament.registrationDeadline) >= new Date()) ? 'bg-primary text-white' :
+          <div className="bg-surface border border-border rounded-[8px] overflow-hidden shadow-sm">
+            <div className="min-h-[10rem] sm:min-h-[14rem] pt-16 bg-surface relative border-b border-border flex items-end p-6 sm:p-8 overflow-hidden">
+              
+              {/* Visible Cyber Design (matching tournament cards) */}
+              <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 12px)' }}></div>
+              <div className="absolute right-0 top-0 w-2/3 h-full bg-gradient-to-l from-primary/20 to-transparent pointer-events-none"></div>
+
+              <div className="absolute top-4 right-4 z-10">
+                <span className={`px-4 py-1.5 rounded-[4px] text-[0.75rem] font-bold uppercase tracking-widest shadow-sm ${(tournament.status === 'open' && new Date(tournament.registrationDeadline) >= new Date()) ? 'bg-primary text-white' :
                   tournament.status === 'live' ? 'bg-red-500 text-white animate-pulse' :
-                    'bg-white/10 text-text-secondary'
+                    'bg-background border border-border text-text-secondary'
                   }`}>
                   {tournament.status === 'open' && new Date(tournament.registrationDeadline) < new Date() ? 'closed' : tournament.status}
                 </span>
               </div>
-              <div>
-                <span className="inline-block bg-accent/20 border border-accent/30 backdrop-blur-md px-3 py-1 rounded text-[0.8rem] font-bold text-accent tracking-wider mb-3 shadow-[0_0_15px_rgba(251,191,36,0.15)]">
+              <div className="relative z-10">
+                <span className="inline-block bg-accent/10 border border-accent/20 px-3 py-1 rounded-[4px] text-[0.8rem] font-bold text-accent tracking-wider mb-3 shadow-sm backdrop-blur-sm">
                   {tournament.game}
                 </span>
-                <h1 className="text-[2rem] sm:text-[2.5rem] font-bold text-text leading-tight">{tournament.title}</h1>
+                <h1 className="text-[2rem] sm:text-[2.5rem] font-bold text-text leading-tight uppercase tracking-tight drop-shadow-sm">{tournament.title}</h1>
               </div>
             </div>
 
-            <div className="p-6 sm:p-8 flex flex-col gap-5 bg-black/20">
+            <div className="p-6 sm:p-8 flex flex-col gap-5 bg-background border-t border-border">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-white/5 border border-border rounded-full flex items-center justify-center text-text-secondary text-xl overflow-hidden shrink-0">
                   {tournament.organizer?.avatar ? (
@@ -305,13 +307,13 @@ const TournamentDetails = () => {
 
           {/* Winner Celebration Banner */}
           {tournament.status === 'completed' && tournament.winner && (
-            <div className="glass-panel border-2 border-accent/50 rounded-3xl p-8 text-center relative overflow-hidden shadow-[0_0_50px_rgba(251,191,36,0.2)] animate-fade-in mt-8">
+            <div className="bg-surface border-2 border-accent/50 rounded-[8px] p-8 text-center relative overflow-hidden shadow-sm animate-fade-in mt-8">
               <div className="absolute -top-20 -left-20 w-64 h-64 bg-accent/20 rounded-full blur-[80px] pointer-events-none"></div>
               <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/20 rounded-full blur-[80px] pointer-events-none"></div>
 
               <i className="fa-solid fa-trophy text-6xl text-accent mb-6 animate-bounce"></i>
-              <h2 className="text-[1.2rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Tournament Champion</h2>
-              <h1 className="text-[3rem] sm:text-[4rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-accent via-yellow-300 to-accent leading-tight mb-2 drop-shadow-lg">
+              <h2 className="text-[1.1rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Tournament Champion</h2>
+              <h1 className="text-[3rem] sm:text-[4rem] font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent via-yellow-300 to-accent leading-tight mb-2 drop-shadow-lg">
                 {tournament.winner.name}
               </h1>
               <p className="text-[1.2rem] text-text font-bold">[{tournament.winner.tag}]</p>
@@ -319,8 +321,8 @@ const TournamentDetails = () => {
           )}
 
           {/* Rules Section */}
-          <div className="glass-panel border border-border rounded-[24px] p-6 sm:p-8 shadow-xl">
-            <h3 className="text-[1.2rem] font-bold text-text uppercase border-b border-border pb-3 mb-6 flex items-center gap-3">
+          <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm">
+            <h3 className="text-[1.1rem] font-bold text-text uppercase tracking-widest border-b border-border pb-3 mb-6 flex items-center gap-3">
               <i className="fa-solid fa-clipboard-list text-primary"></i> Tournament Briefing
             </h3>
             <div className="prose prose-invert max-w-none">
@@ -332,8 +334,8 @@ const TournamentDetails = () => {
 
           {/* Organizer Registration Management Section */}
           {isOrganizer && (
-            <div className="glass-panel border border-border rounded-[24px] p-6 sm:p-8 shadow-xl mt-8">
-              <h3 className="text-[1.2rem] font-bold text-text uppercase border-b border-border pb-3 mb-6 flex items-center gap-3">
+            <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm mt-8">
+              <h3 className="text-[1.1rem] font-bold text-text uppercase tracking-widest border-b border-border pb-3 mb-6 flex items-center gap-3">
                 <i className="fa-solid fa-clipboard-check text-primary"></i> Manage Registrations
               </h3>
 
@@ -419,26 +421,25 @@ const TournamentDetails = () => {
         <div className="space-y-6">
 
           {/* Action Card */}
-          <div className="glass-panel border border-border rounded-[24px] p-6 sm:p-8 shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[50px] pointer-events-none"></div>
+          <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm relative overflow-hidden">
 
-            <h3 className="text-[1.2rem] font-bold text-text uppercase mb-6">Enrollment</h3>
+            <h3 className="text-[0.9rem] font-bold text-text uppercase tracking-widest border-b border-border pb-3 mb-6">Enrollment</h3>
 
             <div className="space-y-4 mb-8">
-              <div className="flex justify-between items-center pb-4 border-b border-white/5">
-                <span className="text-text-secondary text-[0.9rem]"><i className="fa-solid fa-users w-6"></i> Spots Filled</span>
+              <div className="flex justify-between items-center pb-4 border-b border-border">
+                <span className="text-text-secondary text-[0.8rem] uppercase font-bold"><i className="fa-solid fa-users w-6"></i> Spots Filled</span>
                 <span className="font-bold text-text"><strong className="text-primary">{tournament.enrolledCount || 0}</strong> / {tournament.maxTeams}</span>
               </div>
-              <div className="flex justify-between items-center pb-4 border-b border-white/5">
-                <span className="text-text-secondary text-[0.9rem]"><i className="fa-solid fa-user-group w-6"></i> Players/Team</span>
+              <div className="flex justify-between items-center pb-4 border-b border-border">
+                <span className="text-text-secondary text-[0.8rem] uppercase font-bold"><i className="fa-solid fa-user-group w-6"></i> Players/Team</span>
                 <span className="font-bold text-text">{tournament.playersPerTeam || 5}</span>
               </div>
-              <div className="flex justify-between items-center pb-4 border-b border-white/5">
-                <span className="text-text-secondary text-[0.9rem]"><i className="fa-solid fa-trophy w-6"></i> Prize Pool</span>
+              <div className="flex justify-between items-center pb-4 border-b border-border">
+                <span className="text-text-secondary text-[0.8rem] uppercase font-bold"><i className="fa-solid fa-trophy w-6"></i> Prize Pool</span>
                 <span className="font-bold text-accent">{tournament.prizePool || 'Glory & Honor'}</span>
               </div>
-              <div className="flex justify-between items-center pb-4 border-b border-white/5">
-                <span className="text-text-secondary text-[0.9rem]"><i className="fa-solid fa-sitemap w-6"></i> Format</span>
+              <div className="flex justify-between items-center pb-4 border-b border-border">
+                <span className="text-text-secondary text-[0.8rem] uppercase font-bold"><i className="fa-solid fa-sitemap w-6"></i> Format</span>
                 <span className="font-bold text-text capitalize">{tournament.bracketType?.replace('-', ' ') || 'Single elimination'}</span>
               </div>
             </div>
@@ -487,11 +488,11 @@ const TournamentDetails = () => {
                 </div>
               </div>
             ) : tournament.status !== 'open' || new Date(tournament.registrationDeadline) < new Date() ? (
-              <button disabled className="bg-white/5 text-text-secondary font-bold py-3.5 px-4 w-full rounded-xl flex items-center justify-center gap-2 text-[1rem] cursor-not-allowed border border-border">
+              <button disabled className="btn bg-black/5 text-text-secondary w-full border border-border cursor-not-allowed">
                 <i className="fa-solid fa-lock"></i> Registration Closed
               </button>
             ) : (
-              <button onClick={handleOpenModal} className="bg-primary hover:bg-primary-hover text-white font-bold py-3.5 px-4 w-full rounded-xl transition-all shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 flex items-center justify-center gap-2 text-[1rem]">
+              <button onClick={handleOpenModal} className="btn-primary w-full justify-center text-[1rem] py-3">
                 <i className="fa-solid fa-right-to-bracket"></i> Enroll Team
               </button>
             )}
@@ -499,28 +500,28 @@ const TournamentDetails = () => {
           </div>
 
           {/* Timeline Card */}
-          <div className="glass-panel border border-border rounded-[24px] p-6 sm:p-8 shadow-xl">
-            <h3 className="text-[1.2rem] font-bold text-text uppercase mb-6">Tournament Timeline</h3>
+          <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm">
+            <h3 className="text-[0.9rem] font-bold text-text uppercase tracking-widest border-b border-border pb-3 mb-6">Tournament Timeline</h3>
 
-            <div className="relative border-l-2 border-white/10 ml-2 sm:ml-3 space-y-8 py-2">
+            <div className="relative border-l-2 border-border ml-2 sm:ml-3 space-y-8 py-2">
 
               {/* Timeline Item 1 */}
               <div className="relative pl-6 sm:pl-8">
-                <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-background border-2 border-primary"></div>
+                <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-surface border-2 border-primary"></div>
                 <h4 className="text-[0.85rem] font-bold text-primary uppercase tracking-widest mb-1">Registration Closes</h4>
                 <p className="text-[1rem] font-medium text-text">{formatDate(tournament.registrationDeadline)}</p>
               </div>
 
               {/* Timeline Item 2 */}
               <div className="relative pl-6 sm:pl-8">
-                <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-background border-2 border-accent"></div>
+                <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-surface border-2 border-accent"></div>
                 <h4 className="text-[0.85rem] font-bold text-accent uppercase tracking-widest mb-1">Live Matches Begin</h4>
                 <p className="text-[1rem] font-medium text-text">{formatDate(tournament.startDate)}</p>
               </div>
 
               {/* Timeline Item 3 */}
               <div className="relative pl-6 sm:pl-8">
-                <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-background border-2 border-white/20"></div>
+                <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-surface border-2 border-border"></div>
                 <h4 className="text-[0.85rem] font-bold text-text-secondary uppercase tracking-widest mb-1">Estimated End Date</h4>
                 <p className="text-[1rem] font-medium text-text">{formatDate(tournament.endDate)}</p>
               </div>
@@ -535,8 +536,8 @@ const TournamentDetails = () => {
       {/* Enrollment Modal */}
       {
         showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
-            <div className="glass-panel border border-border rounded-[24px] w-full max-w-md overflow-hidden shadow-2xl relative">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-surface border border-border rounded-[8px] w-full max-w-md overflow-hidden shadow-xl relative">
 
               {/* Modal Header */}
               <div className="p-6 border-b border-border flex justify-between items-center bg-black/20">

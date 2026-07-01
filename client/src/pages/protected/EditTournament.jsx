@@ -137,28 +137,26 @@ const EditTournament = () => {
 
   return (
     <div className="container py-8 sm:py-12 relative min-h-[calc(100vh-80px)] overflow-hidden">
-      {/* Ambient Backgrounds */}
-      <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-accent/5 rounded-full blur-[150px] pointer-events-none -z-10"></div>
-      <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
 
-      <div className="mb-8 flex items-center justify-between max-w-4xl mx-auto">
+
+      <div className="mb-8 border-b border-border pb-6 flex items-center justify-between">
         <div>
-          <Link to={`/tournaments/${id}`} className="text-primary hover:text-primary-hover font-bold text-[0.9rem] flex items-center gap-2 mb-2 w-fit transition-transform hover:-translate-x-1">
+          <Link to={`/tournaments/${id}`} className="text-primary hover:text-primary-hover font-bold text-[0.8rem] flex items-center gap-2 mb-3 uppercase tracking-wider transition-all hover:-translate-x-1 w-fit">
             <i className="fa-solid fa-arrow-left"></i> Back to Tournament
           </Link>
-          <h1 className="text-[2.5rem] font-bold text-text uppercase tracking-tight">Edit Tournament</h1>
+          <h1 className="text-[2rem] font-bold text-text uppercase tracking-tight">Edit Tournament</h1>
           <p className="text-text-secondary font-medium">Update configurations and logistics for this tournament.</p>
         </div>
         <button
           onClick={handleDelete}
-          className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 px-4 py-2 rounded-xl transition-all font-bold text-[0.9rem] flex items-center gap-2"
+          className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 px-4 py-2 rounded-[4px] transition-all font-bold text-[0.9rem] flex items-center gap-2"
         >
           <i className="fa-solid fa-trash"></i> Delete
         </button>
       </div>
 
-      <div className="max-w-4xl mx-auto">
-        <form onSubmit={handleSubmit} className="glass-panel border border-border rounded-[24px] p-8 sm:p-10 shadow-xl">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <form onSubmit={handleSubmit} className="lg:col-span-3 glass-panel p-6 sm:p-8">
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 text-red-600 rounded-xl p-4 mb-8 text-[0.9rem] font-medium flex items-center gap-3">
@@ -169,7 +167,7 @@ const EditTournament = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
-              <h3 className="text-[1.1rem] font-bold text-text uppercase border-b border-border pb-2 mb-4">Core Specifications</h3>
+              <h3 className="text-[0.9rem] font-bold text-text uppercase border-b border-border pb-2 mb-4 tracking-widest">Core Specifications</h3>
               <div>
                 <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Tournament Title</label>
                 <input
@@ -225,23 +223,24 @@ const EditTournament = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Bracket Type</label>
-                  <div className="relative">
-                    <select
-                      name="bracketType"
-                      value={formData.bracketType}
-                      onChange={handleChange}
-                      className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
-                      required
-                    >
-                      <option value="single-elimination">Single Elim</option>
-                      <option value="round-robin">Round Robin</option>
-                    </select>
-                    <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-xs"></i>
-                  </div>
+              <div>
+                <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Bracket Type</label>
+                <div className="relative">
+                  <select
+                    name="bracketType"
+                    value={formData.bracketType}
+                    onChange={handleChange}
+                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
+                    required
+                  >
+                    <option value="single-elimination">Single Elimination</option>
+                    <option value="round-robin">Round Robin</option>
+                  </select>
+                  <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-xs"></i>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Max Teams</label>
                   <input
@@ -291,7 +290,7 @@ const EditTournament = () => {
             </div>
 
             <div className="space-y-6">
-              <h3 className="text-[1.1rem] font-bold text-text uppercase border-b border-border pb-2 mb-4">Logistics & Rewards</h3>
+              <h3 className="text-[0.9rem] font-bold text-text uppercase border-b border-border pb-2 mb-4 tracking-widest">Logistics & Rewards</h3>
 
               <div className="grid grid-cols-1 gap-5">
                 <div>
@@ -361,7 +360,7 @@ const EditTournament = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-accent hover:bg-accent-hover text-white font-bold py-3.5 px-8 rounded-xl transition-all shadow-lg hover:shadow-accent/25 hover:-translate-y-0.5 disabled:opacity-50 flex items-center gap-2"
+              className="btn-primary w-full"
             >
               {loading ? (
                 <i className="fa-solid fa-circle-notch fa-spin"></i>
@@ -371,8 +370,16 @@ const EditTournament = () => {
               {loading ? 'Saving Changes...' : 'Save Changes'}
             </button>
           </div>
-
         </form>
+
+        <div className="space-y-6">
+          <div className="glass-panel p-6 border-l-[3px] border-l-primary">
+            <h3 className="text-[0.9rem] font-bold text-text uppercase tracking-widest mb-2">Notice</h3>
+            <p className="text-[0.8rem] text-text-secondary">
+              Updating settings will take effect immediately. Be careful changing dates if teams are already preparing for matches.
+            </p>
+          </div>
+        </div>
       </div>
 
     </div>

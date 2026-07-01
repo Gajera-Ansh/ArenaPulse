@@ -155,18 +155,18 @@ const EditTeam = () => {
   return (
     <div className="container py-8 sm:py-12 relative min-h-[calc(100vh-80px)] overflow-hidden">
 
-      <div className="mb-8 flex items-center justify-between max-w-xl mx-auto">
+      <div className="mb-8 border-b border-border pb-6 flex items-center justify-between">
         <div>
-          <Link to="/teams" className="text-primary hover:text-primary-hover font-bold text-[0.9rem] flex items-center gap-2 mb-2 w-fit transition-transform hover:-translate-x-1">
-            <i className="fa-solid fa-arrow-left"></i> Back to My Teams
+          <Link to="/teams" className="text-primary hover:text-primary-hover font-bold text-[0.8rem] flex items-center gap-2 mb-3 uppercase tracking-wider transition-all hover:-translate-x-1 w-fit">
+            <i className="fa-solid fa-arrow-left"></i> Back to Teams
           </Link>
-          <h1 className="text-[2.5rem] font-bold text-text uppercase tracking-tight">{isCaptain ? 'Edit Team' : 'Team Details'}</h1>
-          <p className="text-text-secondary font-medium">{isCaptain ? 'Update team details and manage your players.' : 'View your team roster and details.'}</p>
+          <h1 className="text-[2rem] font-bold text-text uppercase tracking-tight">{isCaptain ? 'Team Command Center' : 'Team Roster'}</h1>
+          <p className="text-text-secondary font-medium">{isCaptain ? 'Manage settings and active roster.' : 'View team data.'}</p>
         </div>
       </div>
 
-      <div className="max-w-xl mx-auto">
-        <form onSubmit={handleSubmit} className="glass-panel border border-border rounded-[24px] p-8 sm:p-10 shadow-xl">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <form onSubmit={handleSubmit} className="lg:col-span-2 glass-panel p-6">
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 text-red-600 rounded-xl p-4 mb-8 text-[0.9rem] font-medium flex items-center gap-3">
@@ -208,31 +208,34 @@ const EditTeam = () => {
 
             <div>
               <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Primary Game</label>
-              <select
-                name="game"
-                value={isCustomGame ? 'Custom' : formData.game}
-                disabled={!isCaptain}
-                onChange={(e) => {
-                  if (e.target.value === 'Custom') {
-                    setIsCustomGame(true);
-                    setFormData({ ...formData, game: '' });
-                  } else {
-                    setIsCustomGame(false);
-                    setFormData({ ...formData, game: e.target.value });
-                  }
-                }}
-                className={`w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none ${!isCaptain ? 'opacity-70 cursor-not-allowed' : ''}`}
-                required
-              >
-                <option value="Valorant">Valorant</option>
-                <option value="League of Legends">League of Legends</option>
-                <option value="Counter-Strike 2">Counter-Strike 2</option>
-                <option value="BGMI">BGMI</option>
-                <option value="Free Fire">Free Fire</option>
-                <option value="Dota 2">Dota 2</option>
-                <option value="Rocket League">Rocket League</option>
-                <option value="Custom">Custom (Type manually)</option>
-              </select>
+              <div className="relative">
+                <select
+                  name="game"
+                  value={isCustomGame ? 'Custom' : formData.game}
+                  disabled={!isCaptain}
+                  onChange={(e) => {
+                    if (e.target.value === 'Custom') {
+                      setIsCustomGame(true);
+                      setFormData({ ...formData, game: '' });
+                    } else {
+                      setIsCustomGame(false);
+                      setFormData({ ...formData, game: e.target.value });
+                    }
+                  }}
+                  className={`w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer ${!isCaptain ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  required
+                >
+                  <option value="Valorant">Valorant</option>
+                  <option value="League of Legends">League of Legends</option>
+                  <option value="Counter-Strike 2">Counter-Strike 2</option>
+                  <option value="BGMI">BGMI</option>
+                  <option value="Free Fire">Free Fire</option>
+                  <option value="Dota 2">Dota 2</option>
+                  <option value="Rocket League">Rocket League</option>
+                  <option value="Custom">Custom (Type manually)</option>
+                </select>
+                <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-[0.8rem]"></i>
+              </div>
 
               {isCustomGame && (
                 <input
@@ -318,7 +321,7 @@ const EditTeam = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-primary hover:bg-primary-hover text-white font-bold py-3.5 px-8 rounded-xl transition-all shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 disabled:opacity-50 flex items-center gap-2 w-full justify-center"
+                className="btn-primary w-full"
               >
                 {loading ? (
                   <i className="fa-solid fa-circle-notch fa-spin"></i>
@@ -331,6 +334,29 @@ const EditTeam = () => {
           )}
 
         </form>
+
+        <div className="space-y-6">
+          <div className="glass-panel p-6">
+            <h3 className="text-[0.9rem] font-bold text-text uppercase tracking-widest border-b border-border pb-3 mb-4">Quick Stats</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-surface rounded-[8px] p-4 border border-border">
+                <p className="text-text-secondary text-[0.7rem] uppercase font-bold">Roster Size</p>
+                <p className="text-xl font-bold">{selectedPlayers.length || 0}</p>
+              </div>
+              <div className="bg-surface rounded-[8px] p-4 border border-border">
+                <p className="text-text-secondary text-[0.7rem] uppercase font-bold">Tournaments</p>
+                <p className="text-xl font-bold">0</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="glass-panel p-6 border-l-[3px] border-l-accent">
+            <h3 className="text-[0.9rem] font-bold text-text uppercase tracking-widest mb-2">Notice</h3>
+            <p className="text-[0.8rem] text-text-secondary">
+              Only the team captain can edit the team's public information and manage the roster. Changing the primary game does not remove existing players.
+            </p>
+          </div>
+        </div>
       </div>
 
     </div>

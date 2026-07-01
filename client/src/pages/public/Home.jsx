@@ -28,9 +28,7 @@ const Home = () => {
       cta: "Find a Tournament",
       ctaLink: "/tournaments",
       visual: (
-        <div className="w-full h-full bg-white/70 backdrop-blur-xl rounded-[24px] border border-white p-8 shadow-2xl shadow-primary/10 flex flex-col justify-between relative overflow-hidden group">
-          {/* Decorative glow */}
-          <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-primary/10 rounded-full blur-[60px]"></div>
+        <div className="w-full h-full bg-surface border border-slate-300 rounded-[8px] p-8 shadow-sm flex flex-col justify-between relative overflow-hidden group">
 
           <div className="flex justify-between items-center relative z-10 border-b border-border/60 pb-5">
             <div className="flex items-center gap-3">
@@ -87,7 +85,7 @@ const Home = () => {
       cta: "Create an Event",
       ctaLink: "/register",
       visual: (
-        <div className="w-full h-full bg-white/70 backdrop-blur-xl rounded-[24px] border border-white p-8 shadow-2xl shadow-accent/5 flex flex-col justify-center relative overflow-hidden">
+        <div className="w-full h-full bg-surface border border-slate-300 rounded-[8px] p-8 shadow-sm flex flex-col justify-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent"></div>
 
           {/* Animated Bracket Graphic */}
@@ -124,25 +122,23 @@ const Home = () => {
       cta: "View Leaderboard",
       ctaLink: "/leaderboard",
       visual: (
-        <div className="w-full h-full bg-text rounded-[24px] border border-text-secondary/30 p-6 sm:p-8 shadow-2xl relative overflow-hidden group">
-
-          <div className="absolute right-0 top-0 w-48 h-48 bg-primary/20 rounded-full blur-[50px] group-hover:bg-primary/30 transition-colors"></div>
+        <div className="w-full h-full bg-surface border border-slate-300 rounded-[8px] p-8 shadow-sm flex flex-col justify-between relative overflow-hidden">
 
           <div className="relative z-10 h-full flex flex-col">
             <div className="flex items-center gap-3 mb-5">
-              <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm border border-white/5">
+              <div className="p-2 bg-slate-100 rounded-lg border border-slate-200">
                 <i className="fa-solid fa-chart-simple text-[1.2rem] text-accent"></i>
               </div>
-              <h3 className="font-bold text-[1.1rem] text-white">AI Performance Metrics</h3>
+              <h3 className="font-bold text-[1.1rem] text-text">AI Performance Metrics</h3>
             </div>
 
             <div className="space-y-4 flex-grow">
               <div>
-                <div className="flex justify-between text-[0.85rem] mb-2 text-white">
-                  <span className="font-medium text-white/70">Win Probability Matrix</span>
-                  <span className="font-bold text-primary-light">78%</span>
+                <div className="flex justify-between text-[0.85rem] mb-2 text-text">
+                  <span className="font-medium text-text-secondary">Win Probability Matrix</span>
+                  <span className="font-bold text-primary">78%</span>
                 </div>
-                <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-border rounded-full h-2 overflow-hidden">
                   <div className="bg-primary h-full rounded-full w-[78%] relative">
                     <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
                   </div>
@@ -150,22 +146,22 @@ const Home = () => {
               </div>
 
               <div>
-                <div className="flex justify-between text-[0.85rem] mb-2 text-white">
-                  <span className="font-medium text-white/70">K/D/A Spread</span>
+                <div className="flex justify-between text-[0.85rem] mb-2 text-text">
+                  <span className="font-medium text-text-secondary">K/D/A Spread</span>
                   <span className="font-bold text-accent">1.45 Ratio</span>
                 </div>
-                <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-border rounded-full h-2 overflow-hidden">
                   <div className="bg-accent h-full rounded-full w-[65%]"></div>
                 </div>
               </div>
 
-              <div className="mt-auto pt-4 border-t border-white/10 flex items-center gap-5">
-                <div className="w-12 h-12 rounded-full border-[3px] border-amber-400 bg-amber-400/10 flex items-center justify-center font-bold text-[1.3rem] text-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)]">
+              <div className="mt-auto pt-4 border-t border-border flex items-center gap-5">
+                <div className="w-12 h-12 rounded-full border-[3px] border-amber-500 bg-amber-50 flex items-center justify-center font-bold text-[1.3rem] text-amber-500 shadow-sm">
                   G
                 </div>
                 <div>
-                  <div className="text-[0.65rem] text-white/50 uppercase tracking-widest font-bold mb-0.5">Neural Net Classification</div>
-                  <div className="font-bold text-[1.1rem] text-amber-400 tracking-wide">GOLD III <span className="text-white/30 font-normal text-sm ml-1">(Top 14%)</span></div>
+                  <div className="text-[0.65rem] text-text-secondary uppercase tracking-widest font-bold mb-0.5">Neural Net Classification</div>
+                  <div className="font-bold text-[1.1rem] text-amber-500 tracking-wide">GOLD III <span className="text-text-secondary font-normal text-sm ml-1">(Top 14%)</span></div>
                 </div>
               </div>
             </div>
@@ -178,15 +174,11 @@ const Home = () => {
   return (
     <div className="h-[calc(100vh-80px)] flex flex-col lg:flex-row overflow-hidden relative">
 
-      {/* Decorative Ambient Background */}
-      <div className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] left-[-5%] w-[40vw] h-[40vw] bg-accent/5 rounded-full blur-[100px] pointer-events-none"></div>
-
       {/* LEFT SIDE: Interactive Typography Menu */}
       <div className="w-full lg:w-[45%] flex flex-col justify-center px-6 sm:px-12 lg:px-20 py-0 border-r border-border/40 bg-transparent z-10 h-full">
 
         <div className="mb-8">
-          <div className="inline-flex items-center gap-3 bg-text text-white px-3 py-1.5 rounded-[8px] shadow-lg mb-5 relative overflow-hidden group cursor-default">
+          <div className="inline-flex items-center gap-3 bg-text text-white px-3 py-1.5 rounded-[4px] shadow-lg mb-5 relative overflow-hidden group cursor-default">
             <div className="absolute inset-0 bg-primary/20 w-0 group-hover:w-full transition-all duration-500 ease-out"></div>
             <i className="fa-solid fa-wave-square text-[0.9rem] text-primary-light"></i>
             <span className="text-[0.7rem] font-bold uppercase tracking-[0.15em] relative z-10">ArenaPulse OS v2.0</span>
@@ -251,7 +243,7 @@ const Home = () => {
             <div className="mt-auto pb-4">
               <Link
                 to={panelContent[activeTab].ctaLink}
-                className="inline-flex items-center justify-center gap-2 bg-text text-white hover:bg-primary px-7 py-3.5 rounded-[12px] font-bold text-[1rem] transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-primary/25"
+                className="inline-flex items-center justify-center gap-2 bg-text text-white hover:bg-primary px-7 py-3.5 rounded-[4px] font-bold text-[1rem] transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-primary/25"
               >
                 {panelContent[activeTab].cta} <i className="fa-solid fa-chevron-right text-[0.9rem]"></i>
               </Link>

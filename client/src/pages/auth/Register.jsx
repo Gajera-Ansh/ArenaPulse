@@ -15,6 +15,7 @@ const Register = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,8 +23,9 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
     if (formData.password !== formData.confirmPassword) {
-      return alert("Passwords don't match!");
+      return setErrorMsg("Passwords don't match!");
     }
     try {
       await registerAccount({
@@ -34,7 +36,7 @@ const Register = () => {
       });
       navigate('/dashboard');
     } catch (error) {
-      alert('Registration failed. Please try again.');
+      setErrorMsg(error.response?.data?.message || 'Registration failed. Please try again.');
     }
   };
 
@@ -46,7 +48,7 @@ const Register = () => {
           await googleLogin(tokenResponse.access_token, formData.role);
           navigate('/dashboard');
         } catch (error) {
-          alert('Google login failed. Please check the backend server console for errors.');
+          setErrorMsg('Google login failed. Please try again.');
           console.error(error);
         }
       }
@@ -58,8 +60,8 @@ const Register = () => {
     <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 relative overflow-hidden py-12">
 
 
-      <div className="w-full max-w-[480px] relative z-10">
-        <div className="bg-white/5 backdrop-blur-2xl border border-border rounded-[24px] p-8 sm:p-10 shadow-2xl">
+      <div className="w-full max-w-[500px] relative z-10">
+        <div className="bg-surface border border-slate-300 rounded-[8px] p-8 sm:p-10 shadow-sm">
 
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
@@ -72,26 +74,33 @@ const Register = () => {
           <button
             type="button"
             onClick={() => handleGoogleLogin()}
-            className="w-full bg-slate-200 text-slate-800 hover:bg-slate-300 font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-3 shadow-sm mb-8"
+            className="w-full bg-slate-200 text-slate-800 hover:bg-slate-300 font-bold py-3.5 rounded-[4px] transition-all flex items-center justify-center gap-3 shadow-sm mb-8"
           >
             <i className="fa-brands fa-google text-red-600 text-[1.1rem]"></i>
             Continue with Google
           </button>
 
-          <div className="flex items-center mb-8">
-            <div className="flex-1 border-b border-white/10"></div>
+          <div className="flex items-center mb-6">
+            <div className="flex-1 border-b border-border"></div>
             <span className="px-4 text-[0.75rem] font-bold text-text-secondary uppercase tracking-widest">Or Use Email</span>
-            <div className="flex-1 border-b border-white/10"></div>
+            <div className="flex-1 border-b border-border"></div>
           </div>
+
+          {errorMsg && (
+            <div className="mb-6 p-4 bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B] rounded-[4px] text-[0.9rem] flex items-center gap-2 animate-fade-in font-bold">
+              <i className="fa-solid fa-circle-exclamation"></i>
+              {errorMsg}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-2 gap-3 mb-2">
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, role: 'player' })}
-                className={`py-3 rounded-xl border font-bold text-[0.85rem] transition-all ${formData.role === 'player'
-                  ? 'bg-primary border-primary text-white shadow-lg shadow-primary/25'
-                  : 'bg-white/5 border-border text-text-secondary hover:text-text hover:border-white/20'
+                className={`py-3 rounded-[4px] border font-bold text-[0.85rem] transition-all ${formData.role === 'player'
+                  ? 'bg-primary border-primary text-white'
+                  : 'bg-surface border-border text-text-secondary hover:text-text hover:bg-black/5'
                   }`}
               >
                 <i className="fa-solid fa-gamepad mr-2"></i> Player
@@ -99,9 +108,9 @@ const Register = () => {
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, role: 'organizer' })}
-                className={`py-3 rounded-xl border font-bold text-[0.85rem] transition-all ${formData.role === 'organizer'
-                  ? 'bg-accent border-accent text-white shadow-lg shadow-accent/25'
-                  : 'bg-white/5 border-border text-text-secondary hover:text-text hover:border-white/20'
+                className={`py-3 rounded-[4px] border font-bold text-[0.85rem] transition-all ${formData.role === 'organizer'
+                  ? 'bg-accent border-accent text-white'
+                  : 'bg-surface border-border text-text-secondary hover:text-text hover:bg-black/5'
                   }`}
               >
                 <i className="fa-solid fa-trophy mr-2"></i> Organizer
@@ -115,7 +124,7 @@ const Register = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                className="w-full bg-surface border border-border rounded-[4px] px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 placeholder="e.g. Faker"
                 autoFocus
                 required
@@ -129,7 +138,7 @@ const Register = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                className="w-full bg-surface border border-border rounded-[4px] px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 placeholder="commander@squad.com"
                 required
               />
@@ -144,7 +153,7 @@ const Register = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 pr-10 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="w-full bg-surface border border-border rounded-[4px] px-4 py-3.5 pr-10 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     placeholder="••••••••"
                     required
                   />
@@ -165,7 +174,7 @@ const Register = () => {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 pr-10 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="w-full bg-surface border border-border rounded-[4px] px-4 py-3.5 pr-10 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     placeholder="••••••••"
                     required
                   />
@@ -180,7 +189,7 @@ const Register = () => {
               </div>
             </div>
 
-            <button type="submit" className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl transition-all shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 mt-4">
+            <button type="submit" className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-[4px] transition-all shadow-lg hover:-translate-y-0.5 mt-6">
               Deploy Account
             </button>
           </form>

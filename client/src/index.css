@@ -11,6 +11,13 @@
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
   }
+
+  /* Standardize all input border radiuses to match Command Center aesthetic */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]),
+  select,
+  textarea {
+    @apply rounded-[4px] !important;
+  }
 }
 
 @layer components {
@@ -27,31 +34,31 @@
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-[22px] py-[10px] text-[0.9rem] font-semibold rounded-btn transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none;
+    @apply inline-flex items-center justify-center gap-2 px-[18px] py-[8px] text-[0.85rem] font-bold tracking-wide rounded-[4px] transition-all duration-150 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-primary {
-    @apply btn bg-primary text-white hover:bg-primary-hover hover:-translate-y-[1px] hover:shadow-md;
+    @apply btn bg-primary text-white hover:bg-primary-hover shadow-sm hover:shadow;
   }
 
   .btn-accent {
-    @apply btn bg-accent text-white hover:bg-accent-hover hover:-translate-y-[1px] hover:shadow-md;
+    @apply btn bg-accent text-white hover:bg-accent-hover shadow-sm hover:shadow;
   }
 
   .btn-outline {
-    @apply btn bg-transparent text-text border-[1.5px] border-border hover:border-primary hover:text-primary;
+    @apply btn bg-transparent text-text border-border hover:border-text hover:bg-black/5;
   }
   
   .btn-white {
-    @apply btn bg-white text-primary hover:-translate-y-[1px] hover:shadow-md;
+    @apply btn bg-white text-primary border-border hover:bg-gray-50 shadow-sm hover:shadow;
   }
 
   .glass-panel {
-    @apply bg-white/85 backdrop-blur-[12px];
+    @apply bg-surface border border-border rounded-[8px] shadow-sm;
   }
   
   .badge {
-    @apply px-[10px] py-[4px] rounded-badge text-[0.7rem] font-semibold uppercase tracking-[0.04em];
+    @apply px-[8px] py-[2px] rounded-[4px] text-[0.65rem] font-bold uppercase tracking-wider;
   }
   
   .badge-live {

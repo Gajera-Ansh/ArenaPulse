@@ -89,7 +89,7 @@ const Dashboard = () => {
 
         {/* Dashboard Navigation */}
         <div className="flex items-center gap-2 mb-6 border-b border-border pb-1 overflow-x-auto hide-scrollbar">
-          {['overview', 'tournaments', 'settings'].map((tab) => (
+          {['overview', 'history'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -104,7 +104,7 @@ const Dashboard = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="glass-panel border border-border rounded-[24px] p-6 sm:p-8 shadow-xl min-h-[500px] flex flex-col">
+        <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm min-h-[500px] flex flex-col">
 
           {activeTab === 'overview' && (
             <div className="animate-fade-in flex flex-col flex-grow">
@@ -176,7 +176,8 @@ const Dashboard = () => {
               )}
 
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-[1.25rem] font-bold text-text uppercase">
+                <h3 className="text-[1.25rem] font-bold text-text uppercase flex items-center gap-2">
+                  <i className={`fa-solid ${user?.role === 'organizer' ? 'fa-tower-broadcast text-primary' : 'fa-gamepad text-accent'}`}></i>
                   {user?.role === 'organizer' ? 'Active Tournaments' : 'My Enrollments'}
                 </h3>
                 {user?.role === 'organizer' && (
@@ -195,18 +196,22 @@ const Dashboard = () => {
                   {tournaments.filter(t => t.status !== 'completed').length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in mb-12">
                       {tournaments.filter(t => t.status !== 'completed').map((t) => (
-                        <div key={t._id} className="glass-panel border border-border rounded-[20px] overflow-hidden hover:border-primary/50 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 group flex flex-col h-full">
+                        <div key={t._id} className="bg-surface border border-slate-300 rounded-[8px] overflow-hidden hover:border-primary transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/20 group flex flex-col h-full">
                           {/* Card Banner */}
-                          <div className="h-20 bg-gradient-to-r from-background-light to-background relative p-4 border-b border-white/5">
-                            <div className="absolute top-3 right-3">
-                              <span className={`px-2.5 py-1 rounded-full text-[0.65rem] font-bold uppercase tracking-widest shadow-sm ${(t.status === 'open' && new Date(t.registrationDeadline) >= new Date()) ? 'bg-primary text-white' :
-                                  t.status === 'live' ? 'bg-red-500 text-white animate-pulse' :
-                                    'bg-white/10 text-text-secondary'
+                          <div className="h-20 bg-surface relative p-4 border-b border-border overflow-hidden">
+                            {/* Visible Cyber Design */}
+                            <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 12px)' }}></div>
+                            <div className="absolute right-0 top-0 w-2/3 h-full bg-gradient-to-l from-primary/20 to-transparent pointer-events-none"></div>
+
+                            <div className="absolute top-3 right-3 z-10">
+                              <span className={`px-2.5 py-1 rounded-[4px] text-[0.65rem] font-bold uppercase tracking-widest shadow-sm ${(t.status === 'open' && new Date(t.registrationDeadline) >= new Date()) ? 'bg-primary text-white' :
+                                t.status === 'live' ? 'bg-red-500 text-white animate-pulse' :
+                                  'bg-background border border-border text-text-secondary'
                                 }`}>
                                 {t.status === 'open' && new Date(t.registrationDeadline) < new Date() ? 'closed' : t.status}
                               </span>
                             </div>
-                            <span className="inline-block bg-accent/20 border border-accent/30 backdrop-blur-md px-3 py-1 rounded text-[0.7rem] font-bold text-accent tracking-wider shadow-[0_0_15px_rgba(251,191,36,0.15)]">
+                            <span className="inline-block bg-accent/10 border border-accent/20 px-3 py-1 rounded-[4px] text-[0.7rem] font-bold text-accent tracking-wider relative z-10 shadow-sm backdrop-blur-sm">
                               {t.game}
                             </span>
                           </div>
@@ -238,8 +243,8 @@ const Dashboard = () => {
                           </div>
 
                           {/* Card Footer */}
-                          <div className="p-4 border-t border-border bg-black/20">
-                            <Link to={`/tournaments/${t._id}`} className="block w-full text-center bg-white/20 hover:bg-primary/20 text-text hover:text-primary border border-white/10 hover:border-primary/50 font-bold py-2 rounded-lg transition-all text-[0.85rem] uppercase tracking-wider">
+                          <div className="p-4 border-t border-border bg-background">
+                            <Link to={`/tournaments/${t._id}`} className="block w-full text-center bg-primary hover:bg-primary-hover text-white font-bold py-2 rounded-[4px] transition-all text-[0.85rem] uppercase tracking-wider shadow-sm">
                               View Details
                             </Link>
                           </div>
@@ -247,7 +252,7 @@ const Dashboard = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="bg-white/5 border border-dashed border-border rounded-xl p-8 text-center flex flex-col items-center justify-center mb-12">
+                    <div className="bg-white/5 border border-dashed border-black/30 rounded-xl p-8 text-center flex flex-col items-center justify-center mb-12">
                       <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-text-secondary text-2xl mb-4">
                         <i className={`fa-solid ${user?.role === 'organizer' ? 'fa-tower-broadcast' : 'fa-gamepad'}`}></i>
                       </div>
@@ -270,23 +275,27 @@ const Dashboard = () => {
             </div>
           )}
 
-          {activeTab === 'tournaments' && (
+          {activeTab === 'history' && (
             <div className="animate-fade-in flex flex-col flex-grow">
               <h3 className="text-[1.25rem] font-bold text-text uppercase mb-6 flex items-center gap-2">
-                <i className="fa-solid fa-list-check text-text-secondary"></i> Tournament History
+                <i className="fa-solid fa-list-check text-primary"></i> Tournament History
               </h3>
-              
+
               {tournaments.filter(t => t.status === 'completed').length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {tournaments.filter(t => t.status === 'completed').map((t) => (
-                    <div key={t._id} className="glass-panel border border-border rounded-[20px] overflow-hidden hover:border-primary/50 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 group flex flex-col h-full opacity-70 hover:opacity-100">
-                      <div className="h-20 bg-gradient-to-r from-background-light to-background relative p-4 border-b border-white/5">
-                        <div className="absolute top-3 right-3">
-                          <span className="px-2.5 py-1 rounded-full text-[0.65rem] font-bold uppercase tracking-widest shadow-sm bg-white/10 text-text-secondary">
+                    <div key={t._id} className="bg-surface border border-slate-300 rounded-[8px] overflow-hidden hover:border-primary transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/20 group flex flex-col h-full opacity-70 hover:opacity-100">
+                      <div className="h-20 bg-surface relative p-4 border-b border-border overflow-hidden">
+                        {/* Visible Cyber Design */}
+                        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 12px)' }}></div>
+                        <div className="absolute right-0 top-0 w-2/3 h-full bg-gradient-to-l from-primary/20 to-transparent pointer-events-none"></div>
+
+                        <div className="absolute top-3 right-3 z-10">
+                          <span className="px-2.5 py-1 rounded-[4px] text-[0.65rem] font-bold uppercase tracking-widest shadow-sm bg-background border border-border text-text-secondary">
                             Completed
                           </span>
                         </div>
-                        <span className="inline-block bg-accent/20 border border-accent/30 backdrop-blur-md px-3 py-1 rounded text-[0.7rem] font-bold text-accent tracking-wider shadow-[0_0_15px_rgba(251,191,36,0.15)]">
+                        <span className="inline-block bg-accent/10 border border-accent/20 px-3 py-1 rounded-[4px] text-[0.7rem] font-bold text-accent tracking-wider relative z-10 shadow-sm backdrop-blur-sm">
                           {t.game}
                         </span>
                       </div>
@@ -307,8 +316,8 @@ const Dashboard = () => {
                         </div>
                       </div>
 
-                      <div className="p-4 border-t border-border bg-black/20">
-                        <Link to={`/tournaments/${t._id}`} className="block w-full text-center bg-white/20 hover:bg-primary/20 text-text hover:text-primary border border-white/10 hover:border-primary/50 font-bold py-2 rounded-lg transition-all text-[0.85rem] uppercase tracking-wider">
+                      <div className="p-4 border-t border-border bg-background">
+                        <Link to={`/tournaments/${t._id}`} className="block w-full text-center bg-primary hover:bg-primary-hover text-white font-bold py-2 rounded-[4px] transition-all text-[0.85rem] uppercase tracking-wider shadow-sm">
                           View Details
                         </Link>
                       </div>
@@ -325,13 +334,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          {activeTab === 'settings' && (
-            <div className="animate-fade-in text-center flex flex-col items-center justify-center flex-grow">
-              <i className="fa-solid fa-gear text-4xl text-text-secondary mb-4 opacity-50"></i>
-              <h3 className="text-[1.25rem] font-bold text-text mb-2">System Settings</h3>
-              <p className="text-text-secondary">Account configuration options coming online soon.</p>
-            </div>
-          )}
+
 
         </div>
       </div>

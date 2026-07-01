@@ -117,7 +117,7 @@ const Login = () => {
 
 
       <div className="w-full max-w-[480px] relative z-10">
-        <div className="bg-white/5 backdrop-blur-2xl border border-border rounded-[24px] p-8 sm:p-10 shadow-2xl">
+        <div className="bg-surface border border-slate-300 rounded-[8px] p-8 sm:p-10 shadow-sm">
 
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
@@ -136,31 +136,30 @@ const Login = () => {
           {(step === 'email' || step === 'password') && (
             <>
               <button
-                type="button"
                 onClick={() => handleGoogleLogin()}
-                className="w-full bg-slate-200 text-slate-800 hover:bg-slate-300 font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-3 shadow-sm mb-6"
+                className="w-full bg-slate-200 hover:bg-slate-300 text-text border border-border hover:bg-black/5 font-bold py-3.5 rounded-[4px] transition-all flex items-center justify-center gap-3 shadow-sm mb-6"
               >
                 <i className="fa-brands fa-google text-red-600 text-[1.1rem]"></i>
                 Continue with Google
               </button>
 
               <div className="flex items-center mb-6">
-                <div className="flex-1 border-b border-white/10"></div>
+                <div className="flex-1 border-b border-border"></div>
                 <span className="px-4 text-[0.75rem] font-bold text-text-secondary uppercase tracking-widest">Or Use Email</span>
-                <div className="flex-1 border-b border-white/10"></div>
+                <div className="flex-1 border-b border-border"></div>
               </div>
             </>
           )}
 
           {errorMsg && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-[0.9rem] flex items-center gap-2 animate-fade-in">
+            <div className="mb-6 p-4 bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B] rounded-[4px] text-[0.9rem] flex items-center gap-2 animate-fade-in font-bold">
               <i className="fa-solid fa-circle-exclamation"></i>
               {errorMsg}
             </div>
           )}
 
           {successMsg && (
-            <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 text-green-500 rounded-xl text-[0.9rem] flex items-center gap-2 animate-fade-in">
+            <div className="mb-6 p-4 bg-[#F0FDF4] border border-[#BBF7D0] text-[#166534] rounded-[4px] text-[0.9rem] flex items-center gap-2 animate-fade-in font-bold">
               <i className="fa-solid fa-circle-check"></i>
               {successMsg}
             </div>
@@ -175,13 +174,13 @@ const Login = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="w-full bg-surface border border-border rounded-[4px] px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   placeholder="commander@squad.com"
                   autoFocus
                   required
                 />
               </div>
-              <button type="submit" className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl transition-all shadow-lg hover:-translate-y-0.5 mt-4">
+              <button type="submit" className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-[4px] transition-all shadow-lg hover:-translate-y-0.5 mt-4">
                 Next
               </button>
             </form>
@@ -197,7 +196,7 @@ const Login = () => {
                     type="email"
                     value={email}
                     readOnly
-                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text-secondary opacity-70 cursor-not-allowed pr-20"
+                    className="w-full bg-surface border border-border rounded-[4px] px-4 py-3.5 text-text-secondary opacity-70 cursor-not-allowed pr-20"
                   />
                   <button
                     type="button"
@@ -219,7 +218,7 @@ const Login = () => {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 pr-12 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="w-full bg-surface border border-border rounded-[4px] px-4 py-3.5 pr-12 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     placeholder="••••••••"
                     required
                     autoFocus
@@ -234,7 +233,7 @@ const Login = () => {
                 </div>
               </div>
 
-              <button type="submit" disabled={isLoading} className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl transition-all shadow-lg hover:-translate-y-0.5 mt-4">
+              <button type="submit" disabled={isLoading} className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-[4px] transition-all shadow-lg hover:-translate-y-0.5 mt-4">
                 {isLoading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Log In'}
               </button>
             </form>
@@ -243,7 +242,7 @@ const Login = () => {
           {/* STEP 3: FORGOT REQUEST */}
           {step === 'forgot_request' && (
             <form onSubmit={handleForgotRequest} className="space-y-5">
-              <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 text-[0.85rem] text-text mb-4 text-center">
+              <div className="bg-primary/10 border border-primary/20 rounded-[4px] p-4 text-[0.85rem] text-text mb-4 text-center">
                 We will send a 6-digit OTP to <strong>{email}</strong> to verify your identity.
               </div>
               <div className="flex gap-3 mt-6">
@@ -268,7 +267,7 @@ const Login = () => {
                   onChange={(e) => setOtp(e.target.value)}
                   maxLength={6}
                   placeholder="e.g. 123456"
-                  className="w-full bg-white/5 border border-border rounded-xl px-4 py-4 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-center tracking-[0.5em] font-bold text-xl"
+                  className="w-full bg-surface border border-border rounded-[4px] px-4 py-4 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-center tracking-[0.5em] font-bold text-xl"
                   required
                   autoFocus
                 />
@@ -296,7 +295,7 @@ const Login = () => {
                     onChange={(e) => setNewPassword(e.target.value)}
                     minLength={6}
                     placeholder="••••••••"
-                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 pr-12 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="w-full bg-surface border border-border rounded-[4px] px-4 py-3.5 pr-12 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     required
                     autoFocus
                   />

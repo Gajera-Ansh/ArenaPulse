@@ -212,7 +212,7 @@ const TournamentBracket = () => {
 
           <i className="fa-solid fa-trophy text-6xl text-accent mb-6 animate-bounce"></i>
           <h2 className="text-[1.2rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Tournament Champion</h2>
-          <h1 className="text-[3rem] sm:text-[4rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-accent via-yellow-300 to-accent leading-tight mb-2 drop-shadow-lg">
+          <h1 className="text-[3rem] sm:text-[4rem] font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent via-yellow-300 to-accent leading-tight mb-2 drop-shadow-lg">
             {tournament.winner.name}
           </h1>
           <p className="text-[1.2rem] text-text font-bold">[{tournament.winner.tag}]</p>
@@ -339,7 +339,7 @@ const TournamentBracket = () => {
                       <p className="font-bold text-text text-xl truncate">{selectedMatch.teamA?.name || 'TBD'}</p>
                       {selectedMatch.winner?._id === selectedMatch.teamA?._id && <i className="fa-solid fa-crown text-accent mt-2 text-xl"></i>}
                     </div>
-                    <div className="px-6 text-3xl font-black text-primary">
+                    <div className="px-6 text-3xl font-bold text-primary">
                       {selectedMatch.scoreA ?? '-'} <span className="text-text-secondary mx-2 text-xl">vs</span> {selectedMatch.scoreB ?? '-'}
                     </div>
                     <div className="flex-1 text-center">
@@ -368,7 +368,7 @@ const TournamentBracket = () => {
                       />
                     </div>
 
-                    <div className="font-black text-text-secondary text-xl pt-8">VS</div>
+                    <div className="font-bold text-text-secondary text-xl pt-8">VS</div>
 
                     <div className="flex-1 text-center">
                       <p className="font-bold text-text mb-3 truncate">{selectedMatch.teamB?.name || 'TBD'}</p>

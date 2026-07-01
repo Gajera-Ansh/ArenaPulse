@@ -158,7 +158,7 @@ const Settings = () => {
     <div className="container mx-auto px-6 py-12 animate-fade-in relative flex-grow">
       
       <div className="mb-8 max-w-5xl mx-auto">
-        <h1 className="text-[2.5rem] font-bold text-text uppercase tracking-tight">Settings</h1>
+        <h1 className="text-[2rem] font-bold text-text uppercase tracking-tight">Settings</h1>
         <p className="text-text-secondary font-medium">Manage your account and profile preferences.</p>
       </div>
 
@@ -168,13 +168,13 @@ const Settings = () => {
         <div className="md:col-span-1 space-y-2">
           <button 
             onClick={() => handleTabChange('profile')}
-            className={`w-full text-left px-5 py-3 rounded-xl font-bold transition-colors flex items-center gap-3 ${activeTab === 'profile' ? 'bg-primary/20 text-primary border border-primary/30' : 'bg-surface hover:bg-white/5 text-text-secondary hover:text-text border border-transparent'}`}
+            className={`w-full text-left px-5 py-3 rounded-[4px] font-bold transition-colors flex items-center gap-3 ${activeTab === 'profile' ? 'bg-primary text-white border border-primary' : 'bg-surface hover:bg-black/5 text-text-secondary hover:text-text border border-transparent'}`}
           >
             <i className="fa-solid fa-user w-5 text-center"></i> Profile
           </button>
           <button 
             onClick={() => handleTabChange('security')}
-            className={`w-full text-left px-5 py-3 rounded-xl font-bold transition-colors flex items-center gap-3 ${activeTab === 'security' ? 'bg-primary/20 text-primary border border-primary/30' : 'bg-surface hover:bg-white/5 text-text-secondary hover:text-text border border-transparent'}`}
+            className={`w-full text-left px-5 py-3 rounded-[4px] font-bold transition-colors flex items-center gap-3 ${activeTab === 'security' ? 'bg-primary text-white border border-primary' : 'bg-surface hover:bg-black/5 text-text-secondary hover:text-text border border-transparent'}`}
           >
             <i className="fa-solid fa-shield-halved w-5 text-center"></i> Security
           </button>
@@ -182,10 +182,10 @@ const Settings = () => {
 
         {/* Right Content Area */}
         <div className="md:col-span-3">
-          <div className="bg-surface border border-border rounded-[24px] p-8 shadow-xl">
+          <div className="bg-surface border border-border rounded-[8px] p-8 shadow-sm">
             
             {status.message && (
-              <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 font-medium text-[0.9rem] ${status.type === 'success' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+              <div className={`mb-6 p-4 rounded-[4px] flex items-center gap-3 font-bold text-[0.9rem] ${status.type === 'success' ? 'bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]' : 'bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]'}`}>
                 <i className={`fa-solid ${status.type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation'} text-lg`}></i>
                 {status.message}
               </div>
@@ -197,7 +197,7 @@ const Settings = () => {
                 
                 {/* Avatar Section */}
                 <div className="mb-8 flex items-center gap-6">
-                  <div className="w-24 h-24 rounded-full bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center relative group">
+                  <div className="w-24 h-24 rounded-full bg-surface border border-border overflow-hidden flex items-center justify-center relative group shadow-sm">
                     {user?.avatar ? (
                       <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                     ) : (
@@ -244,7 +244,7 @@ const Settings = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleProfileChange}
-                      className="w-full bg-black/20 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                      className="w-full bg-surface border border-border rounded-[4px] px-4 py-3 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                       required
                     />
                   </div>
@@ -256,7 +256,7 @@ const Settings = () => {
                       value={formData.bio}
                       onChange={handleProfileChange}
                       rows="4"
-                      className="w-full bg-black/20 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
+                      className="w-full bg-surface border border-border rounded-[4px] px-4 py-3 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
                       placeholder="Tell the community about yourself..."
                     ></textarea>
                   </div>
@@ -278,7 +278,7 @@ const Settings = () => {
               <div className="animate-fade-in">
                 <h2 className="text-[1.5rem] font-bold text-text uppercase mb-6 border-b border-border pb-4">Security</h2>
                 
-                <div className="bg-black/20 border border-border rounded-xl p-6 md:p-8">
+                <div className="bg-surface border border-border rounded-[8px] p-6 md:p-8 shadow-sm">
                   <div className="mb-6">
                     <h3 className="text-[1.1rem] font-bold text-text mb-2">Change Password</h3>
                     <p className="text-[0.85rem] text-text-secondary">
@@ -310,7 +310,7 @@ const Settings = () => {
                           onChange={(e) => setOtp(e.target.value)}
                           maxLength={6}
                           placeholder="e.g. 123456"
-                          className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-center tracking-[0.5em] font-bold text-lg"
+                          className="w-full bg-surface border border-border rounded-[4px] px-4 py-3 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-center tracking-[0.5em] font-bold text-lg"
                           required
                           autoFocus
                         />
@@ -337,7 +337,7 @@ const Settings = () => {
                             onChange={(e) => setNewPassword(e.target.value)}
                             minLength={6}
                             placeholder="••••••••"
-                            className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 pr-12 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                            className="w-full bg-surface border border-border rounded-[4px] px-4 py-3 pr-12 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                             required
                             autoFocus
                           />
