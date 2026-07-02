@@ -7,26 +7,42 @@ import { SUPPORTED_GAMES } from '../../utils/constants';
 const Profile = () => {
   const { user } = useAuth();
   const [teams, setTeams] = useState([]);
+  const [organizedTournaments, setOrganizedTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('teams');
 
   useEffect(() => {
-    const fetchTeams = async () => {
+    if (user?.role === 'organizer') {
+      setActiveTab('tournaments');
+    }
+  }, [user?.role]);
+
+  useEffect(() => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await expressApi.get('/api/teams');
-        if (res.data.success) {
-          setTeams(res.data.data);
+        if (user?.role === 'organizer') {
+          const res = await expressApi.get(`/api/tournaments?organizer=${user._id}`);
+          if (res.data.success) {
+            setOrganizedTournaments(res.data.data);
+          }
+        } else {
+          const res = await expressApi.get('/api/teams');
+          if (res.data.success) {
+            setTeams(res.data.data);
+          }
         }
       } catch (err) {
-        console.error("Failed to fetch teams", err);
+        console.error("Failed to fetch profile data", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTeams();
-  }, []);
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Unknown';
@@ -83,12 +99,12 @@ const Profile = () => {
               <span className="text-text font-medium text-sm">{formatDate(user?.createdAt || Date.now())}</span>
             </div>
             <div className="flex justify-between items-center pb-3 border-b border-border/50">
-              <span className="text-text-secondary text-xs uppercase font-bold tracking-widest"><i className="fa-solid fa-shield-halved mr-2 w-4"></i>Teams</span>
-              <span className="text-text font-bold text-sm text-primary">{teams.length}</span>
+              <span className="text-text-secondary text-xs uppercase font-bold tracking-widest"><i className="fa-solid fa-shield-halved mr-2 w-4"></i>{user?.role === 'organizer' ? 'Hosted' : 'Teams'}</span>
+              <span className="text-text font-bold text-sm text-primary">{user?.role === 'organizer' ? organizedTournaments.length : teams.length}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-text-secondary text-xs uppercase font-bold tracking-widest"><i className="fa-solid fa-trophy mr-2 w-4"></i>Win Rate</span>
-              <span className="text-text font-bold text-sm text-emerald-500">TBD%</span>
+              <span className="text-text-secondary text-xs uppercase font-bold tracking-widest"><i className="fa-solid fa-trophy mr-2 w-4"></i>{user?.role === 'organizer' ? 'Status' : 'Win Rate'}</span>
+              <span className="text-text font-bold text-sm text-emerald-500">{user?.role === 'organizer' ? 'Active' : 'TBD%'}</span>
             </div>
           </div>
           
@@ -102,7 +118,7 @@ const Profile = () => {
           
           {/* Tabs Navigation */}
           <div className="flex gap-2 overflow-x-auto pb-4 hide-scrollbar">
-            {['teams', 'performance', 'history'].map((tab) => (
+            {(user?.role === 'organizer' ? ['tournaments', 'analytics'] : ['teams', 'performance', 'history']).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -114,7 +130,9 @@ const Profile = () => {
               >
                 {tab === 'teams' ? <><i className="fa-solid fa-users mr-2"></i> Participations</> : 
                  tab === 'performance' ? <><i className="fa-solid fa-chart-line mr-2"></i> Performance</> : 
-                 <><i className="fa-solid fa-clock-rotate-left mr-2"></i> Match History</>}
+                 tab === 'history' ? <><i className="fa-solid fa-clock-rotate-left mr-2"></i> Match History</> :
+                 tab === 'tournaments' ? <><i className="fa-solid fa-sitemap mr-2"></i> Hosted Tournaments</> :
+                 <><i className="fa-solid fa-chart-pie mr-2"></i> Organizer Analytics</>}
               </button>
             ))}
           </div>
@@ -122,6 +140,107 @@ const Profile = () => {
           {/* Tab Content */}
           <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm flex-grow">
             
+            {/* Organizer: Tournaments Tab */}
+            {activeTab === 'tournaments' && (
+              <div className="animate-fade-in">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-text uppercase flex items-center gap-2">
+                    <i className="fa-solid fa-sitemap text-primary"></i> Hosted Tournaments
+                  </h3>
+                  <Link to="/tournaments/create" className="btn-primary text-xs py-2 px-4">
+                    <i className="fa-solid fa-plus mr-2"></i> Create New
+                  </Link>
+                </div>
+                
+                {loading ? (
+                  <div className="py-20 flex justify-center">
+                    <i className="fa-solid fa-circle-notch fa-spin text-3xl text-primary"></i>
+                  </div>
+                ) : organizedTournaments.length > 0 ? (
+                  <div className="space-y-4">
+                    {organizedTournaments.map(tournament => (
+                      <Link to={`/tournaments/${tournament._id}/edit`} key={tournament._id} className="block bg-black/10 border border-border rounded-[8px] p-5 hover:border-primary/50 transition-all group">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h4 className="text-lg font-bold text-text group-hover:text-primary transition-colors">{tournament.title}</h4>
+                            <div className="text-sm text-text-secondary mt-1">{tournament.game} • {tournament.bracketType === 'round-robin' ? 'Round Robin' : 'Single Elim'}</div>
+                          </div>
+                          <span className={`px-2 py-1 rounded-[4px] text-[0.7rem] font-bold uppercase tracking-wider ${
+                            tournament.status === 'live' ? 'bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]' :
+                            tournament.status === 'completed' ? 'bg-primary-light text-primary border border-[#BFDBFE]' :
+                            'bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]'
+                          }`}>
+                            {tournament.status}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-border/50 text-sm">
+                          <div>
+                            <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Teams</span>
+                            <span className="font-bold text-text"><i className="fa-solid fa-users text-primary mr-1"></i> {tournament.maxTeams}</span>
+                          </div>
+                          <div>
+                            <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Format</span>
+                            <span className="font-bold text-text"><i className="fa-solid fa-user-group text-accent mr-1"></i> {tournament.playersPerTeam}v{tournament.playersPerTeam}</span>
+                          </div>
+                          <div>
+                            <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Prize</span>
+                            <span className="font-bold text-emerald-500"><i className="fa-solid fa-sack-dollar mr-1"></i> {tournament.prizePool || 'None'}</span>
+                          </div>
+                          <div>
+                            <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Start Date</span>
+                            <span className="font-bold text-text"><i className="fa-regular fa-calendar mr-1"></i> {new Date(tournament.startDate).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-black/5 rounded-[8px] border border-dashed border-border">
+                    <i className="fa-solid fa-sitemap text-4xl text-text-secondary/50 mb-4"></i>
+                    <h4 className="text-lg font-bold text-text mb-2">No Tournaments Hosted</h4>
+                    <p className="text-text-secondary text-sm mb-6 max-w-sm mx-auto">You haven't organized any tournaments yet. Start hosting to build your reputation!</p>
+                    <Link to="/tournaments/create" className="btn-primary">
+                      <i className="fa-solid fa-plus mr-2"></i> Create Tournament
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Organizer: Analytics Tab */}
+            {activeTab === 'analytics' && (
+              <div className="animate-fade-in">
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="text-xl font-bold text-text uppercase flex items-center gap-2">
+                    <i className="fa-solid fa-chart-pie text-accent"></i> Organizer Analytics
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                  <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
+                    <i className="fa-solid fa-sitemap text-primary text-xl mb-2"></i>
+                    <p className="text-3xl font-black text-text">{organizedTournaments.length}</p>
+                    <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Tournaments Hosted</p>
+                  </div>
+                  <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
+                    <i className="fa-solid fa-users text-blue-500 text-xl mb-2"></i>
+                    <p className="text-3xl font-black text-text">{organizedTournaments.reduce((acc, t) => acc + (t.maxTeams || 0), 0)}</p>
+                    <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Total Teams Capacity</p>
+                  </div>
+                  <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
+                    <i className="fa-solid fa-circle-check text-emerald-500 text-xl mb-2"></i>
+                    <p className="text-3xl font-black text-text">{organizedTournaments.filter(t => t.status === 'completed').length}</p>
+                    <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Completed Events</p>
+                  </div>
+                  <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
+                    <i className="fa-solid fa-star text-accent text-xl mb-2"></i>
+                    <p className="text-3xl font-black text-text">100%</p>
+                    <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Organizer Rating</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Teams (Participations) Tab */}
             {activeTab === 'teams' && (
               <div className="animate-fade-in">
