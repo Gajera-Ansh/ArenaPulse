@@ -103,6 +103,23 @@ const TournamentBracket = () => {
   const [scoreB, setScoreB] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Player Stats Modal State
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const [statsMatchData, setStatsMatchData] = useState(null); // { match, teamAPlayers, teamBPlayers }
+  const [playerStatsInput, setPlayerStatsInput] = useState({}); // { [userId]: { kills: '', deaths: '', ... } }
+  const [statsFields, setStatsFields] = useState([]);
+  const [submittingStats, setSubmittingStats] = useState(false);
+
+  // Game stats field config (mirrors backend)
+  const GAME_STATS_FIELDS = {
+    'Valorant': ['kills', 'deaths', 'assists', 'headshots'],
+    'Counter-Strike 2': ['kills', 'deaths', 'assists', 'headshots'],
+    'BGMI': ['kills', 'deaths', 'damage'],
+    'Free Fire': ['kills', 'deaths', 'damage'],
+    'Dota 2': ['kills', 'deaths', 'assists'],
+    'League of Legends': ['kills', 'deaths', 'assists'],
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -229,7 +246,7 @@ const TournamentBracket = () => {
       });
 
       if (res.data.success) {
-        // We need to re-fetch matches and tournament because the tournament might have concluded
+        // Re-fetch matches and tournament
         const [matchRes, tournRes] = await Promise.all([
           expressApi.get(`/api/matches/tournament/${id}`),
           expressApi.get(`/api/tournaments/${id}`)
@@ -243,11 +260,73 @@ const TournamentBracket = () => {
         }
 
         closeMatchModal();
+
+        // Open Player Stats modal if both teams exist
+        if (selectedMatch.teamA && selectedMatch.teamB && tournament) {
+          openStatsModal(selectedMatch);
+        }
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to submit result');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Open the player stats entry modal
+  const openStatsModal = async (match) => {
+    try {
+      const game = tournament?.game || 'Valorant';
+      const fields = GAME_STATS_FIELDS[game] || ['kills', 'deaths'];
+      setStatsFields(fields);
+
+      const res = await expressApi.get(`/api/playerstats/match-players/${match.teamA._id}/${match.teamB._id}`);
+      if (res.data.success) {
+        const { teamA, teamB } = res.data.data;
+        setStatsMatchData({ match, teamA, teamB, game });
+
+        // Initialize empty stats for all players
+        const initStats = {};
+        [...teamA.players, ...teamB.players].forEach(p => {
+          initStats[p._id] = {};
+          fields.forEach(f => { initStats[p._id][f] = ''; });
+        });
+        setPlayerStatsInput(initStats);
+        setShowStatsModal(true);
+      }
+    } catch (err) {
+      console.error('Failed to load players for stats:', err);
+    }
+  };
+
+  const handleStatChange = (playerId, field, value) => {
+    setPlayerStatsInput(prev => ({
+      ...prev,
+      [playerId]: { ...prev[playerId], [field]: value }
+    }));
+  };
+
+  const handleSubmitStats = async () => {
+    if (!statsMatchData) return;
+    setSubmittingStats(true);
+    try {
+      const players = Object.entries(playerStatsInput).map(([userId, stats]) => ({
+        userId,
+        stats
+      }));
+
+      await expressApi.post('/api/playerstats/submit', {
+        game: statsMatchData.game,
+        players
+      });
+
+      setShowStatsModal(false);
+      setStatsMatchData(null);
+      setPlayerStatsInput({});
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to submit player stats');
+    } finally {
+      setSubmittingStats(false);
     }
   };
 
@@ -465,9 +544,21 @@ const TournamentBracket = () => {
                   </div>
 
                   {selectedMatch.status === 'completed' ? (
-                    <div className="text-center p-4 bg-primary/10 border border-primary/20 rounded-[4px]">
-                      <p className="text-primary font-bold uppercase tracking-widest text-[0.9rem]">This match has been completed.</p>
-                      <p className="text-text-secondary text-sm font-bold mt-1">Winner: <span className="text-text">{selectedMatch.winner?.name}</span></p>
+                    <div className="space-y-3">
+                      <div className="text-center p-4 bg-primary/10 border border-primary/20 rounded-[4px]">
+                        <p className="text-primary font-bold uppercase tracking-widest text-[0.9rem]">This match has been completed.</p>
+                        <p className="text-text-secondary text-sm font-bold mt-1">Winner: <span className="text-text">{selectedMatch.winner?.name}</span></p>
+                      </div>
+                      {/* Button to enter stats for completed match */}
+                      {selectedMatch.teamA && selectedMatch.teamB && (
+                        <button
+                          type="button"
+                          onClick={() => { closeMatchModal(); openStatsModal(selectedMatch); }}
+                          className="w-full bg-accent/10 hover:bg-accent/20 text-accent border border-accent/20 py-3 rounded-[4px] font-bold text-[0.85rem] uppercase tracking-widest transition-all"
+                        >
+                          <i className="fa-solid fa-chart-bar mr-2"></i>Enter Player Stats
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <div className="flex flex-col sm:flex-row gap-3">
@@ -475,7 +566,7 @@ const TournamentBracket = () => {
                         type="button"
                         onClick={handleLiveScoreUpdate}
                         disabled={submitting || !selectedMatch.teamA || !selectedMatch.teamB}
-                        className="flex-1 bg-white/5 hover:bg-white/10 text-text border border-border hover:border-slate-400 py-4 rounded-[4px] font-bold text-[1rem] transition-all"
+                        className="flex-1 bg-white/5 hover:bg-white/10 text-text border border-border hover:border-slate-400 py-4 rounded-[4px] font-bold text-[0.9rem] transition-all"
                       >
                         {submitting === 'live' ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Update Live Score'}
                       </button>
@@ -483,7 +574,7 @@ const TournamentBracket = () => {
                         type="button"
                         onClick={handleFinalSubmit}
                         disabled={submitting || !selectedMatch.teamA || !selectedMatch.teamB}
-                        className="flex-1 btn-primary py-4 text-[1rem]"
+                        className="flex-1 btn-primary py-4 text-[0.9rem]"
                       >
                         {submitting === 'final' ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Submit Final Result'}
                       </button>
@@ -491,6 +582,137 @@ const TournamentBracket = () => {
                   )}
                 </form>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Player Stats Modal */}
+      {showStatsModal && statsMatchData && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-surface border border-slate-300 rounded-[8px] shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden animate-slide-up flex flex-col">
+            {/* Header */}
+            <div className="bg-slate-50 p-4 border-b border-slate-300 flex justify-between items-center flex-shrink-0">
+              <div>
+                <h3 className="text-lg font-bold text-text uppercase tracking-widest">
+                  <i className="fa-solid fa-chart-bar mr-2 text-accent"></i>Player Stats
+                </h3>
+                <p className="text-[0.75rem] text-text-secondary font-medium mt-0.5">
+                  Match {statsMatchData.match.matchNumber} • {statsMatchData.game}
+                </p>
+              </div>
+              <button
+                onClick={() => { setShowStatsModal(false); setStatsMatchData(null); }}
+                className="text-text-secondary hover:text-red-500 transition-colors"
+              >
+                <i className="fa-solid fa-xmark text-xl"></i>
+              </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto flex-grow p-6 space-y-8">
+
+              {/* Stat Field Labels */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[0.7rem] font-bold text-text-secondary uppercase tracking-widest">Fields:</span>
+                {statsFields.map(f => (
+                  <span key={f} className="text-[0.7rem] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase tracking-wider">{f}</span>
+                ))}
+              </div>
+
+              {/* Team A Players */}
+              <div>
+                <h4 className="text-[0.85rem] font-bold text-text uppercase tracking-widest border-b border-border pb-2 mb-4">
+                  <i className="fa-solid fa-shield-halved mr-2 text-primary"></i>{statsMatchData.teamA.name} [{statsMatchData.teamA.tag}]
+                </h4>
+                <div className="space-y-3">
+                  {statsMatchData.teamA.players.map(player => (
+                    <div key={player._id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-bg border border-border rounded-[6px] p-3">
+                      <div className="flex items-center gap-2 min-w-[140px]">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {player.avatar ? (
+                            <img src={player.avatar} alt={player.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <i className="fa-solid fa-user text-primary text-[0.7rem]"></i>
+                          )}
+                        </div>
+                        <span className="font-bold text-[0.85rem] text-text truncate">{player.name}</span>
+                      </div>
+                      <div className="flex gap-2 flex-wrap flex-1">
+                        {statsFields.map(field => (
+                          <div key={field} className="flex flex-col">
+                            <label className="text-[0.6rem] font-bold text-text-secondary uppercase tracking-wider mb-0.5">{field}</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={playerStatsInput[player._id]?.[field] || ''}
+                              onChange={(e) => handleStatChange(player._id, field, e.target.value)}
+                              className="w-[70px] h-[36px] text-center bg-white border border-border rounded-[4px] text-[0.85rem] font-bold text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                              placeholder="0"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Team B Players */}
+              <div>
+                <h4 className="text-[0.85rem] font-bold text-text uppercase tracking-widest border-b border-border pb-2 mb-4">
+                  <i className="fa-solid fa-shield-halved mr-2 text-text-secondary"></i>{statsMatchData.teamB.name} [{statsMatchData.teamB.tag}]
+                </h4>
+                <div className="space-y-3">
+                  {statsMatchData.teamB.players.map(player => (
+                    <div key={player._id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-bg border border-border rounded-[6px] p-3">
+                      <div className="flex items-center gap-2 min-w-[140px]">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {player.avatar ? (
+                            <img src={player.avatar} alt={player.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <i className="fa-solid fa-user text-primary text-[0.7rem]"></i>
+                          )}
+                        </div>
+                        <span className="font-bold text-[0.85rem] text-text truncate">{player.name}</span>
+                      </div>
+                      <div className="flex gap-2 flex-wrap flex-1">
+                        {statsFields.map(field => (
+                          <div key={field} className="flex flex-col">
+                            <label className="text-[0.6rem] font-bold text-text-secondary uppercase tracking-wider mb-0.5">{field}</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={playerStatsInput[player._id]?.[field] || ''}
+                              onChange={(e) => handleStatChange(player._id, field, e.target.value)}
+                              className="w-[70px] h-[36px] text-center bg-white border border-border rounded-[4px] text-[0.85rem] font-bold text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                              placeholder="0"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-border bg-slate-50 flex justify-between items-center flex-shrink-0">
+              <button
+                onClick={() => { setShowStatsModal(false); setStatsMatchData(null); }}
+                className="btn-outline py-2.5"
+              >
+                Skip
+              </button>
+              <button
+                onClick={handleSubmitStats}
+                disabled={submittingStats}
+                className="btn-primary py-2.5"
+              >
+                {submittingStats ? <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> : <i className="fa-solid fa-save mr-2"></i>}
+                Save Stats
+              </button>
             </div>
           </div>
         </div>

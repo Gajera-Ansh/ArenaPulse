@@ -20,10 +20,9 @@ import Tournaments from './pages/public/Tournaments';
 import TournamentDetails from './pages/public/TournamentDetails';
 import TournamentBracket from './pages/public/TournamentBracket';
 import Teams from './pages/public/Teams';
+import Leaderboard from './pages/public/Leaderboard';
 import Settings from './pages/protected/Settings';
 
-// Placeholders for other pages
-const Leaderboard = () => <div className="container pt-20"><h1>Leaderboard</h1></div>;
 
 function App() {
   return (

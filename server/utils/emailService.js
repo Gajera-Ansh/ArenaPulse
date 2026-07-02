@@ -86,7 +86,7 @@ export const sendTeamInvitationEmail = async (userEmail, userName, captainName, 
       },
     });
 
-    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/login` : 'http://localhost:5173/login';
+    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/login` : 'https://arena-pulse-pi.vercel.app/login';
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -169,7 +169,7 @@ export const sendTournamentEnrollmentEmail = async (userEmail, userName, captain
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     });
 
-    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/dashboard` : 'http://localhost:5173/dashboard';
+    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/dashboard` : 'https://arena-pulse-pi.vercel.app/dashboard';
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -358,7 +358,7 @@ export const sendTeamCompleteEmail = async (captainEmail, captainName, teamName)
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     });
 
-    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/tournaments` : 'http://localhost:5173/tournaments';
+    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/tournaments` : 'https://arena-pulse-pi.vercel.app/tournaments';
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -417,7 +417,7 @@ export const sendOrganizerRegistrationRequestEmail = async (organizerEmail, orga
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     });
 
-    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/tournaments` : 'http://localhost:5173/tournaments';
+    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/tournaments` : 'https://arena-pulse-pi.vercel.app/tournaments';
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -479,7 +479,7 @@ export const sendWelcomeEmail = async (email, name) => {
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     });
 
-    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/login` : 'http://localhost:5173/login';
+    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/login` : 'https://arena-pulse-pi.vercel.app/login';
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -538,7 +538,7 @@ export const sendNewTournamentEmail = async (playerEmails, tournamentName, game,
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     });
 
-    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/tournaments` : 'http://localhost:5173/tournaments';
+    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/tournaments` : 'https://arena-pulse-pi.vercel.app/tournaments';
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -603,7 +603,7 @@ export const sendTournamentUpdateEmail = async (playerEmails, tournamentName, ac
     });
 
     const isUpdate = actionType === 'updated';
-    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/tournaments` : 'http://localhost:5173/tournaments';
+    const loginUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/tournaments` : 'https://arena-pulse-pi.vercel.app/tournaments';
     const actionColor = isUpdate ? '#3b82f6' : '#ef4444'; // blue for update, red for cancel
     const headerTitle = isUpdate ? 'Tournament Updated' : 'Tournament Canceled';
     const actionVerb = isUpdate ? 'updated the details for' : 'canceled';

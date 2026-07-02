@@ -23,6 +23,7 @@ import checkinRoutes from './routes/checkin.routes.js';
 import leaderboardRoutes from './routes/leaderboard.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import playerstatRoutes from './routes/playerstat.routes.js';
 
 // Initialize Express
 const app = express();
@@ -32,7 +33,7 @@ const PORT = process.env.PORT || 5000;
 const httpServer = http.createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: process.env.CLIENT_URL || 'https://arena-pulse-pi.vercel.app',
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
     credentials: true,
   }
@@ -52,7 +53,7 @@ io.on('connection', (socket) => {
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: process.env.CLIENT_URL || 'https://arena-pulse-pi.vercel.app',
   credentials: true,
 }));
 app.use(express.json());
@@ -75,6 +76,7 @@ app.use('/api/checkins', checkinRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/playerstats', playerstatRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);

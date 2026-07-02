@@ -1,4 +1,4 @@
-// Leaderboard routes - team rankings
+// Leaderboard routes - team and player rankings
 
 import { Router } from 'express';
 import { getTeamLeaderboard, getTournamentStandings } from '../controllers/leaderboard.controller.js';
