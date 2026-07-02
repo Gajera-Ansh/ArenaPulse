@@ -13,14 +13,14 @@ export default {
         text: '#111827',
         'text-secondary': '#6B7280',
         primary: {
-          DEFAULT: '#4F46E5', // Indigo-600
-          hover: '#4338CA', // Indigo-700
-          light: '#EEF2FF', // Indigo-50
+          DEFAULT: '#2563EB', // Blue-600
+          hover: '#1D4ED8', // Blue-700
+          light: '#EFF6FF', // Blue-50
         },
         accent: {
-          DEFAULT: '#E11D48', // Rose-600
-          hover: '#BE123C', // Rose-700
-          light: '#FFF1F2', // Rose-50
+          DEFAULT: '#EA580C', // Orange-600
+          hover: '#C2410C', // Orange-700
+          light: '#FFF7ED', // Orange-50
         },
       },
       fontFamily: {
