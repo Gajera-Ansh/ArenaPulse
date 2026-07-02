@@ -90,7 +90,12 @@ const Teams = () => {
             <div key={t._id} className="bg-surface border border-slate-300 rounded-[8px] overflow-hidden hover:border-primary/50 transition-all hover:-translate-y-1 hover:shadow-lg group flex flex-col h-full relative">
               {/* Card Banner */}
               <div className="bg-black/5 relative p-5 border-b border-border flex items-center justify-between">
-                <div>
+                <div className="flex items-center gap-3">
+                  <img 
+                    src={t.logo ? (t.logo.startsWith('http') ? t.logo : `http://localhost:5000/${t.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(t.tag || t.name)}&background=random&color=fff&size=200&bold=true`} 
+                    alt={`${t.name} Logo`} 
+                    className="w-10 h-10 rounded bg-white/10 border border-border object-cover" 
+                  />
                   <h4 className="text-[1.1rem] font-bold text-text uppercase tracking-tight group-hover:text-primary transition-colors">
                     {t.name} <span className="text-[0.75rem] text-text-secondary tracking-widest ml-1">[{t.tag}]</span>
                   </h4>

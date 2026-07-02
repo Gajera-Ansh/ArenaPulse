@@ -22,6 +22,7 @@ import TournamentBracket from './pages/public/TournamentBracket';
 import Teams from './pages/public/Teams';
 import Leaderboard from './pages/public/Leaderboard';
 import Settings from './pages/protected/Settings';
+import Profile from './pages/protected/Profile';
 
 
 function App() {
@@ -41,6 +42,12 @@ function App() {
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <Profile />
                   </ProtectedRoute>
                 } />
 

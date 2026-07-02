@@ -198,6 +198,14 @@ const Navbar = () => {
 
                     <div className="p-2">
                       <Link
+                        to="/profile"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 text-[0.85rem] font-medium text-text hover:bg-primary/5 hover:text-primary rounded-lg transition-colors"
+                      >
+                        <i className="fa-solid fa-user w-4 text-center"></i> Profile
+                      </Link>
+
+                      <Link
                         to="/dashboard"
                         onClick={() => setIsDropdownOpen(false)}
                         className="flex items-center gap-3 px-3 py-2.5 text-[0.85rem] font-medium text-text hover:bg-primary/5 hover:text-primary rounded-lg transition-colors"

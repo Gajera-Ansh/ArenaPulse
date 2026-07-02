@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { useAuth } from '../../context/AuthContext';
+import { SUPPORTED_GAMES } from '../../utils/constants';
 
 const EditTeam = () => {
   const { id } = useParams();
@@ -11,6 +12,7 @@ const EditTeam = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [tournamentCount, setTournamentCount] = useState(0);
   const [isCaptain, setIsCaptain] = useState(false);
   const [captainInfo, setCaptainInfo] = useState(null);
 
@@ -25,6 +27,9 @@ const EditTeam = () => {
   const [selectedPlayers, setSelectedPlayers] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
+
   useEffect(() => {
     const fetchTeam = async () => {
       try {
@@ -37,6 +42,11 @@ const EditTeam = () => {
             tag: t.tag || '',
             game: t.game || ''
           });
+
+          if (t.logo) {
+            // Check if logo is full url or local path
+            setLogoPreview(t.logo.startsWith('http') ? t.logo : `http://localhost:5000/${t.logo}`);
+          }
 
           // Set selected players, filtering out the captain (who is the current user)
           const captainId = typeof t.captain === 'object' ? t.captain._id : t.captain;
@@ -64,6 +74,8 @@ const EditTeam = () => {
           if (typeof t.captain === 'object') {
             setCaptainInfo(t.captain);
           }
+
+          setTournamentCount(t.tournamentCount || 0);
         }
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load team data');
@@ -115,18 +127,38 @@ const EditTeam = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image must be smaller than 5MB.');
+        return;
+      }
+      setLogoFile(file);
+      setLogoPreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const payload = {
-        ...formData,
-        players: selectedPlayers.map(p => p._id)
-      };
+      const payload = new FormData();
+      payload.append('name', formData.name);
+      payload.append('tag', formData.tag);
+      payload.append('game', formData.game);
+      if (selectedPlayers.length > 0) {
+        payload.append('players', JSON.stringify(selectedPlayers.map(p => p._id)));
+      }
+      if (logoFile) {
+        payload.append('logo', logoFile);
+      }
 
-      const res = await expressApi.put(`/api/teams/${id}`, payload);
+      const res = await expressApi.put(`/api/teams/${id}`, payload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
       if (res.data.success) {
         navigate('/teams');
@@ -201,6 +233,26 @@ const EditTeam = () => {
             </div>
 
             <div>
+              <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Team Logo (Optional)</label>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center overflow-hidden shrink-0">
+                  {logoPreview ? (
+                    <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <i className="fa-solid fa-shield text-text-secondary text-2xl"></i>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={handleLogoChange}
+                  disabled={!isCaptain}
+                  className={`block w-full text-sm text-text-secondary file:mr-4 file:py-2.5 file:px-4 file:rounded-[4px] file:border-0 file:text-sm file:font-bold file:bg-primary file:text-white hover:file:bg-primary-hover ${!isCaptain ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                />
+              </div>
+            </div>
+
+            <div>
               <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Primary Game</label>
               <div className="relative">
                 <select
@@ -211,12 +263,9 @@ const EditTeam = () => {
                   className={`w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer ${!isCaptain ? 'opacity-70 cursor-not-allowed' : ''}`}
                   required
                 >
-                  <option value="Valorant">Valorant</option>
-                  <option value="League of Legends">League of Legends</option>
-                  <option value="Counter-Strike 2">Counter-Strike 2</option>
-                  <option value="BGMI">BGMI</option>
-                  <option value="Free Fire">Free Fire</option>
-                  <option value="Dota 2">Dota 2</option>
+                  {SUPPORTED_GAMES.map(game => (
+                    <option key={game} value={game}>{game}</option>
+                  ))}
                 </select>
                 <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-[0.8rem]"></i>
               </div>
@@ -312,11 +361,11 @@ const EditTeam = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-surface rounded-[8px] p-4 border border-border">
                 <p className="text-text-secondary text-[0.7rem] uppercase font-bold">Roster Size</p>
-                <p className="text-xl font-bold">{selectedPlayers.length || 0}</p>
+                <p className="text-xl font-bold">{(selectedPlayers.length + 1) || 1}</p>
               </div>
               <div className="bg-surface rounded-[8px] p-4 border border-border">
                 <p className="text-text-secondary text-[0.7rem] uppercase font-bold">Tournaments</p>
-                <p className="text-xl font-bold">0</p>
+                <p className="text-xl font-bold">{tournamentCount}</p>
               </div>
             </div>
           </div>

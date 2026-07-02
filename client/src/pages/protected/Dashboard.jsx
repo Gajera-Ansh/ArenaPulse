@@ -119,7 +119,12 @@ const Dashboard = () => {
                     {invitations.map(inv => (
                       <div key={inv._id} className="bg-white/5 border border-accent/30 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-[0_0_15px_rgba(251,191,36,0.05)] transition-all hover:bg-white/10 hover:border-accent/50">
                         <div>
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-3 mb-1">
+                            <img 
+                              src={inv.logo ? (inv.logo.startsWith('http') ? inv.logo : `http://localhost:5000/${inv.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(inv.tag || inv.name)}&background=random&color=fff&size=200&bold=true`} 
+                              alt={`${inv.name} Logo`} 
+                              className="w-8 h-8 rounded border border-border object-cover" 
+                            />
                             <h4 className="text-[1.1rem] font-bold text-text">{inv.name}</h4>
                             <span className="text-[0.7rem] bg-accent/20 text-accent font-bold px-2 py-0.5 rounded uppercase tracking-wider">{inv.tag}</span>
                           </div>

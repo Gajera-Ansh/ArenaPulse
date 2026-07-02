@@ -199,7 +199,7 @@ const Settings = () => {
                 <div className="mb-8 flex items-center gap-6">
                   <div className="w-24 h-24 rounded-full bg-surface border border-border overflow-hidden flex items-center justify-center relative group shadow-sm">
                     {user?.avatar ? (
-                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
                       <i className="fa-solid fa-user text-3xl text-text-secondary"></i>
                     )}

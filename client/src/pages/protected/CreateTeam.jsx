@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { useAuth } from '../../context/AuthContext';
+import { SUPPORTED_GAMES } from '../../utils/constants';
 
 const CreateTeam = () => {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ const CreateTeam = () => {
   const [formData, setFormData] = useState({
     name: '',
     tag: '',
-    game: 'Valorant'
+    game: SUPPORTED_GAMES[0]
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,8 +57,23 @@ const CreateTeam = () => {
     setSelectedPlayers(selectedPlayers.filter(p => p._id !== playerId));
   };
 
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image must be smaller than 5MB.');
+        return;
+      }
+      setLogoFile(file);
+      setLogoPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -66,12 +82,20 @@ const CreateTeam = () => {
     setError('');
 
     try {
-      const payload = {
-        ...formData,
-        players: selectedPlayers.map(p => p._id)
-      };
+      const payload = new FormData();
+      payload.append('name', formData.name);
+      payload.append('tag', formData.tag);
+      payload.append('game', formData.game);
+      if (selectedPlayers.length > 0) {
+        payload.append('players', JSON.stringify(selectedPlayers.map(p => p._id)));
+      }
+      if (logoFile) {
+        payload.append('logo', logoFile);
+      }
 
-      const res = await expressApi.post('/api/teams', payload);
+      const res = await expressApi.post('/api/teams', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
       if (res.data.success) {
         // Redirect to the Teams board where they can see their new team
@@ -139,6 +163,25 @@ const CreateTeam = () => {
             </div>
 
             <div>
+              <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Team Logo (Optional)</label>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center overflow-hidden shrink-0">
+                  {logoPreview ? (
+                    <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <i className="fa-solid fa-shield text-text-secondary text-2xl"></i>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={handleLogoChange}
+                  className="block w-full text-sm text-text-secondary file:mr-4 file:py-2.5 file:px-4 file:rounded-[4px] file:border-0 file:text-sm file:font-bold file:bg-primary file:text-white hover:file:bg-primary-hover cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <div>
               <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Primary Game</label>
               <div className="relative">
                 <select
@@ -148,12 +191,9 @@ const CreateTeam = () => {
                   className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
                   required
                 >
-                  <option value="Valorant">Valorant</option>
-                  <option value="League of Legends">League of Legends</option>
-                  <option value="Counter-Strike 2">Counter-Strike 2</option>
-                  <option value="BGMI">BGMI</option>
-                  <option value="Free Fire">Free Fire</option>
-                  <option value="Dota 2">Dota 2</option>
+                  {SUPPORTED_GAMES.map(game => (
+                    <option key={game} value={game}>{game}</option>
+                  ))}
                 </select>
                 <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-[0.8rem]"></i>
               </div>

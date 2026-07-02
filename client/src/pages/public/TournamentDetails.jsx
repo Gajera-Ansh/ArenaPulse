@@ -362,6 +362,11 @@ const TournamentDetails = () => {
                     <div key={reg._id} className="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-3 mb-2">
+                          <img 
+                            src={reg.team?.logo ? (reg.team.logo.startsWith('http') ? reg.team.logo : `http://localhost:5000/${reg.team.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(reg.team?.tag || reg.team?.name || 'T')}&background=random&color=fff&size=200&bold=true`} 
+                            alt={`${reg.team?.name || 'Team'} Logo`} 
+                            className="w-10 h-10 rounded border border-border object-cover" 
+                          />
                           <h4 className="text-[1.1rem] font-bold text-text">{reg.team?.name}</h4>
                           <span className="text-[0.7rem] bg-accent/20 text-accent font-bold px-2 py-0.5 rounded uppercase tracking-wider">[{reg.team?.tag}]</span>
                         </div>
@@ -599,9 +604,16 @@ const TournamentDetails = () => {
                     <p className="text-[0.85rem] text-text-secondary mb-4">Select which team you want to lead into this tournament. Only teams where you are Captain are shown.</p>
                     {myTeams.map(team => (
                       <div key={team._id} className="flex items-center justify-between p-4 bg-white/5 border border-border rounded-xl hover:border-primary/50 transition-colors">
-                        <div>
-                          <h5 className="font-bold text-text text-[1rem] leading-tight">{team.name}</h5>
-                          <span className="text-[0.75rem] text-primary font-bold tracking-widest uppercase">[{team.tag}]</span>
+                        <div className="flex items-center gap-3">
+                          <img 
+                            src={team.logo ? (team.logo.startsWith('http') ? team.logo : `http://localhost:5000/${team.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(team.tag || team.name)}&background=random&color=fff&size=200&bold=true`} 
+                            alt={`${team.name} Logo`} 
+                            className="w-10 h-10 rounded border border-border object-cover" 
+                          />
+                          <div>
+                            <h5 className="font-bold text-text text-[1rem] leading-tight">{team.name}</h5>
+                            <span className="text-[0.75rem] text-primary font-bold tracking-widest uppercase">[{team.tag}]</span>
+                          </div>
                         </div>
                         <button
                           onClick={() => handleEnroll(team)}

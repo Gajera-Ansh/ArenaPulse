@@ -3,6 +3,7 @@
 import Team from '../models/Team.js';
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
+import Registration from '../models/Registration.js';
 import { sendTeamInvitationEmail, sendTeamCompleteEmail } from '../utils/emailService.js';
 
 // POST /api/teams
@@ -10,12 +11,19 @@ export const createTeam = async (req, res, next) => {
   try {
     const { name, tag, game, players } = req.body;
 
-    const pendingPlayers = players && Array.isArray(players) ? players.filter(p => p !== req.user._id.toString()) : [];
+    let parsedPlayers = [];
+    if (players) {
+      parsedPlayers = typeof players === 'string' ? JSON.parse(players) : players;
+    }
+
+    const pendingPlayers = parsedPlayers.filter(p => p !== req.user._id.toString());
+    const logo = req.file ? req.file.path : `https://ui-avatars.com/api/?name=${encodeURIComponent(tag || name)}&background=random&color=fff&size=200&bold=true`;
 
     const team = await Team.create({
       name,
       tag,
       game,
+      logo,
       captain: req.user._id,
       players: [req.user._id.toString()],
       pendingPlayers,
@@ -41,7 +49,16 @@ export const getMyTeams = async (req, res, next) => {
       .populate('captain', 'name email avatar')
       .populate('players', 'name email avatar');
 
-    res.status(200).json({ success: true, data: teams });
+    // Fetch tournament count for each team
+    const teamsWithCounts = await Promise.all(teams.map(async (team) => {
+      const tournamentCount = await Registration.countDocuments({ 
+        team: team._id,
+        status: { $in: ['pending', 'approved'] }
+      });
+      return { ...team.toObject(), tournamentCount };
+    }));
+
+    res.status(200).json({ success: true, data: teamsWithCounts });
   } catch (error) {
     next(error);
   }
@@ -86,7 +103,15 @@ export const getTeamById = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Team not found.' });
     }
 
-    res.status(200).json({ success: true, data: team });
+    const tournamentCount = await Registration.countDocuments({ 
+      team: team._id,
+      status: { $in: ['pending', 'approved'] } 
+    });
+
+    // Using .toObject() or .lean() is better, but spread works if it's a mongoose doc.
+    const teamData = { ...team.toObject(), tournamentCount };
+
+    res.status(200).json({ success: true, data: teamData });
   } catch (error) {
     next(error);
   }
@@ -110,9 +135,18 @@ export const updateTeam = async (req, res, next) => {
     team.name = name || team.name;
     team.tag = tag || team.tag;
     team.game = game || team.game;
+    
+    if (req.file) {
+      team.logo = req.file.path;
+    }
 
-    if (players && Array.isArray(players)) {
-      const incomingPlayers = players.filter(p => p !== req.user._id.toString());
+    let parsedPlayers = null;
+    if (players) {
+      parsedPlayers = typeof players === 'string' ? JSON.parse(players) : players;
+    }
+
+    if (parsedPlayers && Array.isArray(parsedPlayers)) {
+      const incomingPlayers = parsedPlayers.filter(p => p !== req.user._id.toString());
       const confirmedPlayers = team.players.map(p => p.toString());
       const existingPending = team.pendingPlayers.map(p => p.toString());
 

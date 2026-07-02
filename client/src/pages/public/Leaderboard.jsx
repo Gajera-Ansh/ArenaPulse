@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import expressApi from '../../api/expressApi';
-
-const GAMES = ['Valorant', 'Dota 2', 'Counter-Strike 2', 'BGMI', 'Free Fire', 'League of Legends'];
+import { SUPPORTED_GAMES } from '../../utils/constants';
 
 const Leaderboard = () => {
   const [activeTab, setActiveTab] = useState('teams');
-  const [filterGame, setFilterGame] = useState('Valorant'); // Default to Valorant
+  const [filterGame, setFilterGame] = useState(SUPPORTED_GAMES[0]); // Default to first game
   const [teamData, setTeamData] = useState([]);
   const [playerData, setPlayerData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +89,7 @@ const Leaderboard = () => {
             onChange={(e) => setFilterGame(e.target.value)}
             className="w-full h-[44px] bg-bg border border-border rounded-[4px] px-4 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer text-[0.9rem]"
           >
-            {GAMES.map(g => (
+            {SUPPORTED_GAMES.map(g => (
               <option key={g} value={g}>{g}</option>
             ))}
           </select>
@@ -157,11 +156,11 @@ const Leaderboard = () => {
             {/* Team Info */}
             <div className="col-span-4 flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-[6px] bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                {entry.team.logo ? (
-                  <img src={entry.team.logo} alt={entry.team.name} className="w-full h-full object-cover" />
-                ) : (
-                  <i className="fa-solid fa-shield-halved text-primary text-[1rem]"></i>
-                )}
+                <img 
+                  src={entry.team.logo ? (entry.team.logo.startsWith('http') ? entry.team.logo : `http://localhost:5000/${entry.team.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.team.tag || entry.team.name)}&background=random&color=fff&size=200&bold=true`} 
+                  alt={entry.team.name} 
+                  className="w-full h-full object-cover" 
+                />
               </div>
               <div className="min-w-0">
                 <div className="font-bold text-[0.95rem] text-text truncate">{entry.team.name}</div>

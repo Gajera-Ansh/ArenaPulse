@@ -23,6 +23,10 @@ const teamSchema = new mongoose.Schema(
       required: [true, 'Game is required'],
       trim: true,
     },
+    logo: {
+      type: String,
+      default: '',
+    },
     captain: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

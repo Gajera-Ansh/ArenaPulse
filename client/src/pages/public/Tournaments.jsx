@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
+import { SUPPORTED_GAMES } from '../../utils/constants';
 
 const Tournaments = () => {
   const [tournaments, setTournaments] = useState([]);
@@ -74,12 +75,9 @@ const Tournaments = () => {
               className="w-full h-[48px] bg-background border border-border rounded-[4px] px-4 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer text-[0.9rem] sm:text-[1rem]"
             >
               <option value="">All Games</option>
-              <option value="Valorant">Valorant</option>
-              <option value="League of Legends">League of Legends</option>
-              <option value="Counter-Strike 2">Counter-Strike 2</option>
-              <option value="BGMI">BGMI</option>
-              <option value="Free Fire">Free Fire</option>
-              <option value="Dota 2">Dota 2</option>
+              {SUPPORTED_GAMES.map(game => (
+                <option key={game} value={game}>{game}</option>
+              ))}
             </select>
             <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-[0.8rem]"></i>
           </div>

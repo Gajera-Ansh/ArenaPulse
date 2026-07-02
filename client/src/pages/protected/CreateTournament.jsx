@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
+import { SUPPORTED_GAMES } from '../../utils/constants';
 
 const CreateTournament = () => {
   const navigate = useNavigate();
@@ -119,12 +120,9 @@ const CreateTournament = () => {
                     className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
                     required
                   >
-                    <option value="Valorant">Valorant</option>
-                    <option value="League of Legends">League of Legends</option>
-                    <option value="Counter-Strike 2">Counter-Strike 2</option>
-                    <option value="BGMI">BGMI</option>
-                    <option value="Free Fire">Free Fire</option>
-                    <option value="Dota 2">Dota 2</option>
+                    {SUPPORTED_GAMES.map(game => (
+                      <option key={game} value={game}>{game}</option>
+                    ))}
                   </select>
                   <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-sm"></i>
                 </div>
