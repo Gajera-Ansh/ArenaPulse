@@ -239,8 +239,8 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Link to="/login" className="btn-outline hidden sm:flex">Log In</Link>
-              <Link to="/register" className="btn-primary">Sign Up</Link>
+              <Link to="/login" className="btn-outline hidden sm:flex !px-4 !py-2 !text-[0.75rem]">Log In</Link>
+              <Link to="/register" className="btn-primary !px-4 !py-2 !text-[0.75rem]">Sign Up</Link>
             </>
           )}
         </div>
