@@ -8,7 +8,6 @@ const EditTournament = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isCustomGame, setIsCustomGame] = useState(false);
 
   // Get tomorrow's local date at 00:00 to prevent selecting today
   const tomorrow = new Date();
@@ -37,12 +36,6 @@ const EditTournament = () => {
         const res = await expressApi.get(`/api/tournaments/${id}`);
         if (res.data.success) {
           const t = res.data.data;
-
-          // Check if it's a standard game or custom
-          const standardGames = ['Valorant', 'League of Legends', 'Counter-Strike 2', 'BGMI', 'Free Fire', 'Dota 2', 'Rocket League'];
-          if (!standardGames.includes(t.game)) {
-            setIsCustomGame(true);
-          }
 
           // Format dates to YYYY-MM-DDThh:mm for datetime-local inputs in LOCAL time
           const formatDateForInput = (isoString) => {
@@ -185,16 +178,8 @@ const EditTournament = () => {
                 <div className="relative">
                   <select
                     name="game"
-                    value={isCustomGame ? 'Custom' : formData.game}
-                    onChange={(e) => {
-                      if (e.target.value === 'Custom') {
-                        setIsCustomGame(true);
-                        setFormData({ ...formData, game: '' });
-                      } else {
-                        setIsCustomGame(false);
-                        setFormData({ ...formData, game: e.target.value });
-                      }
-                    }}
+                    value={formData.game}
+                    onChange={handleChange}
                     className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
                     required
                   >
@@ -204,23 +189,9 @@ const EditTournament = () => {
                     <option value="BGMI">BGMI</option>
                     <option value="Free Fire">Free Fire</option>
                     <option value="Dota 2">Dota 2</option>
-                    <option value="Rocket League">Rocket League</option>
-                    <option value="Custom">Custom (Type manually)</option>
                   </select>
                   <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-sm"></i>
                 </div>
-
-                {isCustomGame && (
-                  <input
-                    type="text"
-                    name="game"
-                    value={formData.game}
-                    onChange={handleChange}
-                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all mt-3 animate-fade-in"
-                    placeholder="Enter custom game name"
-                    required
-                  />
-                )}
               </div>
 
               <div>

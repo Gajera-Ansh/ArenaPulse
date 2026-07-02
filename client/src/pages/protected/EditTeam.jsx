@@ -11,7 +11,6 @@ const EditTeam = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isCustomGame, setIsCustomGame] = useState(false);
   const [isCaptain, setIsCaptain] = useState(false);
   const [captainInfo, setCaptainInfo] = useState(null);
 
@@ -33,11 +32,6 @@ const EditTeam = () => {
         if (res.data.success) {
           const t = res.data.data;
 
-          const standardGames = ['Valorant', 'League of Legends', 'Counter-Strike 2', 'BGMI', 'Free Fire', 'Dota 2', 'Rocket League'];
-          if (!standardGames.includes(t.game)) {
-            setIsCustomGame(true);
-          }
-
           setFormData({
             name: t.name || '',
             tag: t.tag || '',
@@ -48,7 +42,7 @@ const EditTeam = () => {
           const captainId = typeof t.captain === 'object' ? t.captain._id : t.captain;
           const userIsCaptain = String(user?.id || user?._id) === String(captainId);
           setIsCaptain(userIsCaptain);
-          
+
           let squad = [];
           if (t.players) {
             squad = [
@@ -65,7 +59,7 @@ const EditTeam = () => {
             ];
           }
           setSelectedPlayers(squad);
-          
+
           // Also set the captain info so we can display it
           if (typeof t.captain === 'object') {
             setCaptainInfo(t.captain);
@@ -211,17 +205,9 @@ const EditTeam = () => {
               <div className="relative">
                 <select
                   name="game"
-                  value={isCustomGame ? 'Custom' : formData.game}
+                  value={formData.game}
                   disabled={!isCaptain}
-                  onChange={(e) => {
-                    if (e.target.value === 'Custom') {
-                      setIsCustomGame(true);
-                      setFormData({ ...formData, game: '' });
-                    } else {
-                      setIsCustomGame(false);
-                      setFormData({ ...formData, game: e.target.value });
-                    }
-                  }}
+                  onChange={handleChange}
                   className={`w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer ${!isCaptain ? 'opacity-70 cursor-not-allowed' : ''}`}
                   required
                 >
@@ -231,24 +217,9 @@ const EditTeam = () => {
                   <option value="BGMI">BGMI</option>
                   <option value="Free Fire">Free Fire</option>
                   <option value="Dota 2">Dota 2</option>
-                  <option value="Rocket League">Rocket League</option>
-                  <option value="Custom">Custom (Type manually)</option>
                 </select>
                 <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-[0.8rem]"></i>
               </div>
-
-              {isCustomGame && (
-                <input
-                  type="text"
-                  name="game"
-                  value={formData.game}
-                  onChange={handleChange}
-                  disabled={!isCaptain}
-                  className={`w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all mt-3 animate-fade-in ${!isCaptain ? 'opacity-70 cursor-not-allowed' : ''}`}
-                  placeholder="Enter custom game name"
-                  required
-                />
-              )}
             </div>
 
             {/* Player Roster */}
@@ -258,7 +229,7 @@ const EditTeam = () => {
               <div className="flex flex-col gap-3 mb-4">
                 <div className="bg-primary/20 border border-primary/30 text-primary px-4 py-3 rounded-xl text-[0.9rem] font-bold flex items-center justify-between shadow-sm">
                   <span className="flex items-center gap-2">
-                    <i className="fa-solid fa-crown text-[0.8rem]"></i> 
+                    <i className="fa-solid fa-crown text-[0.8rem]"></i>
                     {isCaptain ? 'You (Captain)' : (captainInfo?.name || 'Captain')}
                   </span>
                   <span className="text-[0.75rem] bg-primary/20 px-2 py-0.5 rounded text-primary">Ready</span>
@@ -349,7 +320,7 @@ const EditTeam = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="glass-panel p-6 border-l-[3px] border-l-accent">
             <h3 className="text-[0.9rem] font-bold text-text uppercase tracking-widest mb-2">Notice</h3>
             <p className="text-[0.8rem] text-text-secondary">

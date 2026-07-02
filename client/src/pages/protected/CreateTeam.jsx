@@ -8,7 +8,6 @@ const CreateTeam = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isCustomGame, setIsCustomGame] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -28,7 +27,7 @@ const CreateTeam = () => {
         try {
           const res = await expressApi.get(`/api/users/search?q=${encodeURIComponent(searchQuery)}&role=player`);
           if (res.data.success) {
-            const results = res.data.data.filter(p => 
+            const results = res.data.data.filter(p =>
               String(p._id) !== String(user?.id || user?._id) && !selectedPlayers.some(sp => String(sp._id) === String(p._id))
             );
             setSearchResults(results);
@@ -71,7 +70,7 @@ const CreateTeam = () => {
         ...formData,
         players: selectedPlayers.map(p => p._id)
       };
-      
+
       const res = await expressApi.post('/api/teams', payload);
 
       if (res.data.success) {
@@ -144,16 +143,8 @@ const CreateTeam = () => {
               <div className="relative">
                 <select
                   name="game"
-                  value={isCustomGame ? 'Custom' : formData.game}
-                  onChange={(e) => {
-                    if (e.target.value === 'Custom') {
-                      setIsCustomGame(true);
-                      setFormData({ ...formData, game: '' });
-                    } else {
-                      setIsCustomGame(false);
-                      setFormData({ ...formData, game: e.target.value });
-                    }
-                  }}
+                  value={formData.game}
+                  onChange={handleChange}
                   className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
                   required
                 >
@@ -163,29 +154,15 @@ const CreateTeam = () => {
                   <option value="BGMI">BGMI</option>
                   <option value="Free Fire">Free Fire</option>
                   <option value="Dota 2">Dota 2</option>
-                  <option value="Rocket League">Rocket League</option>
-                  <option value="Custom">Custom (Type manually)</option>
                 </select>
                 <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-[0.8rem]"></i>
               </div>
-
-              {isCustomGame && (
-                <input
-                  type="text"
-                  name="game"
-                  value={formData.game}
-                  onChange={handleChange}
-                  className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all mt-3 animate-fade-in"
-                  placeholder="Enter custom game name"
-                  required
-                />
-              )}
             </div>
 
             {/* Player Roster */}
             <div className="mt-8 pt-6 border-t border-border">
               <label className="block text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-3">Team Roster ({selectedPlayers.length + 1}/10)</label>
-              
+
               <div className="flex flex-wrap gap-3 mb-4">
                 <div className="bg-primary/20 border border-primary/30 text-primary px-4 py-2 rounded-xl text-[0.9rem] font-bold flex items-center gap-2 shadow-sm">
                   <i className="fa-solid fa-crown text-[0.8rem]"></i> You (Captain)

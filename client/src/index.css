@@ -6,7 +6,9 @@
   body {
     @apply font-sans text-text leading-relaxed;
     background-color: theme('colors.bg');
-    background-image: radial-gradient(circle, #CBD5E1 1.5px, transparent 1.5px);
+    background-image: 
+      linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
     background-size: 32px 32px;
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
@@ -22,27 +24,27 @@
 
 @layer components {
   .container {
-    @apply max-w-[1120px] mx-auto px-6;
+    @apply w-full mx-auto px-6 md:px-12 xl:px-20 2xl:px-32;
   }
   
   .card {
-    @apply bg-surface border border-border rounded shadow transition-all duration-200;
+    @apply bg-surface border-2 border-border/50 rounded-[8px] shadow-sm transition-all duration-200;
   }
   
   .card:hover {
-    @apply shadow-md -translate-y-[2px];
+    @apply shadow-md border-primary/30 -translate-y-[2px];
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-[18px] py-[8px] text-[0.85rem] font-bold tracking-wide rounded-[4px] transition-all duration-150 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 px-[20px] py-[10px] text-[0.85rem] font-bold tracking-widest uppercase rounded-[4px] transition-all duration-150 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-primary {
-    @apply btn bg-primary text-white hover:bg-primary-hover shadow-sm hover:shadow;
+    @apply btn bg-primary text-white hover:bg-primary-hover shadow-sm hover:shadow active:scale-95;
   }
 
   .btn-accent {
-    @apply btn bg-accent text-white hover:bg-accent-hover shadow-sm hover:shadow;
+    @apply btn bg-accent text-white hover:bg-accent-hover shadow-sm hover:shadow active:scale-95;
   }
 
   .btn-outline {

@@ -6,7 +6,6 @@ const CreateTournament = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isCustomGame, setIsCustomGame] = useState(false);
 
   // Get tomorrow's local date at 00:00 to prevent selecting today
   const tomorrow = new Date();
@@ -115,16 +114,8 @@ const CreateTournament = () => {
                 <div className="relative">
                   <select
                     name="game"
-                    value={isCustomGame ? 'Custom' : formData.game}
-                    onChange={(e) => {
-                      if (e.target.value === 'Custom') {
-                        setIsCustomGame(true);
-                        setFormData({ ...formData, game: '' });
-                      } else {
-                        setIsCustomGame(false);
-                        setFormData({ ...formData, game: e.target.value });
-                      }
-                    }}
+                    value={formData.game}
+                    onChange={handleChange}
                     className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
                     required
                   >
@@ -134,24 +125,9 @@ const CreateTournament = () => {
                     <option value="BGMI">BGMI</option>
                     <option value="Free Fire">Free Fire</option>
                     <option value="Dota 2">Dota 2</option>
-                    <option value="Rocket League">Rocket League</option>
-                    <option value="Custom">Custom (Type manually)</option>
                   </select>
                   <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-sm"></i>
                 </div>
-
-                {isCustomGame && (
-                  <input
-                    type="text"
-                    name="game"
-                    value={formData.game}
-                    onChange={handleChange}
-                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3.5 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all mt-3 animate-fade-in"
-                    placeholder="Enter custom game name"
-                    required
-                    autoFocus
-                  />
-                )}
               </div>
 
               <div>

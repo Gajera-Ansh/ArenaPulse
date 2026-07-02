@@ -80,7 +80,6 @@ const Tournaments = () => {
               <option value="BGMI">BGMI</option>
               <option value="Free Fire">Free Fire</option>
               <option value="Dota 2">Dota 2</option>
-              <option value="Rocket League">Rocket League</option>
             </select>
             <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-[0.8rem]"></i>
           </div>
