@@ -22,7 +22,7 @@ const Profile = () => {
       try {
         setLoading(true);
         if (user?.role === 'organizer') {
-          const res = await expressApi.get(`/api/tournaments?organizer=${user._id}`);
+          const res = await expressApi.get(`/api/tournaments?organizer=${user.id}`);
           if (res.data.success) {
             setOrganizedTournaments(res.data.data);
           }
