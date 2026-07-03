@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import * as XLSX from 'xlsx';
 
 const getTeamLogo = (team) => {
   if (!team) return '';
@@ -309,6 +310,91 @@ const TournamentBracket = () => {
     }
   };
 
+  const downloadTemplateForMatch = async (match) => {
+    try {
+      const game = tournament?.game || 'Valorant';
+      const fields = GAME_STATS_FIELDS[game] || ['kills', 'deaths'];
+      
+      const res = await expressApi.get(`/api/playerstats/match-players/${match.teamA._id}/${match.teamB._id}`);
+      if (res.data.success) {
+        const { teamA, teamB } = res.data.data;
+        
+        const rows = [];
+        teamA.players.forEach(p => {
+          const row = { Team: teamA.name, Player: p.name, PlayerID: p._id };
+          fields.forEach(f => row[f] = 0);
+          rows.push(row);
+        });
+        
+        teamB.players.forEach(p => {
+          const row = { Team: teamB.name, Player: p.name, PlayerID: p._id };
+          fields.forEach(f => row[f] = 0);
+          rows.push(row);
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(rows);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Stats');
+        XLSX.writeFile(workbook, `Match_${match.matchNumber}_Stats_Template.xlsx`);
+      }
+    } catch (err) {
+      console.error('Failed to download template', err);
+      alert('Could not download template right now.');
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    if (!statsMatchData) return;
+    
+    const rows = [];
+    statsMatchData.teamA.players.forEach(p => {
+      const row = { Team: statsMatchData.teamA.name, Player: p.name, PlayerID: p._id };
+      statsFields.forEach(f => row[f] = playerStatsInput[p._id]?.[f] || 0);
+      rows.push(row);
+    });
+    
+    statsMatchData.teamB.players.forEach(p => {
+      const row = { Team: statsMatchData.teamB.name, Player: p.name, PlayerID: p._id };
+      statsFields.forEach(f => row[f] = playerStatsInput[p._id]?.[f] || 0);
+      rows.push(row);
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Stats');
+    XLSX.writeFile(workbook, `Match_${statsMatchData.match.matchNumber}_Stats.xlsx`);
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(worksheet);
+
+      const newStatsInput = { ...playerStatsInput };
+
+      json.forEach(row => {
+        const pId = row.PlayerID;
+        if (pId && newStatsInput[pId]) {
+          statsFields.forEach(f => {
+            if (row[f] !== undefined) {
+              newStatsInput[pId][f] = row[f];
+            }
+          });
+        }
+      });
+
+      setPlayerStatsInput(newStatsInput);
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = null;
+  };
+
   const handleStatChange = (playerId, field, value) => {
     setPlayerStatsInput(prev => ({
       ...prev,
@@ -330,6 +416,12 @@ const TournamentBracket = () => {
         game: statsMatchData.game,
         players
       });
+
+      // Refetch matches to update the local state with the newly saved playerStats
+      const matchRes = await expressApi.get(`/api/matches/tournament/${id}`);
+      if (matchRes.data.success) {
+        setMatches(matchRes.data.data);
+      }
 
       setShowStatsModal(false);
       setStatsMatchData(null);
@@ -576,15 +668,27 @@ const TournamentBracket = () => {
                       )}
                     </div>
                   ) : (
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <button
-                        type="button"
-                        onClick={handleLiveScoreUpdate}
-                        disabled={submitting || !selectedMatch.teamA || !selectedMatch.teamB}
-                        className="flex-1 bg-white/5 hover:bg-white/10 text-text border border-border hover:border-slate-400 py-4 rounded-[4px] font-bold text-[0.85rem] uppercase tracking-widest transition-all"
-                      >
-                        {submitting === 'live' ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Update Live Score'}
-                      </button>
+                    <div className="space-y-4">
+                      {selectedMatch.teamA && selectedMatch.teamB && (
+                        <div className="flex justify-end mb-2">
+                          <button
+                            type="button"
+                            onClick={() => downloadTemplateForMatch(selectedMatch)}
+                            className="text-[0.7rem] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded hover:bg-emerald-100 transition-colors flex items-center gap-1.5"
+                          >
+                            <i className="fa-solid fa-file-excel"></i> Pre-Download Stats Template
+                          </button>
+                        </div>
+                      )}
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <button
+                          type="button"
+                          onClick={handleLiveScoreUpdate}
+                          disabled={submitting || !selectedMatch.teamA || !selectedMatch.teamB}
+                          className="flex-1 bg-white/5 hover:bg-white/10 text-text border border-border hover:border-slate-400 py-4 rounded-[4px] font-bold text-[0.85rem] uppercase tracking-widest transition-all"
+                        >
+                          {submitting === 'live' ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Update Live Score'}
+                        </button>
                       <button
                         type="button"
                         onClick={handleFinalSubmit}
@@ -594,6 +698,7 @@ const TournamentBracket = () => {
                         {submitting === 'final' ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Submit Final Result'}
                       </button>
                     </div>
+                  </div>
                   )}
                 </form>
               )}
@@ -615,6 +720,15 @@ const TournamentBracket = () => {
                 <p className="text-[0.75rem] text-text-secondary font-medium mt-0.5">
                   Match {statsMatchData.match.matchNumber} • {statsMatchData.game}
                 </p>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={handleDownloadTemplate} className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded text-xs font-bold uppercase tracking-wider hover:bg-blue-100 transition-colors">
+                  <i className="fa-solid fa-download mr-1.5"></i>Template
+                </button>
+                <label className="px-3 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded text-xs font-bold uppercase tracking-wider hover:bg-emerald-100 transition-colors cursor-pointer">
+                  <i className="fa-solid fa-upload mr-1.5"></i>Upload
+                  <input type="file" accept=".xlsx, .xls, .csv" className="hidden" onChange={handleFileUpload} />
+                </label>
               </div>
             </div>
 
