@@ -8,8 +8,12 @@ const Profile = () => {
   const { user } = useAuth();
   const [teams, setTeams] = useState([]);
   const [organizedTournaments, setOrganizedTournaments] = useState([]);
+  const [tournamentHistory, setTournamentHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('teams');
+  const [historyFilter, setHistoryFilter] = useState('all');
+  const [playerStats, setPlayerStats] = useState(null);
+  const [selectedGame, setSelectedGame] = useState('All Games');
 
   useEffect(() => {
     if (user?.role === 'organizer') {
@@ -27,9 +31,25 @@ const Profile = () => {
             setOrganizedTournaments(res.data.data);
           }
         } else {
-          const res = await expressApi.get('/api/teams');
-          if (res.data.success) {
-            setTeams(res.data.data);
+          const [teamRes, histRes, statsRes] = await Promise.all([
+            expressApi.get('/api/teams'),
+            expressApi.get('/api/registrations/my-active-enrollments'),
+            expressApi.get('/api/playerstats/me')
+          ]);
+          if (teamRes.data.success) {
+            setTeams(teamRes.data.data);
+          }
+          if (histRes.data.success) {
+            const enrolledTournaments = histRes.data.data
+              .filter(reg => reg.tournament)
+              .map(reg => ({
+                ...reg.tournament,
+                myTeamId: reg.team?._id
+              }));
+            setTournamentHistory(enrolledTournaments);
+          }
+          if (statsRes.data.success) {
+            setPlayerStats(statsRes.data.data.gameStats || {});
           }
         }
       } catch (err) {
@@ -138,11 +158,11 @@ const Profile = () => {
           </div>
 
           {/* Tab Content */}
-          <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm flex-grow">
+          <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm flex flex-col flex-grow">
             
             {/* Organizer: Tournaments Tab */}
             {activeTab === 'tournaments' && (
-              <div className="animate-fade-in">
+              <div className="animate-fade-in flex flex-col flex-grow">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-bold text-text uppercase flex items-center gap-2">
                     <i className="fa-solid fa-sitemap text-primary"></i> Hosted Tournaments
@@ -195,7 +215,7 @@ const Profile = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12 bg-black/5 rounded-[8px] border border-dashed border-border">
+                  <div className="text-center py-12 bg-black/5 rounded-[8px] border border-dashed border-border flex flex-col items-center justify-center flex-grow">
                     <i className="fa-solid fa-sitemap text-4xl text-text-secondary/50 mb-4 mt-12"></i>
                     <h4 className="text-lg font-bold text-text mb-2">No Tournaments Hosted</h4>
                     <p className="text-text-secondary text-sm mb-12 max-w-sm mx-auto">You haven't organized any tournaments yet. Start hosting to build your reputation!</p>
@@ -206,7 +226,7 @@ const Profile = () => {
 
             {/* Organizer: Analytics Tab */}
             {activeTab === 'analytics' && (
-              <div className="animate-fade-in">
+              <div className="animate-fade-in flex flex-col flex-grow">
                 <div className="flex items-center justify-between mb-8">
                   <h3 className="text-xl font-bold text-text uppercase flex items-center gap-2">
                     <i className="fa-solid fa-chart-pie text-accent"></i> Organizer Analytics
@@ -240,7 +260,7 @@ const Profile = () => {
 
             {/* Teams (Participations) Tab */}
             {activeTab === 'teams' && (
-              <div className="animate-fade-in">
+              <div className="animate-fade-in flex flex-col flex-grow">
                 <h3 className="text-xl font-bold text-text uppercase mb-6 flex items-center gap-2">
                   <i className="fa-solid fa-shield text-primary"></i> My Squads
                 </h3>
@@ -285,58 +305,175 @@ const Profile = () => {
             )}
 
             {/* Performance Tab */}
-            {activeTab === 'performance' && (
-              <div className="animate-fade-in">
+            {activeTab === 'performance' && (() => {
+              const getDisplayStats = () => {
+                if (!playerStats) return { kills: 0, deaths: 0, assists: 0, kd: '0.00' };
+                
+                if (selectedGame === 'All Games') {
+                  let totalKills = 0, totalDeaths = 0, totalAssists = 0;
+                  Object.values(playerStats).forEach(stats => {
+                    totalKills += stats.kills || 0;
+                    totalDeaths += stats.deaths || 0;
+                    totalAssists += stats.assists || 0;
+                  });
+                  const kd = totalDeaths > 0 ? (totalKills / totalDeaths).toFixed(2) : (totalKills > 0 ? totalKills.toFixed(2) : '0.00');
+                  return { kills: totalKills, deaths: totalDeaths, assists: totalAssists, kd };
+                } else {
+                  const stats = playerStats[selectedGame] || { kills: 0, deaths: 0, assists: 0 };
+                  const kd = stats.deaths > 0 ? (stats.kills / stats.deaths).toFixed(2) : (stats.kills > 0 ? stats.kills.toFixed(2) : '0.00');
+                  return { kills: stats.kills || 0, deaths: stats.deaths || 0, assists: stats.assists || 0, kd };
+                }
+              };
+              
+              const currentStats = getDisplayStats();
+
+              return (
+              <div className="animate-fade-in flex flex-col flex-grow">
                 <div className="flex items-center justify-between mb-8">
                   <h3 className="text-xl font-bold text-text uppercase flex items-center gap-2">
                     <i className="fa-solid fa-chart-pie text-accent"></i> Combat Analytics
                   </h3>
-                  <select className="bg-background border border-border text-text text-sm rounded-[4px] px-3 py-1.5 focus:outline-none focus:border-primary">
-                    <option>All Games</option>
+                  <select 
+                    value={selectedGame}
+                    onChange={(e) => setSelectedGame(e.target.value)}
+                    className="bg-background border border-border text-text text-sm rounded-[4px] px-3 py-1.5 focus:outline-none focus:border-primary"
+                  >
+                    <option value="All Games">All Games</option>
                     {SUPPORTED_GAMES.map(game => (
                       <option key={game} value={game}>{game}</option>
                     ))}
                   </select>
                 </div>
 
-                {/* Coming Soon State or Mock Data */}
+                {/* Real Data Rendering */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                   <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
                     <i className="fa-solid fa-crosshairs text-primary text-xl mb-2"></i>
-                    <p className="text-3xl font-black text-text">0</p>
+                    <p className="text-3xl font-black text-text">{currentStats.kills}</p>
                     <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Total Kills</p>
                   </div>
                   <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
                     <i className="fa-solid fa-skull text-red-500 text-xl mb-2"></i>
-                    <p className="text-3xl font-black text-text">0</p>
+                    <p className="text-3xl font-black text-text">{currentStats.deaths}</p>
                     <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Total Deaths</p>
                   </div>
                   <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
                     <i className="fa-solid fa-hands-helping text-blue-400 text-xl mb-2"></i>
-                    <p className="text-3xl font-black text-text">0</p>
+                    <p className="text-3xl font-black text-text">{currentStats.assists}</p>
                     <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Assists</p>
                   </div>
                   <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
                     <i className="fa-solid fa-percent text-accent text-xl mb-2"></i>
-                    <p className="text-3xl font-black text-text">0.00</p>
+                    <p className="text-3xl font-black text-text">{currentStats.kd}</p>
                     <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">K/D Ratio</p>
                   </div>
                 </div>
 
-                <div className="bg-black/5 border border-dashed border-border rounded-[8px] p-8 text-center flex flex-col items-center justify-center">
+                <div className="bg-black/5 border border-dashed border-border rounded-[8px] p-8 text-center flex flex-col items-center justify-center flex-grow mt-4">
                   <i className="fa-solid fa-chart-line text-text-secondary/50 text-4xl mb-4"></i>
-                  <h4 className="text-lg font-bold text-text mb-2">No Data Available</h4>
-                  <p className="text-text-secondary text-sm">Play more matches in tournaments to generate your performance analytics.</p>
+                  <h4 className="text-lg font-bold text-text mb-2">Django Graph Area</h4>
+                  <p className="text-text-secondary text-sm">Once the Django Microservice is live, the visual Python charts will be injected here.</p>
                 </div>
               </div>
-            )}
+              );
+            })()}
 
-            {/* Match History Tab */}
             {activeTab === 'history' && (
-              <div className="animate-fade-in text-center py-16">
-                <i className="fa-solid fa-clock-rotate-left text-text-secondary/30 text-5xl mb-4"></i>
-                <h4 className="text-lg font-bold text-text mb-2">Match History</h4>
-                <p className="text-text-secondary text-sm max-w-sm mx-auto">Your recent tournament matches and results will be displayed here.</p>
+              <div className="animate-fade-in flex flex-col flex-grow">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                  <h3 className="text-[1.25rem] font-bold text-text uppercase flex items-center gap-2">
+                    <i className="fa-solid fa-list-check text-primary"></i> Tournament History
+                  </h3>
+                  
+                  {/* Filter Controls */}
+                  <div className="flex bg-black/10 border border-border rounded-[4px] p-1">
+                    <button 
+                      onClick={() => setHistoryFilter('all')} 
+                      className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'all' ? 'bg-surface shadow-sm text-text' : 'text-text-secondary hover:text-text'}`}
+                    >
+                      All
+                    </button>
+                    <button 
+                      onClick={() => setHistoryFilter('win')} 
+                      className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'win' ? 'bg-emerald-500/10 text-emerald-500 shadow-sm' : 'text-text-secondary hover:text-emerald-500'}`}
+                    >
+                      Wins
+                    </button>
+                    <button 
+                      onClick={() => setHistoryFilter('loss')} 
+                      className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'loss' ? 'bg-red-500/10 text-red-500 shadow-sm' : 'text-text-secondary hover:text-red-500'}`}
+                    >
+                      Losses
+                    </button>
+                  </div>
+                </div>
+
+                {tournamentHistory.filter(t => t.status === 'completed' && (
+                  historyFilter === 'all' ? true : 
+                  historyFilter === 'win' ? String(t.winner) === String(t.myTeamId) : 
+                  String(t.winner) !== String(t.myTeamId)
+                )).length > 0 ? (
+                  <div className="space-y-4">
+                    {tournamentHistory.filter(t => t.status === 'completed' && (
+                      historyFilter === 'all' ? true : 
+                      historyFilter === 'win' ? String(t.winner) === String(t.myTeamId) : 
+                      String(t.winner) !== String(t.myTeamId)
+                    )).map((t) => {
+                      const isWin = String(t.winner) === String(t.myTeamId);
+                      return (
+                      <Link to={`/tournaments/${t._id}`} key={t._id} className="block bg-black/10 border border-border rounded-[8px] p-5 hover:border-primary/50 transition-all group relative overflow-hidden">
+                        {/* Win/Loss background subtle gradient */}
+                        <div className={`absolute right-0 top-0 bottom-0 w-32 pointer-events-none opacity-20 bg-gradient-to-l ${isWin ? 'from-emerald-500' : 'from-red-500'} to-transparent`}></div>
+                        
+                        <div className="flex justify-between items-start mb-3 relative z-10">
+                          <div>
+                            <h4 className="text-lg font-bold text-text group-hover:text-primary transition-colors">{t.title}</h4>
+                            <div className="text-sm text-text-secondary mt-1">{t.game} • {t.bracketType === 'round-robin' ? 'Round Robin' : 'Single Elim'}</div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <span className="px-2 py-1 rounded-[4px] text-[0.7rem] font-bold uppercase tracking-wider bg-primary-light text-primary border border-[#BFDBFE]">
+                              Completed
+                            </span>
+                            {isWin ? (
+                              <span className="text-emerald-500 text-[0.8rem] font-bold uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded flex items-center gap-1 border border-emerald-500/20">
+                                <i className="fa-solid fa-crown"></i> Victory
+                              </span>
+                            ) : (
+                              <span className="text-red-500 text-[0.8rem] font-bold uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded flex items-center gap-1 border border-red-500/20">
+                                <i className="fa-solid fa-xmark"></i> Defeat
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-border/50 text-sm">
+                          <div>
+                            <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Teams</span>
+                            <span className="font-bold text-text"><i className="fa-solid fa-users text-primary mr-1"></i> {t.enrolledCount || 0}/{t.maxTeams}</span>
+                          </div>
+                          <div>
+                            <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Format</span>
+                            <span className="font-bold text-text"><i className="fa-solid fa-user-group text-accent mr-1"></i> {t.playersPerTeam || 5}v{t.playersPerTeam || 5}</span>
+                          </div>
+                          <div>
+                            <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Prize</span>
+                            <span className="font-bold text-emerald-500"><i className="fa-solid fa-sack-dollar mr-1"></i> {t.prizePool || 'Glory'}</span>
+                          </div>
+                          <div>
+                            <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Ended</span>
+                            <span className="font-bold text-text"><i className="fa-regular fa-calendar-check mr-1"></i> {new Date(t.endDate).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      </Link>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center flex flex-col items-center justify-center flex-grow py-12">
+                    <i className="fa-solid fa-list-check text-4xl text-text-secondary mb-4 opacity-50"></i>
+                    <h3 className="text-[1.25rem] font-bold text-text mb-2">No History Yet</h3>
+                    <p className="text-text-secondary">Your past combat records will appear here.</p>
+                  </div>
+                )}
               </div>
             )}
 

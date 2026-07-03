@@ -10,6 +10,7 @@ const Dashboard = () => {
   const [invitations, setInvitations] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [historyFilter, setHistoryFilter] = useState('all');
 
   const formatDate = (dateString) => {
     if (!dateString) return 'TBD';
@@ -38,10 +39,12 @@ const Dashboard = () => {
           if (invRes.data.success) setInvitations(invRes.data.data);
           if (enrRes.data.success) setEnrollments(enrRes.data.data);
           if (activeEnrRes.data.success) {
-            // Map registrations to just the tournament objects for the grid
             const enrolledTournaments = activeEnrRes.data.data
               .filter(reg => reg.tournament)
-              .map(reg => reg.tournament);
+              .map(reg => ({
+                ...reg.tournament,
+                myTeamId: reg.team?._id
+              }));
             setTournaments(enrolledTournaments);
           }
         }
@@ -104,7 +107,7 @@ const Dashboard = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm min-h-[500px] flex flex-col">
+        <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm min-h-[500px] flex flex-col flex-grow">
 
           {activeTab === 'overview' && (
             <div className="animate-fade-in flex flex-col flex-grow">
@@ -257,7 +260,7 @@ const Dashboard = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="bg-white/5 border border-dashed border-black/30 rounded-xl p-8 text-center flex flex-col items-center justify-center">
+                    <div className="bg-white/5 border border-dashed border-black/30 rounded-xl p-8 text-center flex flex-col items-center justify-center flex-grow">
                       <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-text-secondary text-2xl mb-4 mt-20">
                         <i className={`fa-solid ${user?.role === 'organizer' ? 'fa-tower-broadcast' : 'fa-gamepad'}`}></i>
                       </div>
@@ -282,23 +285,70 @@ const Dashboard = () => {
 
           {activeTab === 'history' && (
             <div className="animate-fade-in flex flex-col flex-grow">
-              <h3 className="text-[1.25rem] font-bold text-text uppercase mb-6 flex items-center gap-2">
-                <i className="fa-solid fa-list-check text-primary"></i> Tournament History
-              </h3>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <h3 className="text-[1.25rem] font-bold text-text uppercase flex items-center gap-2">
+                  <i className="fa-solid fa-list-check text-primary"></i> Tournament History
+                </h3>
+                
+                {/* Filter Controls (Only for players) */}
+                {user?.role === 'player' && (
+                  <div className="flex bg-black/10 border border-border rounded-[4px] p-1">
+                    <button 
+                      onClick={() => setHistoryFilter('all')} 
+                      className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'all' ? 'bg-surface shadow-sm text-text' : 'text-text-secondary hover:text-text'}`}
+                    >
+                      All
+                    </button>
+                    <button 
+                      onClick={() => setHistoryFilter('win')} 
+                      className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'win' ? 'bg-emerald-500/10 text-emerald-500 shadow-sm' : 'text-text-secondary hover:text-emerald-500'}`}
+                    >
+                      Wins
+                    </button>
+                    <button 
+                      onClick={() => setHistoryFilter('loss')} 
+                      className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'loss' ? 'bg-red-500/10 text-red-500 shadow-sm' : 'text-text-secondary hover:text-red-500'}`}
+                    >
+                      Losses
+                    </button>
+                  </div>
+                )}
+              </div>
 
-              {tournaments.filter(t => t.status === 'completed').length > 0 ? (
+              {tournaments.filter(t => t.status === 'completed' && (
+                user?.role === 'organizer' || historyFilter === 'all' ? true : 
+                historyFilter === 'win' ? String(t.winner) === String(t.myTeamId) : 
+                String(t.winner) !== String(t.myTeamId)
+              )).length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {tournaments.filter(t => t.status === 'completed').map((t) => (
-                    <div key={t._id} className="bg-surface border border-slate-300 rounded-[8px] overflow-hidden hover:border-primary transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/20 group flex flex-col h-full opacity-70 hover:opacity-100">
+                  {tournaments.filter(t => t.status === 'completed' && (
+                    user?.role === 'organizer' || historyFilter === 'all' ? true : 
+                    historyFilter === 'win' ? String(t.winner) === String(t.myTeamId) : 
+                    String(t.winner) !== String(t.myTeamId)
+                  )).map((t) => {
+                    const isWin = user?.role === 'player' ? String(t.winner) === String(t.myTeamId) : false;
+                    return (
+                    <div key={t._id} className={`bg-surface border ${user?.role === 'player' ? (isWin ? 'border-emerald-500/30' : 'border-red-500/30') : 'border-slate-300'} rounded-[8px] overflow-hidden hover:border-primary transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/20 group flex flex-col h-full opacity-70 hover:opacity-100`}>
                       <div className="h-20 bg-surface relative p-4 border-b border-border overflow-hidden">
                         {/* Visible Cyber Design */}
                         <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 12px)' }}></div>
-                        <div className="absolute right-0 top-0 w-2/3 h-full bg-gradient-to-l from-primary/20 to-transparent pointer-events-none"></div>
+                        <div className={`absolute right-0 top-0 w-2/3 h-full bg-gradient-to-l ${user?.role === 'player' ? (isWin ? 'from-emerald-500/20' : 'from-red-500/20') : 'from-primary/20'} to-transparent pointer-events-none`}></div>
 
-                        <div className="absolute top-3 right-3 z-10">
+                        <div className="absolute top-3 right-3 z-10 flex flex-col gap-1 items-end">
                           <span className="px-2.5 py-1 rounded-[4px] text-[0.65rem] font-bold uppercase tracking-widest shadow-sm bg-background border border-border text-text-secondary">
                             Completed
                           </span>
+                          {user?.role === 'player' && (
+                            isWin ? (
+                              <span className="text-emerald-500 text-[0.65rem] font-bold uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded shadow-sm border border-emerald-500/30">
+                                Victory
+                              </span>
+                            ) : (
+                              <span className="text-red-500 text-[0.65rem] font-bold uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded shadow-sm border border-red-500/30">
+                                Defeat
+                              </span>
+                            )
+                          )}
                         </div>
                         <span className="inline-block bg-accent/10 border border-accent/20 px-3 py-1 rounded-[4px] text-[0.7rem] font-bold text-accent tracking-wider relative z-10 shadow-sm backdrop-blur-sm">
                           {t.game}
@@ -327,7 +377,8 @@ const Dashboard = () => {
                         </Link>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center flex flex-col items-center justify-center flex-grow py-12">

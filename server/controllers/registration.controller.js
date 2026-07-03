@@ -168,7 +168,7 @@ export const getMyActiveEnrollments = async (req, res, next) => {
   try {
     const registrations = await Registration.find({ status: { $in: ['pending', 'approved'] } })
       .populate('team', 'name tag players')
-      .populate('tournament', 'title game status startDate endDate registrationDeadline prizePool enrolledCount maxTeams')
+      .populate('tournament', 'title game status startDate endDate registrationDeadline prizePool enrolledCount maxTeams playersPerTeam bracketType winner')
       .sort({ createdAt: -1 });
 
     const myRegistrations = registrations.filter(reg => 
