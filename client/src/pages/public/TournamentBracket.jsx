@@ -188,7 +188,7 @@ const TournamentBracket = () => {
 
   // Prevent background scrolling when modal is open
   useEffect(() => {
-    if (selectedMatch) {
+    if (selectedMatch || showStatsModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -196,7 +196,7 @@ const TournamentBracket = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [selectedMatch]);
+  }, [selectedMatch, showStatsModal]);
 
   const isOrganizer = user && tournament && tournament.organizer?._id === user.id;
 
@@ -566,7 +566,7 @@ const TournamentBracket = () => {
                         type="button"
                         onClick={handleLiveScoreUpdate}
                         disabled={submitting || !selectedMatch.teamA || !selectedMatch.teamB}
-                        className="flex-1 bg-white/5 hover:bg-white/10 text-text border border-border hover:border-slate-400 py-4 rounded-[4px] font-bold text-[0.9rem] transition-all"
+                        className="flex-1 bg-white/5 hover:bg-white/10 text-text border border-border hover:border-slate-400 py-4 rounded-[4px] font-bold text-[0.85rem] uppercase tracking-widest transition-all"
                       >
                         {submitting === 'live' ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Update Live Score'}
                       </button>
@@ -574,7 +574,7 @@ const TournamentBracket = () => {
                         type="button"
                         onClick={handleFinalSubmit}
                         disabled={submitting || !selectedMatch.teamA || !selectedMatch.teamB}
-                        className="flex-1 btn-primary py-4 text-[0.9rem]"
+                        className="flex-1 btn-primary py-4 !text-[0.85rem]"
                       >
                         {submitting === 'final' ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Submit Final Result'}
                       </button>
@@ -601,12 +601,6 @@ const TournamentBracket = () => {
                   Match {statsMatchData.match.matchNumber} • {statsMatchData.game}
                 </p>
               </div>
-              <button
-                onClick={() => { setShowStatsModal(false); setStatsMatchData(null); }}
-                className="text-text-secondary hover:text-red-500 transition-colors"
-              >
-                <i className="fa-solid fa-xmark text-xl"></i>
-              </button>
             </div>
 
             {/* Scrollable Content */}
@@ -698,13 +692,7 @@ const TournamentBracket = () => {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-border bg-slate-50 flex justify-between items-center flex-shrink-0">
-              <button
-                onClick={() => { setShowStatsModal(false); setStatsMatchData(null); }}
-                className="btn-outline py-2.5"
-              >
-                Skip
-              </button>
+            <div className="p-4 border-t border-border bg-slate-50 flex justify-end items-center flex-shrink-0">
               <button
                 onClick={handleSubmitStats}
                 disabled={submittingStats}
