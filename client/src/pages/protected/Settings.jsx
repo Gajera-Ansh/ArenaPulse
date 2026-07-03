@@ -197,11 +197,11 @@ const Settings = () => {
                 
                 {/* Avatar Section */}
                 <div className="mb-8 flex items-center gap-6">
-                  <div className="w-24 h-24 rounded-full bg-surface border border-border overflow-hidden flex items-center justify-center relative group shadow-sm">
+                  <div className="w-24 h-24 rounded-full bg-slate-100 border border-border overflow-hidden flex items-center justify-center relative group shadow-sm">
                     {user?.avatar ? (
                       <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
-                      <i className="fa-solid fa-user text-3xl text-text-secondary"></i>
+                      <i className="fa-solid fa-user text-3xl text-slate-400"></i>
                     )}
                     
                     <div className={`absolute inset-0 bg-black/60 flex items-center justify-center ${isUploading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>

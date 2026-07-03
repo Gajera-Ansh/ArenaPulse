@@ -74,7 +74,7 @@ const Profile = () => {
               {user?.avatar ? (
                 <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               ) : (
-                <i className="fa-solid fa-user text-4xl text-slate-300"></i>
+                <i className="fa-solid fa-user text-4xl text-slate-400"></i>
               )}
             </div>
             <div className="absolute bottom-0 right-1 w-5 h-5 bg-green-500 border-2 border-surface rounded-full shadow-sm" title="Online"></div>

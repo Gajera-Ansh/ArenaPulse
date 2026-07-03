@@ -2,6 +2,7 @@
 
 import PlayerStat from '../models/PlayerStat.js';
 import Team from '../models/Team.js';
+import Match from '../models/Match.js';
 
 // Game-specific stat fields configuration
 const GAME_STATS_FIELDS = {
@@ -23,36 +24,71 @@ export const getGameFields = (req, res) => {
 
 // POST /api/playerstats/submit
 // Organizer submits stats for multiple players after a match
-// Body: { game: "Valorant", players: [ { userId: "...", stats: { kills: 25, deaths: 12, assists: 8, headshots: 5 } }, ... ] }
 export const submitPlayerStats = async (req, res, next) => {
   try {
-    const { game, players } = req.body;
+    const { matchId, game, players } = req.body;
 
-    if (!game || !players || !Array.isArray(players) || players.length === 0) {
-      return res.status(400).json({ success: false, message: 'Game and players array are required.' });
+    if (!matchId || !game || !players || !Array.isArray(players) || players.length === 0) {
+      return res.status(400).json({ success: false, message: 'Match ID, Game, and players array are required.' });
     }
 
+    const match = await Match.findById(matchId);
+    if (!match) {
+      return res.status(404).json({ success: false, message: 'Match not found.' });
+    }
+
+    const isEdit = match.statsSubmitted;
+    const oldPlayerStats = match.playerStats || new Map();
     const validFields = GAME_STATS_FIELDS[game] || ['kills', 'deaths'];
 
     const bulkOps = players.map(({ userId, stats }) => {
-      // Build the $inc update for only valid fields
-      const incUpdate = { [`gameStats.${game}.matches`]: 1 };
+      const oldStats = oldPlayerStats.get(userId) || {};
+      const incUpdate = {};
+
+      if (!isEdit) {
+        incUpdate[`gameStats.${game}.matches`] = 1;
+      }
+
       for (const field of validFields) {
-        if (stats[field] !== undefined && stats[field] !== null && stats[field] !== '') {
-          incUpdate[`gameStats.${game}.${field}`] = Number(stats[field]) || 0;
+        const newVal = Number(stats[field]) || 0;
+        const oldVal = Number(oldStats[field]) || 0;
+        const delta = newVal - oldVal;
+
+        if (delta !== 0) {
+          incUpdate[`gameStats.${game}.${field}`] = delta;
         }
       }
+
+      if (Object.keys(incUpdate).length === 0) return null;
 
       return {
         updateOne: {
           filter: { user: userId },
           update: { $inc: incUpdate },
-          upsert: true,  // Create document if it doesn't exist
+          upsert: true,
         },
       };
+    }).filter(Boolean);
+
+    if (bulkOps.length > 0) {
+      await PlayerStat.bulkWrite(bulkOps);
+    }
+
+    // Save new stats back to match document
+    const newPlayerStats = new Map();
+    players.forEach(({ userId, stats }) => {
+      const statsObj = {};
+      validFields.forEach(f => {
+        if (stats[f] !== undefined && stats[f] !== null && stats[f] !== '') {
+          statsObj[f] = Number(stats[f]);
+        }
+      });
+      newPlayerStats.set(userId, statsObj);
     });
 
-    await PlayerStat.bulkWrite(bulkOps);
+    match.playerStats = newPlayerStats;
+    match.statsSubmitted = true;
+    await match.save();
 
     res.status(200).json({ success: true, message: 'Player stats updated successfully.' });
   } catch (error) {
@@ -173,8 +209,8 @@ export const getMatchPlayers = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: {
-        teamA: { name: teamA.name, tag: teamA.tag, players: getTeamMembers(teamA) },
-        teamB: { name: teamB.name, tag: teamB.tag, players: getTeamMembers(teamB) },
+        teamA: { name: teamA.name, tag: teamA.tag, logo: teamA.logo, players: getTeamMembers(teamA) },
+        teamB: { name: teamB.name, tag: teamB.tag, logo: teamB.logo, players: getTeamMembers(teamB) },
       },
     });
   } catch (error) {

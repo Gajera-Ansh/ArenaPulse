@@ -4,6 +4,11 @@ import expressApi from '../../api/expressApi';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 
+const getTeamLogo = (team) => {
+  if (!team) return '';
+  return team.logo ? (team.logo.startsWith('http') ? team.logo : `http://localhost:5000/${team.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(team.tag || team.name || 'T')}&background=random&color=fff&size=200&bold=true`;
+};
+
 // Recursive Match Node Component for perfect tree alignment
 const MatchNode = ({ match, allMatches, openMatchModal }) => {
   const children = allMatches.filter(m => m.nextMatchNumber === match.matchNumber).sort((a, b) => a.matchNumber - b.matchNumber);
@@ -50,6 +55,7 @@ const MatchNode = ({ match, allMatches, openMatchModal }) => {
           <div className="flex items-center gap-3 truncate">
             {match.teamA ? (
               <>
+                <img src={getTeamLogo(match.teamA)} alt="logo" className="w-6 h-6 rounded-full object-cover mr-2" />
                 <span className={`font-bold text-[1rem] truncate ${match.winner?._id === match.teamA._id ? 'text-primary' : 'text-text'}`}>
                   {match.teamA.name}
                 </span>
@@ -69,6 +75,7 @@ const MatchNode = ({ match, allMatches, openMatchModal }) => {
           <div className="flex items-center gap-3 truncate">
             {match.teamB ? (
               <>
+                <img src={getTeamLogo(match.teamB)} alt="logo" className="w-6 h-6 rounded-full object-cover mr-2" />
                 <span className={`font-bold text-[1rem] truncate ${match.winner?._id === match.teamB._id ? 'text-primary' : 'text-text'}`}>
                   {match.teamB.name}
                 </span>
@@ -285,11 +292,14 @@ const TournamentBracket = () => {
         const { teamA, teamB } = res.data.data;
         setStatsMatchData({ match, teamA, teamB, game });
 
-        // Initialize empty stats for all players
+        // Initialize empty stats for all players (or pre-fill if editing)
         const initStats = {};
         [...teamA.players, ...teamB.players].forEach(p => {
           initStats[p._id] = {};
-          fields.forEach(f => { initStats[p._id][f] = ''; });
+          const existingStats = match.playerStats?.[p._id] || {};
+          fields.forEach(f => { 
+            initStats[p._id][f] = existingStats[f] !== undefined ? existingStats[f] : ''; 
+          });
         });
         setPlayerStatsInput(initStats);
         setShowStatsModal(true);
@@ -316,6 +326,7 @@ const TournamentBracket = () => {
       }));
 
       await expressApi.post('/api/playerstats/submit', {
+        matchId: statsMatchData.match._id,
         game: statsMatchData.game,
         players
       });
@@ -414,6 +425,7 @@ const TournamentBracket = () => {
                           <div className="flex items-center gap-3 truncate">
                             {match.teamA ? (
                               <>
+                                <img src={getTeamLogo(match.teamA)} alt="logo" className="w-6 h-6 rounded-full object-cover mr-2" />
                                 <span className={`font-bold text-[1rem] truncate ${match.winner?._id === match.teamA._id ? 'text-primary' : 'text-text'}`}>
                                   {match.teamA.name}
                                 </span>
@@ -433,6 +445,7 @@ const TournamentBracket = () => {
                           <div className="flex items-center gap-3 truncate">
                             {match.teamB ? (
                               <>
+                                <img src={getTeamLogo(match.teamB)} alt="logo" className="w-6 h-6 rounded-full object-cover mr-2" />
                                 <span className={`font-bold text-[1rem] truncate ${match.winner?._id === match.teamB._id ? 'text-primary' : 'text-text'}`}>
                                   {match.teamB.name}
                                 </span>
@@ -495,15 +508,17 @@ const TournamentBracket = () => {
                 // Public View (Read-Only)
                 <div className="space-y-6">
                   <div className="flex justify-between items-center">
-                    <div className="flex-1 text-center">
-                      <p className="font-bold text-text text-xl truncate">{selectedMatch.teamA?.name || 'TBD'}</p>
+                    <div className="flex-1 flex flex-col items-center text-center">
+                      <img src={getTeamLogo(selectedMatch.teamA)} alt="logo" className="w-10 h-10 rounded-full object-cover mb-2" />
+                      <p className="font-bold text-text text-xl truncate w-full">{selectedMatch.teamA?.name || 'TBD'}</p>
                       {selectedMatch.winner?._id === selectedMatch.teamA?._id && <i className="fa-solid fa-crown text-accent mt-2 text-xl"></i>}
                     </div>
                     <div className="px-6 text-3xl font-bold text-primary">
                       {selectedMatch.scoreA ?? '-'} <span className="text-text-secondary mx-2 text-xl">vs</span> {selectedMatch.scoreB ?? '-'}
                     </div>
-                    <div className="flex-1 text-center">
-                      <p className="font-bold text-text text-xl truncate">{selectedMatch.teamB?.name || 'TBD'}</p>
+                    <div className="flex-1 flex flex-col items-center text-center">
+                      <img src={getTeamLogo(selectedMatch.teamB)} alt="logo" className="w-10 h-10 rounded-full object-cover mb-2" />
+                      <p className="font-bold text-text text-xl truncate w-full">{selectedMatch.teamB?.name || 'TBD'}</p>
                       {selectedMatch.winner?._id === selectedMatch.teamB?._id && <i className="fa-solid fa-crown text-accent mt-2 text-xl"></i>}
                     </div>
                   </div>
@@ -616,18 +631,19 @@ const TournamentBracket = () => {
 
               {/* Team A Players */}
               <div>
-                <h4 className="text-[0.85rem] font-bold text-text uppercase tracking-widest border-b border-border pb-2 mb-4">
-                  <i className="fa-solid fa-shield-halved mr-2 text-primary"></i>{statsMatchData.teamA.name} [{statsMatchData.teamA.tag}]
+                <h4 className="text-[0.85rem] font-bold text-text uppercase tracking-widest border-b border-border pb-2 mb-4 flex items-center">
+                  <img src={getTeamLogo(statsMatchData.teamA)} alt="logo" className="w-6 h-6 rounded-full object-cover mr-2" />
+                  {statsMatchData.teamA.name} [{statsMatchData.teamA.tag}]
                 </h4>
                 <div className="space-y-3">
                   {statsMatchData.teamA.players.map(player => (
                     <div key={player._id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-bg border border-border rounded-[6px] p-3">
                       <div className="flex items-center gap-2 min-w-[140px]">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden border border-border">
                           {player.avatar ? (
                             <img src={player.avatar} alt={player.name} className="w-full h-full object-cover" />
                           ) : (
-                            <i className="fa-solid fa-user text-primary text-[0.7rem]"></i>
+                            <i className="fa-solid fa-user text-slate-400 text-[0.7rem]"></i>
                           )}
                         </div>
                         <span className="font-bold text-[0.85rem] text-text truncate">{player.name}</span>
@@ -654,18 +670,19 @@ const TournamentBracket = () => {
 
               {/* Team B Players */}
               <div>
-                <h4 className="text-[0.85rem] font-bold text-text uppercase tracking-widest border-b border-border pb-2 mb-4">
-                  <i className="fa-solid fa-shield-halved mr-2 text-text-secondary"></i>{statsMatchData.teamB.name} [{statsMatchData.teamB.tag}]
+                <h4 className="text-[0.85rem] font-bold text-text uppercase tracking-widest border-b border-border pb-2 mb-4 flex items-center">
+                  <img src={getTeamLogo(statsMatchData.teamB)} alt="logo" className="w-6 h-6 rounded-full object-cover mr-2" />
+                  {statsMatchData.teamB.name} [{statsMatchData.teamB.tag}]
                 </h4>
                 <div className="space-y-3">
                   {statsMatchData.teamB.players.map(player => (
                     <div key={player._id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-bg border border-border rounded-[6px] p-3">
                       <div className="flex items-center gap-2 min-w-[140px]">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden border border-border">
                           {player.avatar ? (
                             <img src={player.avatar} alt={player.name} className="w-full h-full object-cover" />
                           ) : (
-                            <i className="fa-solid fa-user text-primary text-[0.7rem]"></i>
+                            <i className="fa-solid fa-user text-slate-400 text-[0.7rem]"></i>
                           )}
                         </div>
                         <span className="font-bold text-[0.85rem] text-text truncate">{player.name}</span>

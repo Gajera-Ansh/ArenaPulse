@@ -53,6 +53,15 @@ const matchSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    statsSubmitted: {
+      type: Boolean,
+      default: false,
+    },
+    playerStats: {
+      type: Map,
+      of: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
   },
   { timestamps: true }
 );

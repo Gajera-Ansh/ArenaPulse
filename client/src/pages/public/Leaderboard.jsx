@@ -212,11 +212,11 @@ const Leaderboard = () => {
 
             {/* Player Info */}
             <div className="col-span-3 flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <div className="w-10 h-10 rounded-full bg-slate-100 border border-border flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {entry.player.avatar ? (
                   <img src={entry.player.avatar} alt={entry.player.name} className="w-full h-full object-cover" />
                 ) : (
-                  <i className="fa-solid fa-user text-primary text-[1rem]"></i>
+                  <i className="fa-solid fa-user text-slate-400 text-[1rem]"></i>
                 )}
               </div>
               <div className="min-w-0">
