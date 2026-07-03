@@ -257,8 +257,8 @@ const Dashboard = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="bg-white/5 border border-dashed border-black/30 rounded-xl p-8 text-center flex flex-col items-center justify-center mb-12">
-                      <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-text-secondary text-2xl mb-4">
+                    <div className="bg-white/5 border border-dashed border-black/30 rounded-xl p-8 text-center flex flex-col items-center justify-center">
+                      <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-text-secondary text-2xl mb-4 mt-20">
                         <i className={`fa-solid ${user?.role === 'organizer' ? 'fa-tower-broadcast' : 'fa-gamepad'}`}></i>
                       </div>
                       <h4 className="text-[1.1rem] font-bold text-text mb-2">
@@ -269,7 +269,7 @@ const Dashboard = () => {
                           ? "You haven't launched any active tournaments yet. Start organizing to build your community."
                           : "You aren't deployed in any active tournaments. Browse the tournament board to join the fight."}
                       </p>
-                      <Link to="/tournaments" className="btn-outline">
+                      <Link to="/tournaments" className="btn-outline mb-20">
                         Browse Tournaments
                       </Link>
                     </div>

@@ -196,12 +196,9 @@ const Profile = () => {
                   </div>
                 ) : (
                   <div className="text-center py-12 bg-black/5 rounded-[8px] border border-dashed border-border">
-                    <i className="fa-solid fa-sitemap text-4xl text-text-secondary/50 mb-4"></i>
+                    <i className="fa-solid fa-sitemap text-4xl text-text-secondary/50 mb-4 mt-12"></i>
                     <h4 className="text-lg font-bold text-text mb-2">No Tournaments Hosted</h4>
-                    <p className="text-text-secondary text-sm mb-6 max-w-sm mx-auto">You haven't organized any tournaments yet. Start hosting to build your reputation!</p>
-                    <Link to="/tournaments/create" className="btn-primary">
-                      <i className="fa-solid fa-plus mr-2"></i> Create Tournament
-                    </Link>
+                    <p className="text-text-secondary text-sm mb-12 max-w-sm mx-auto">You haven't organized any tournaments yet. Start hosting to build your reputation!</p>
                   </div>
                 )}
               </div>
