@@ -70,8 +70,13 @@ export const registerForTournament = async (req, res, next) => {
 export const getRegistrationsByTournament = async (req, res, next) => {
   try {
     const registrations = await Registration.find({ tournament: req.params.tournamentId })
-      .populate('team', 'name tag game logo players captain')
+      .populate({
+        path: 'team',
+        select: 'name tag game logo players captain formerPlayers',
+        populate: { path: 'players', select: 'name avatar' }
+      })
       .populate('pendingPlayers', 'name avatar')
+      .populate('lockedRoster', 'name avatar')
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, data: registrations });

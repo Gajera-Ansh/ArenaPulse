@@ -114,9 +114,17 @@ export const getPlayerStatsLeaderboard = async (req, res, next) => {
       .populate('user', 'name avatar')
       .lean();
 
-    // Find all teams to build a player->team map
-    const teams = await Team.find(game ? { game } : {}).select('name tag game captain players').lean();
+    // Find all teams these players belong to, regardless of the team's primary game
+    const userIds = stats.map(s => s.user._id);
+    const teams = await Team.find({
+      $or: [
+        { captain: { $in: userIds } },
+        { players: { $in: userIds } },
+        { formerPlayers: { $in: userIds } }
+      ]
+    }).select('name tag game captain players formerPlayers').lean();
     const playerTeamMap = {};
+    const formerPlayerTeamMap = {};
     for (const team of teams) {
       const teamId = String(team._id);
       const tInfo = { _id: teamId, name: team.name, tag: team.tag, game: team.game };
@@ -127,6 +135,13 @@ export const getPlayerStatsLeaderboard = async (req, res, next) => {
       for (const p of team.players) {
         const pId = String(p);
         if (!playerTeamMap[pId]) playerTeamMap[pId] = tInfo;
+      }
+
+      if (team.formerPlayers) {
+        for (const p of team.formerPlayers) {
+          const pId = String(p);
+          if (!formerPlayerTeamMap[pId]) formerPlayerTeamMap[pId] = tInfo;
+        }
       }
     }
 
@@ -146,7 +161,7 @@ export const getPlayerStatsLeaderboard = async (req, res, next) => {
 
       return {
         player: doc.user,
-        team: playerTeamMap[playerId] || null,
+        team: playerTeamMap[playerId] || formerPlayerTeamMap[playerId] || null,
         game,
         kills,
         deaths,

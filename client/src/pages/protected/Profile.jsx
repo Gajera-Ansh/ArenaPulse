@@ -384,10 +384,12 @@ const Profile = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between text-sm text-text-secondary">
-                          <span className="flex items-center gap-2"><i className="fa-solid fa-users text-primary"></i> {team.players?.length || 1} Members</span>
-                          <span className="flex items-center gap-2"> {team.tournamentCount || 0} Tournaments</span>
-                        </div>
+                        {!team.isFormerMember && (
+                          <div className="flex items-center justify-between text-sm text-text-secondary mt-2">
+                            <span className="flex items-center gap-2"><i className="fa-solid fa-users text-primary"></i> {team.players?.length || 1} Members</span>
+                            <span className="flex items-center gap-2"> {team.tournamentCount || 0} Tournaments</span>
+                          </div>
+                        )}
                       </Link>
                     ))}
                   </div>

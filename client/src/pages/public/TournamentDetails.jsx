@@ -116,9 +116,13 @@ const TournamentDetails = () => {
             const allRegs = regRes.data.data;
 
             // Set myRegistration for players
-            const registration = allRegs.find(reg =>
-              reg.team && (reg.team.captain === user.id || reg.team.players.some(p => typeof p === 'object' ? p._id === user.id : p === user.id))
-            );
+            const registration = allRegs.find(reg => {
+              if (!reg.team) return false;
+              if (reg.team.captain === user.id) return true;
+              
+              const roster = reg.lockedRoster?.length > 0 ? reg.lockedRoster : reg.team.players;
+              return roster.some(p => typeof p === 'object' ? p._id === user.id : p === user.id);
+            });
             if (registration) {
               setMyRegistration(registration);
             }
@@ -486,7 +490,7 @@ const TournamentDetails = () => {
                 )}
                 <div className="space-y-2 mt-4 pt-4 border-t border-white/5">
                   <p className="text-[0.8rem] text-text-secondary uppercase font-bold tracking-wider mb-2">Roster Readiness</p>
-                  {myRegistration.team.players.map(player => {
+                  {(myRegistration.lockedRoster?.length > 0 ? myRegistration.lockedRoster : myRegistration.team.players).map(player => {
                     const isPending = myRegistration.pendingPlayers?.some(p => p._id === (player._id || player));
                     const isCaptain = (player._id || player) === myRegistration.team.captain;
                     return (

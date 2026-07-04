@@ -175,6 +175,16 @@ export const updateTeam = async (req, res, next) => {
 
       const newlyInvited = incomingPlayers.filter(p => !confirmedPlayers.includes(p) && !existingPending.includes(p));
 
+      // Find players that were removed and add them to formerPlayers
+      const removedPlayers = confirmedPlayers.filter(
+        (p) => p !== req.user._id.toString() && !incomingPlayers.includes(p)
+      );
+      for (const p of removedPlayers) {
+        if (!team.formerPlayers.includes(p)) {
+          team.formerPlayers.push(p);
+        }
+      }
+
       team.pendingPlayers = incomingPlayers.filter(p => !confirmedPlayers.includes(p));
       team.players = [req.user._id.toString(), ...incomingPlayers.filter(p => confirmedPlayers.includes(p))];
 
