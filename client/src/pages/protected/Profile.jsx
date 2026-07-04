@@ -52,7 +52,7 @@ const Profile = () => {
             expressApi.get('/api/teams'),
             expressApi.get('/api/registrations/my-active-enrollments'),
             expressApi.get('/api/playerstats/me'),
-            fetch(`http://localhost:8000/analytics/player/${user.id}/`).then(res => res.json()).catch(() => null)
+            fetch(`${import.meta.env.VITE_DJANGO_URL}/analytics/player/${user.id}/`).then(res => res.json()).catch(() => null)
           ]);
           if (teamRes.data.success) {
             setTeams(teamRes.data.data);
