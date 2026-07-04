@@ -153,18 +153,13 @@ const Teams = () => {
         </div>
       ) : (
         <div className="bg-white/5 border border-dashed border-border rounded-xl p-12 text-center flex flex-col items-center justify-center flex-grow animate-fade-in">
-          <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center text-text-secondary text-3xl mb-6">
+          <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center text-text-secondary text-3xl mb-4">
             <i className="fa-solid fa-users-slash"></i>
           </div>
           <h4 className="text-[1.5rem] font-bold text-text mb-3">No Teams Found</h4>
           <p className="text-[1rem] text-text-secondary max-w-lg mx-auto mb-6">
             {searchQuery ? "You have no teams matching that search." : "You haven't created any teams yet! Create your first team to start competing."}
           </p>
-          {!searchQuery && (
-            <Link to="/teams/create" className="btn-primary">
-              <i className="fa-solid fa-plus"></i> Create a Team
-            </Link>
-          )}
         </div>
       )}
     </div>
