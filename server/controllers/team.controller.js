@@ -4,7 +4,7 @@ import Team from '../models/Team.js';
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import Registration from '../models/Registration.js';
-import { sendTeamInvitationEmail, sendTeamCompleteEmail } from '../utils/emailService.js';
+import { sendTeamInvitationEmail, sendTeamCompleteEmail, sendTeamRemovalEmail } from '../utils/emailService.js';
 
 // POST /api/teams
 export const createTeam = async (req, res, next) => {
@@ -182,6 +182,10 @@ export const updateTeam = async (req, res, next) => {
       for (const p of removedPlayers) {
         if (!team.formerPlayers.includes(p)) {
           team.formerPlayers.push(p);
+          const userToRemove = await User.findById(p);
+          if (userToRemove) {
+            sendTeamRemovalEmail(userToRemove.email, userToRemove.name, team.name);
+          }
         }
       }
 
@@ -275,6 +279,10 @@ export const removeMember = async (req, res, next) => {
 
     if (!team.formerPlayers.includes(req.params.playerId)) {
       team.formerPlayers.push(req.params.playerId);
+      const userToRemove = await User.findById(req.params.playerId);
+      if (userToRemove) {
+        sendTeamRemovalEmail(userToRemove.email, userToRemove.name, team.name);
+      }
     }
     team.players = team.players.filter((p) => p.toString() !== req.params.playerId);
     await team.save();
