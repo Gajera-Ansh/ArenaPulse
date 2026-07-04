@@ -44,6 +44,12 @@ const teamSchema = new mongoose.Schema(
         ref: 'User',
       },
     ],
+    formerPlayers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
     logo: {
       type: String,
       default: '',

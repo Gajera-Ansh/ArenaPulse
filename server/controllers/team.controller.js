@@ -45,7 +45,7 @@ export const createTeam = async (req, res, next) => {
 // GET /api/teams
 export const getMyTeams = async (req, res, next) => {
   try {
-    const teams = await Team.find({ players: req.user._id })
+    const teams = await Team.find({ $or: [{ players: req.user._id }, { formerPlayers: req.user._id }] })
       .populate('captain', 'name email avatar')
       .populate('players', 'name email avatar');
 
@@ -55,7 +55,8 @@ export const getMyTeams = async (req, res, next) => {
         team: team._id,
         status: { $in: ['pending', 'approved'] }
       });
-      return { ...team.toObject(), tournamentCount };
+      const isFormerMember = team.formerPlayers.some(p => p.toString() === req.user._id.toString());
+      return { ...team.toObject(), tournamentCount, isFormerMember };
     }));
 
     res.status(200).json({ success: true, data: teamsWithCounts });
@@ -67,7 +68,7 @@ export const getMyTeams = async (req, res, next) => {
 // GET /api/teams/user/:userId
 export const getUserTeams = async (req, res, next) => {
   try {
-    const teams = await Team.find({ players: req.params.userId })
+    const teams = await Team.find({ $or: [{ players: req.params.userId }, { formerPlayers: req.params.userId }] })
       .populate('captain', 'name email avatar')
       .populate('players', 'name email avatar');
 
@@ -76,7 +77,8 @@ export const getUserTeams = async (req, res, next) => {
         team: team._id,
         status: { $in: ['pending', 'approved'] }
       });
-      return { ...team.toObject(), tournamentCount };
+      const isFormerMember = team.formerPlayers.some(p => p.toString() === req.params.userId.toString());
+      return { ...team.toObject(), tournamentCount, isFormerMember };
     }));
 
     res.status(200).json({ success: true, data: teamsWithCounts });
@@ -261,6 +263,9 @@ export const removeMember = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Captain cannot be removed.' });
     }
 
+    if (!team.formerPlayers.includes(req.params.playerId)) {
+      team.formerPlayers.push(req.params.playerId);
+    }
     team.players = team.players.filter((p) => p.toString() !== req.params.playerId);
     await team.save();
 

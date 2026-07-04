@@ -5,23 +5,25 @@ import Match from '../models/Match.js';
 import Team from '../models/Team.js';
 import Tournament from '../models/Tournament.js';
 import User from '../models/User.js';
+import Registration from '../models/Registration.js';
 
 // GET /api/leaderboard/teams?game=Valorant
 export const getTeamLeaderboard = async (req, res, next) => {
   try {
     const { game } = req.query;
 
-    // Step 1: If game filter is present, find matching team IDs first
-    let teamFilter = {};
+    // Step 1: If game filter is present, find matching tournament IDs first
+    let tournamentFilter = {};
+    let tournamentIds = [];
     if (game) {
-      const filteredTeams = await Team.find({ game }).select('_id');
-      const teamIds = filteredTeams.map(t => t._id);
-      teamFilter = { $in: teamIds };
+      const filteredTournaments = await Tournament.find({ game }).select('_id');
+      tournamentIds = filteredTournaments.map(t => t._id);
+      tournamentFilter = { tournament: { $in: tournamentIds } };
     }
 
     // Step 2: Aggregate wins from completed matches
     const winPipeline = [
-      { $match: { status: 'completed', winner: { $ne: null }, ...(game ? { winner: teamFilter } : {}) } },
+      { $match: { status: 'completed', winner: { $ne: null }, ...tournamentFilter } },
       { $group: { _id: '$winner', wins: { $sum: 1 } } },
     ];
     const winResults = await Match.aggregate(winPipeline);
@@ -31,17 +33,17 @@ export const getTeamLeaderboard = async (req, res, next) => {
     
     // Get all teams that have participated
     const teamAMatches = await Match.aggregate([
-      { $match: { ...matchFilterBase, teamA: { $ne: null } } },
+      { $match: { ...matchFilterBase, ...tournamentFilter, teamA: { $ne: null } } },
       { $group: { _id: '$teamA', played: { $sum: 1 } } },
     ]);
     
     const teamBMatches = await Match.aggregate([
-      { $match: { ...matchFilterBase, teamB: { $ne: null } } },
+      { $match: { ...matchFilterBase, ...tournamentFilter, teamB: { $ne: null } } },
       { $group: { _id: '$teamB', played: { $sum: 1 } } },
     ]);
 
     // Step 4: Aggregate tournaments won
-    const tourneyWinFilter = game ? { winner: { $ne: null }, game } : { winner: { $ne: null } };
+    const tourneyWinFilter = game ? { winner: { $ne: null }, _id: { $in: tournamentIds } } : { winner: { $ne: null } };
     const tourneyWins = await Tournament.aggregate([
       { $match: tourneyWinFilter },
       { $group: { _id: '$winner', tournamentsWon: { $sum: 1 } } },
@@ -76,15 +78,21 @@ export const getTeamLeaderboard = async (req, res, next) => {
       statsMap[id].tournamentsWon = entry.tournamentsWon;
     }
 
-    // Step 6: Build result array
-    const teamIds = Object.keys(statsMap).map(id => new mongoose.Types.ObjectId(id));
-    let teamsQuery = Team.find({ _id: { $in: teamIds } }).select('name tag game logo');
-    if (game) {
-      teamsQuery = teamsQuery.where('game').equals(game);
-    }
-    const teams = await teamsQuery;
+    // Fetch all approved registrations for these tournaments
+    const activeRegistrations = await Registration.find({ 
+      ...(game ? { tournament: { $in: tournamentIds } } : {}),
+      status: { $in: ['approved'] } 
+    }).select('team');
+    
+    // Get unique team IDs that have actually participated in this game's tournaments
+    const activeTeamIds = [...new Set(activeRegistrations.map(r => String(r.team)))];
 
-    const result = teams.map(team => {
+    // Fetch the actual teams
+    const teams = await Team.find({ _id: { $in: activeTeamIds } }).select('name tag game logo');
+
+    // Map results
+    const result = teams
+      .map(team => {
       const id = String(team._id);
       const stats = statsMap[id] || { wins: 0, played: 0, tournamentsWon: 0 };
       const losses = stats.played - stats.wins;

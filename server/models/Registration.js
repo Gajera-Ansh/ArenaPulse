@@ -25,6 +25,12 @@ const registrationSchema = new mongoose.Schema(
         ref: 'User',
       },
     ],
+    lockedRoster: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
     note: {
       type: String,
       default: '',

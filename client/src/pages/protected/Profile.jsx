@@ -36,11 +36,13 @@ const Profile = () => {
   const [analyticsData, setAnalyticsData] = useState([]);
 
   const isOwnProfile = !id || (authUser && id === authUser.id);
-  const user = profileUser || authUser;
+  const user = isOwnProfile ? authUser : profileUser;
 
   useEffect(() => {
     if (user?.role === 'organizer') {
       setActiveTab('tournaments');
+    } else if (user?.role === 'player') {
+      setActiveTab('teams');
     }
   }, [user?.role]);
 
@@ -51,17 +53,19 @@ const Profile = () => {
         
         let targetUserId = authUser?.id;
         
+        let targetRole = authUser?.role;
         if (!isOwnProfile) {
           const userRes = await expressApi.get(`/api/users/${id}`);
           if (userRes.data.success) {
             setProfileUser({ ...userRes.data.data, id: userRes.data.data._id });
             targetUserId = id;
+            targetRole = userRes.data.data.role;
           } else {
              return;
           }
         }
 
-        if (user?.role === 'organizer' || (profileUser && profileUser.role === 'organizer')) {
+        if (targetRole === 'organizer') {
           const res = await expressApi.get(`/api/tournaments?organizer=${targetUserId}`);
           if (res.data.success) {
             setOrganizedTournaments(res.data.data);
@@ -117,6 +121,14 @@ const Profile = () => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date);
   };
+
+  if (!user) {
+    return (
+      <div className="container py-32 flex justify-center items-center min-h-[calc(100vh-80px)]">
+        <i className="fa-solid fa-circle-notch fa-spin text-5xl text-primary"></i>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-8 sm:py-12 animate-fade-in relative min-h-[calc(100vh-80px)]">
@@ -336,16 +348,40 @@ const Profile = () => {
                 ) : teams.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {teams.map(team => (
-                      <Link to={`/teams/${team._id}/edit`} key={team._id} className={`bg-black/10 border border-border rounded-[8px] p-5 transition-all ${isOwnProfile ? 'hover:border-primary/50 hover:-translate-y-1 group' : 'pointer-events-none'}`}>
+                      <Link 
+                        to={team.isFormerMember ? '#' : `/teams/${team._id}/edit`} 
+                        key={team._id} 
+                        onClick={(e) => {
+                          if (team.isFormerMember) {
+                            e.preventDefault();
+                            alert('You are no longer an active member of this team. You cannot view their private dashboard.');
+                          }
+                        }}
+                        className={`bg-black/10 border border-border rounded-[8px] p-5 transition-all ${
+                          isOwnProfile && !team.isFormerMember ? 'hover:border-primary/50 hover:-translate-y-1 group cursor-pointer' 
+                          : team.isFormerMember && isOwnProfile ? 'hover:bg-black/20 cursor-pointer opacity-75' 
+                          : 'pointer-events-none'
+                        }`}
+                      >
                         <div className="flex items-center gap-4 mb-4">
                           <img
                             src={team.logo ? (team.logo.startsWith('http') ? team.logo : `http://localhost:5000/${team.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(team.tag || team.name)}&background=random&color=fff&size=200&bold=true`}
                             alt={`${team.name} Logo`}
-                            className="w-12 h-12 rounded bg-surface border border-border object-cover shadow-sm group-hover:border-primary/50 transition-colors"
+                            className={`w-12 h-12 rounded bg-surface border border-border object-cover shadow-sm transition-colors ${
+                              !team.isFormerMember && isOwnProfile ? 'group-hover:border-primary/50' 
+                              : team.isFormerMember ? 'grayscale' : ''
+                            }`}
                           />
                           <div>
-                            <h4 className="text-lg font-bold text-text leading-tight group-hover:text-primary transition-colors">{team.name}</h4>
-                            <span className="text-xs bg-primary/20 text-primary font-bold px-2 py-0.5 rounded uppercase tracking-wider">[{team.tag}]</span>
+                            <h4 className={`text-lg font-bold text-text leading-tight transition-colors ${
+                              !team.isFormerMember && isOwnProfile ? 'group-hover:text-primary' : ''
+                            }`}>{team.name}</h4>
+                            <div className="flex gap-2 items-center mt-1">
+                              <span className="text-xs bg-primary/20 text-primary font-bold px-2 py-0.5 rounded uppercase tracking-wider">[{team.tag}]</span>
+                              {team.isFormerMember && (
+                                 <span className="text-xs bg-red-500/10 text-red-500 font-bold px-2 py-0.5 rounded uppercase tracking-wider">Former Member</span>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-sm text-text-secondary">

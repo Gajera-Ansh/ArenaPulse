@@ -50,6 +50,7 @@ export const registerForTournament = async (req, res, next) => {
       tournament: tournamentId,
       status: status,
       pendingPlayers: pendingEnrollmentPlayers,
+      lockedRoster: team.players,
     });
 
     if (pendingEnrollmentPlayers.length > 0) {
@@ -171,9 +172,13 @@ export const getMyActiveEnrollments = async (req, res, next) => {
       .populate('tournament', 'title game status startDate endDate registrationDeadline prizePool enrolledCount maxTeams playersPerTeam bracketType winner')
       .sort({ createdAt: -1 });
 
-    const myRegistrations = registrations.filter(reg => 
-      reg.team && reg.team.players.some(p => p.toString() === req.user._id.toString())
-    );
+    const myRegistrations = registrations.filter(reg => {
+      if (!reg.team) return false;
+      if (reg.lockedRoster && reg.lockedRoster.length > 0) {
+        return reg.lockedRoster.some(p => p.toString() === req.user._id.toString());
+      }
+      return reg.team.players.some(p => p.toString() === req.user._id.toString());
+    });
 
     res.status(200).json({ success: true, data: myRegistrations });
   } catch (error) {
@@ -189,9 +194,13 @@ export const getUserEnrollments = async (req, res, next) => {
       .populate('tournament', 'title game status startDate endDate registrationDeadline prizePool enrolledCount maxTeams playersPerTeam bracketType winner')
       .sort({ createdAt: -1 });
 
-    const userRegistrations = registrations.filter(reg => 
-      reg.team && reg.team.players.some(p => p.toString() === req.params.userId)
-    );
+    const userRegistrations = registrations.filter(reg => {
+      if (!reg.team) return false;
+      if (reg.lockedRoster && reg.lockedRoster.length > 0) {
+        return reg.lockedRoster.some(p => p.toString() === req.params.userId);
+      }
+      return reg.team.players.some(p => p.toString() === req.params.userId);
+    });
 
     res.status(200).json({ success: true, data: userRegistrations });
   } catch (error) {
