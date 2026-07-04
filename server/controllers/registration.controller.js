@@ -181,6 +181,24 @@ export const getMyActiveEnrollments = async (req, res, next) => {
   }
 };
 
+// GET /api/registrations/user/:userId
+export const getUserEnrollments = async (req, res, next) => {
+  try {
+    const registrations = await Registration.find({ status: { $in: ['pending', 'approved'] } })
+      .populate('team', 'name tag players')
+      .populate('tournament', 'title game status startDate endDate registrationDeadline prizePool enrolledCount maxTeams playersPerTeam bracketType winner')
+      .sort({ createdAt: -1 });
+
+    const userRegistrations = registrations.filter(reg => 
+      reg.team && reg.team.players.some(p => p.toString() === req.params.userId)
+    );
+
+    res.status(200).json({ success: true, data: userRegistrations });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // POST /api/registrations/:id/accept
 export const acceptEnrollment = async (req, res, next) => {
   try {

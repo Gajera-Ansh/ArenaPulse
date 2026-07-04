@@ -64,6 +64,27 @@ export const getMyTeams = async (req, res, next) => {
   }
 };
 
+// GET /api/teams/user/:userId
+export const getUserTeams = async (req, res, next) => {
+  try {
+    const teams = await Team.find({ players: req.params.userId })
+      .populate('captain', 'name email avatar')
+      .populate('players', 'name email avatar');
+
+    const teamsWithCounts = await Promise.all(teams.map(async (team) => {
+      const tournamentCount = await Registration.countDocuments({ 
+        team: team._id,
+        status: { $in: ['pending', 'approved'] }
+      });
+      return { ...team.toObject(), tournamentCount };
+    }));
+
+    res.status(200).json({ success: true, data: teamsWithCounts });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // GET /api/teams/invitations
 export const getInvitations = async (req, res, next) => {
   try {

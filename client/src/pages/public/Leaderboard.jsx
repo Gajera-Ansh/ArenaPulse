@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import expressApi from '../../api/expressApi';
+import { Link } from 'react-router-dom';
 import { SUPPORTED_GAMES } from '../../utils/constants';
 
 const Leaderboard = () => {
@@ -201,9 +202,10 @@ const Leaderboard = () => {
 
         {/* Player Rows */}
         {!loading && activeTab === 'players' && playerData.map((entry, index) => (
-          <div
+          <Link
+            to={`/profile/${entry.player._id}`}
             key={entry.player._id}
-            className={`grid grid-cols-1 sm:grid-cols-12 gap-2 px-4 sm:px-6 py-4 items-center border-b border-border/50 hover:bg-primary/[0.03] transition-colors ${getRankStyle(index)}`}
+            className={`grid grid-cols-1 sm:grid-cols-12 gap-2 px-4 sm:px-6 py-4 items-center border-b border-border/50 hover:bg-primary/[0.03] transition-colors ${getRankStyle(index)} cursor-pointer block sm:grid`}
           >
             {/* Rank */}
             <div className="col-span-1 flex items-center justify-center">
@@ -268,7 +270,7 @@ const Leaderboard = () => {
                 {entry.kdRatio || '0.00'}
               </span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

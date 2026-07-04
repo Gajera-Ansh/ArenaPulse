@@ -227,3 +227,13 @@ export const getMyStats = async (req, res, next) => {
     next(error);
   }
 };
+
+// GET /api/playerstats/user/:userId
+export const getUserStats = async (req, res, next) => {
+  try {
+    const stats = await PlayerStat.findOne({ user: req.params.userId });
+    res.status(200).json({ success: true, data: stats || { gameStats: {} } });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import expressApi from '../../api/expressApi';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { SUPPORTED_GAMES } from '../../utils/constants';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -21,7 +21,10 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
+  const { id } = useParams();
+  
+  const [profileUser, setProfileUser] = useState(null);
   const [teams, setTeams] = useState([]);
   const [organizedTournaments, setOrganizedTournaments] = useState([]);
   const [tournamentHistory, setTournamentHistory] = useState([]);
@@ -31,6 +34,9 @@ const Profile = () => {
   const [playerStats, setPlayerStats] = useState(null);
   const [selectedGame, setSelectedGame] = useState(SUPPORTED_GAMES[0]);
   const [analyticsData, setAnalyticsData] = useState([]);
+
+  const isOwnProfile = !id || (authUser && id === authUser.id);
+  const user = profileUser || authUser;
 
   useEffect(() => {
     if (user?.role === 'organizer') {
@@ -42,18 +48,39 @@ const Profile = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        if (user?.role === 'organizer') {
-          const res = await expressApi.get(`/api/tournaments?organizer=${user.id}`);
+        
+        let targetUserId = authUser?.id;
+        
+        if (!isOwnProfile) {
+          const userRes = await expressApi.get(`/api/users/${id}`);
+          if (userRes.data.success) {
+            setProfileUser({ ...userRes.data.data, id: userRes.data.data._id });
+            targetUserId = id;
+          } else {
+             return;
+          }
+        }
+
+        if (user?.role === 'organizer' || (profileUser && profileUser.role === 'organizer')) {
+          const res = await expressApi.get(`/api/tournaments?organizer=${targetUserId}`);
           if (res.data.success) {
             setOrganizedTournaments(res.data.data);
           }
         } else {
-          const [teamRes, histRes, statsRes, analyticsRes] = await Promise.all([
+          const endpoints = isOwnProfile ? [
             expressApi.get('/api/teams'),
             expressApi.get('/api/registrations/my-active-enrollments'),
             expressApi.get('/api/playerstats/me'),
-            fetch(`${import.meta.env.VITE_DJANGO_URL}/analytics/player/${user.id}/`).then(res => res.json()).catch(() => null)
-          ]);
+            fetch(`${import.meta.env.VITE_DJANGO_URL}/analytics/player/${targetUserId}/`).then(res => res.json()).catch(() => null)
+          ] : [
+            expressApi.get(`/api/teams/user/${targetUserId}`),
+            expressApi.get(`/api/registrations/user/${targetUserId}`),
+            expressApi.get(`/api/playerstats/user/${targetUserId}`),
+            fetch(`${import.meta.env.VITE_DJANGO_URL}/analytics/player/${targetUserId}/`).then(res => res.json()).catch(() => null)
+          ];
+
+          const [teamRes, histRes, statsRes, analyticsRes] = await Promise.all(endpoints);
+          
           if (teamRes.data.success) {
             setTeams(teamRes.data.data);
           }
@@ -79,11 +106,11 @@ const Profile = () => {
         setLoading(false);
       }
     };
-
-    if (user) {
-      fetchData();
+    
+    if (authUser || id) {
+       fetchData();
     }
-  }, [user]);
+  }, [authUser, id, isOwnProfile, profileUser?.role]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Unknown';
@@ -96,9 +123,9 @@ const Profile = () => {
 
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-[2rem] font-bold text-text uppercase tracking-tight">Profile</h1>
+        <h1 className="text-[2rem] font-bold text-text uppercase tracking-tight">{isOwnProfile ? 'Profile' : 'Player Card'}</h1>
         <p className="text-text-secondary font-medium">
-          Your centralized hub for performance stats, team participation, and overall ArenaPulse journey.
+          {isOwnProfile ? 'Your centralized hub for performance stats, team participation, and overall ArenaPulse journey.' : `Viewing ${user?.name || 'Player'}'s public ArenaPulse details.`}
         </p>
       </div>
 
@@ -163,9 +190,11 @@ const Profile = () => {
             </div>
           </div>
 
-          <Link to="/settings" className="block w-full mt-8 py-3 bg-white/5 hover:bg-white/10 text-text border border-border hover:border-primary/50 rounded-[4px] text-sm font-bold transition-colors">
-            <i className="fa-solid fa-pen-to-square mr-2"></i> Edit Profile
-          </Link>
+          {isOwnProfile && (
+            <Link to="/settings" className="block w-full mt-8 py-3 bg-white/5 hover:bg-white/10 text-text border border-border hover:border-primary/50 rounded-[4px] text-sm font-bold transition-colors">
+              <i className="fa-solid fa-pen-to-square mr-2"></i> Edit Profile
+            </Link>
+          )}
         </div>
 
         {/* Right Content - Tabs */}
@@ -201,9 +230,11 @@ const Profile = () => {
                   <h3 className="text-xl font-bold text-text uppercase flex items-center gap-2">
                     <i className="fa-solid fa-sitemap text-primary"></i> Hosted Tournaments
                   </h3>
-                  <Link to="/tournaments/create" className="btn-primary text-xs py-2 px-4">
-                    <i className="fa-solid fa-plus mr-2"></i> Create New
-                  </Link>
+                  {isOwnProfile && (
+                    <Link to="/tournaments/create" className="btn-primary text-xs py-2 px-4">
+                      <i className="fa-solid fa-plus mr-2"></i> Create New
+                    </Link>
+                  )}
                 </div>
 
                 {loading ? (
@@ -213,7 +244,7 @@ const Profile = () => {
                 ) : organizedTournaments.length > 0 ? (
                   <div className="space-y-4">
                     {organizedTournaments.map(tournament => (
-                      <Link to={`/tournaments/${tournament._id}/edit`} key={tournament._id} className="block bg-black/10 border border-border rounded-[8px] p-5 hover:border-primary/50 transition-all group">
+                      <Link to={`/tournaments/${tournament._id}/edit`} key={tournament._id} className={`block bg-black/10 border border-border rounded-[8px] p-5 transition-all ${isOwnProfile ? 'hover:border-primary/50 group' : 'pointer-events-none'}`}>
                         <div className="flex justify-between items-start mb-3">
                           <div>
                             <h4 className="text-lg font-bold text-text group-hover:text-primary transition-colors">{tournament.title}</h4>
@@ -305,7 +336,7 @@ const Profile = () => {
                 ) : teams.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {teams.map(team => (
-                      <Link to={`/teams/${team._id}/edit`} key={team._id} className="bg-black/10 border border-border rounded-[8px] p-5 hover:border-primary/50 transition-all hover:-translate-y-1 group">
+                      <Link to={`/teams/${team._id}/edit`} key={team._id} className={`bg-black/10 border border-border rounded-[8px] p-5 transition-all ${isOwnProfile ? 'hover:border-primary/50 hover:-translate-y-1 group' : 'pointer-events-none'}`}>
                         <div className="flex items-center gap-4 mb-4">
                           <img
                             src={team.logo ? (team.logo.startsWith('http') ? team.logo : `http://localhost:5000/${team.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(team.tag || team.name)}&background=random&color=fff&size=200&bold=true`}
@@ -329,9 +360,11 @@ const Profile = () => {
                     <i className="fa-solid fa-users-slash text-4xl text-text-secondary/50 mb-4"></i>
                     <h4 className="text-lg font-bold text-text mb-2">No Participations Yet</h4>
                     <p className="text-text-secondary text-sm mb-6 max-w-sm mx-auto">You aren't a part of any teams right now. Create a team or get invited to join the arena!</p>
-                    <Link to="/teams/create" className="btn-primary">
-                      <i className="fa-solid fa-plus mr-2"></i> Create Team
-                    </Link>
+                    {isOwnProfile && (
+                      <Link to="/teams/create" className="btn-primary">
+                        <i className="fa-solid fa-plus mr-2"></i> Create Team
+                      </Link>
+                    )}
                   </div>
                 )}
               </div>
@@ -460,7 +493,7 @@ const Profile = () => {
                     )).map((t) => {
                       const isWin = String(t.winner) === String(t.myTeamId);
                       return (
-                        <Link to={`/tournaments/${t._id}`} key={t._id} className="block bg-black/10 border border-border rounded-[8px] p-5 hover:border-primary/50 transition-all group relative overflow-hidden">
+                        <Link to={`/tournaments/${t._id}`} key={t._id} className={`block bg-black/10 border border-border rounded-[8px] p-5 transition-all relative overflow-hidden ${isOwnProfile ? 'hover:border-primary/50 group' : 'pointer-events-none'}`}>
                           {/* Win/Loss background subtle gradient */}
                           <div className={`absolute right-0 top-0 bottom-0 w-32 pointer-events-none opacity-20 bg-gradient-to-l ${isWin ? 'from-emerald-500' : 'from-red-500'} to-transparent`}></div>
 

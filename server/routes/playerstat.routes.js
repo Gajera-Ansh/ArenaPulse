@@ -1,7 +1,7 @@
 // PlayerStat routes - submit and retrieve player game stats
 
 import { Router } from 'express';
-import { getGameFields, submitPlayerStats, getPlayerStatsLeaderboard, getMatchPlayers, getMyStats } from '../controllers/playerstat.controller.js';
+import { getGameFields, submitPlayerStats, getPlayerStatsLeaderboard, getMatchPlayers, getMyStats, getUserStats } from '../controllers/playerstat.controller.js';
 import authMiddleware from '../middleware/auth.middleware.js';
 
 const router = Router();
@@ -9,6 +9,7 @@ const router = Router();
 // Public
 router.get('/fields/:game', getGameFields);
 router.get('/leaderboard', getPlayerStatsLeaderboard);
+router.get('/user/:userId', getUserStats);
 
 // Protected (player/organizer)
 router.get('/me', authMiddleware, getMyStats);
