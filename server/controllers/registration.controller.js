@@ -39,6 +39,21 @@ export const registerForTournament = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Team already registered.' });
     }
 
+    // Check if any player on the team is already COMMITTED to this tournament via another team
+    const committedRegistrations = await Registration.find({
+      tournament: tournamentId,
+      status: { $in: ['pending', 'approved'] },
+      lockedRoster: { $in: team.players }
+    }).populate('team', 'name');
+
+    if (committedRegistrations.length > 0) {
+      const committedTeamsNames = committedRegistrations.map(r => r.team.name).join(', ');
+      return res.status(400).json({ 
+        success: false, 
+        message: `Registration blocked. One or more players on your roster are already registered for this tournament under another team (${committedTeamsNames}).` 
+      });
+    }
+
     // Filter out the captain from pending players
     const pendingEnrollmentPlayers = team.players.filter(p => p.toString() !== req.user._id.toString());
 
@@ -57,6 +72,28 @@ export const registerForTournament = async (req, res, next) => {
       const usersToEmail = await User.find({ _id: { $in: pendingEnrollmentPlayers } });
       for (const u of usersToEmail) {
         sendTournamentEnrollmentEmail(u.email, u.name, req.user.name, team.name, tournament.title);
+      }
+    }
+
+    // The captain is committing to this tournament, so auto-decline any other invites they might have
+    const captainOtherRegistrations = await Registration.find({
+      tournament: tournamentId,
+      status: 'awaiting_players',
+      pendingPlayers: req.user._id
+    }).populate('team');
+
+    for (const otherReg of captainOtherRegistrations) {
+      await Registration.findByIdAndDelete(otherReg._id);
+      
+      await Notification.create({
+        user: otherReg.team.captain,
+        message: `${req.user.name} has committed to another team for ${tournament.title}. Your team's registration has been aborted.`,
+        type: 'warning',
+      });
+
+      const otherCaptain = await User.findById(otherReg.team.captain);
+      if (otherCaptain) {
+        sendPlayerDeclinedEmail(otherCaptain.email, otherCaptain.name, req.user.name, otherReg.team.name, tournament.title);
       }
     }
 
@@ -230,6 +267,29 @@ export const acceptEnrollment = async (req, res, next) => {
 
     // Remove from pendingPlayers
     registration.pendingPlayers = registration.pendingPlayers.filter(p => p.toString() !== req.user._id.toString());
+
+    // Auto-decline any other invites for this user for this tournament
+    const otherRegistrations = await Registration.find({
+      _id: { $ne: registration._id },
+      tournament: registration.tournament._id,
+      status: 'awaiting_players',
+      pendingPlayers: req.user._id
+    }).populate('team');
+
+    for (const otherReg of otherRegistrations) {
+      await Registration.findByIdAndDelete(otherReg._id);
+      
+      await Notification.create({
+        user: otherReg.team.captain,
+        message: `${req.user.name} has committed to another team for ${registration.tournament.title}. Your team's registration has been aborted.`,
+        type: 'warning',
+      });
+
+      const otherCaptain = await User.findById(otherReg.team.captain);
+      if (otherCaptain) {
+        sendPlayerDeclinedEmail(otherCaptain.email, otherCaptain.name, req.user.name, otherReg.team.name, registration.tournament.title);
+      }
+    }
 
     // If everyone has accepted, move status to 'pending' (ready for organizer)
     if (registration.pendingPlayers.length === 0) {

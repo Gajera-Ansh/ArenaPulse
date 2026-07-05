@@ -55,7 +55,8 @@ export const getMyTeams = async (req, res, next) => {
         team: team._id,
         status: { $in: ['pending', 'approved'] }
       });
-      const isFormerMember = team.formerPlayers.some(p => p.toString() === req.user._id.toString());
+      const isFormerMember = team.formerPlayers.some(p => p.toString() === req.user._id.toString()) && 
+                             !team.players.some(p => (p._id ? p._id.toString() : p.toString()) === req.user._id.toString());
       return { ...team.toObject(), tournamentCount, isFormerMember };
     }));
 
@@ -77,7 +78,8 @@ export const getUserTeams = async (req, res, next) => {
         team: team._id,
         status: { $in: ['pending', 'approved'] }
       });
-      const isFormerMember = team.formerPlayers.some(p => p.toString() === req.params.userId.toString());
+      const isFormerMember = team.formerPlayers.some(p => p.toString() === req.params.userId.toString()) && 
+                             !team.players.some(p => (p._id ? p._id.toString() : p.toString()) === req.params.userId.toString());
       return { ...team.toObject(), tournamentCount, isFormerMember };
     }));
 
@@ -252,6 +254,12 @@ export const joinTeam = async (req, res, next) => {
     }
 
     team.players.push(req.user._id);
+    
+    // Remove from formerPlayers if they are rejoining
+    if (team.formerPlayers && team.formerPlayers.includes(req.user._id)) {
+      team.formerPlayers = team.formerPlayers.filter(p => p.toString() !== req.user._id.toString());
+    }
+
     await team.save();
 
     res.status(200).json({ success: true, message: 'Joined team successfully.' });
@@ -329,6 +337,11 @@ export const acceptInvite = async (req, res, next) => {
     // Move from pending to active
     team.pendingPlayers = team.pendingPlayers.filter(p => p.toString() !== req.user._id.toString());
     team.players.push(req.user._id);
+
+    // Remove from formerPlayers if they are rejoining
+    if (team.formerPlayers && team.formerPlayers.includes(req.user._id)) {
+      team.formerPlayers = team.formerPlayers.filter(p => p.toString() !== req.user._id.toString());
+    }
 
     await team.save();
 
