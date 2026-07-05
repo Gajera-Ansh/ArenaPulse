@@ -488,104 +488,110 @@ const Profile = () => {
               );
             })()}
 
-            {activeTab === 'history' && (
-              <div className="animate-fade-in flex flex-col flex-grow">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                  <h3 className="text-[1.25rem] font-bold text-text uppercase flex items-center gap-2">
-                    <i className="fa-solid fa-list-check text-primary"></i> Tournament History
-                  </h3>
+            {activeTab === 'history' && (() => {
+              const completedHistory = tournamentHistory.filter(t => t.status === 'completed');
+              const winCount = completedHistory.filter(t => String(t.winner) === String(t.myTeamId)).length;
+              const lossCount = completedHistory.length - winCount;
 
-                  {/* Filter Controls */}
-                  <div className="flex bg-black/10 border border-border rounded-[4px] p-1">
-                    <button
-                      onClick={() => setHistoryFilter('all')}
-                      className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'all' ? 'bg-surface shadow-sm text-text' : 'text-text-secondary hover:text-text'}`}
-                    >
-                      All
-                    </button>
-                    <button
-                      onClick={() => setHistoryFilter('win')}
-                      className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'win' ? 'bg-emerald-500/10 text-emerald-500 shadow-sm' : 'text-text-secondary hover:text-emerald-500'}`}
-                    >
-                      Wins
-                    </button>
-                    <button
-                      onClick={() => setHistoryFilter('loss')}
-                      className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'loss' ? 'bg-red-500/10 text-red-500 shadow-sm' : 'text-text-secondary hover:text-red-500'}`}
-                    >
-                      Losses
-                    </button>
+              return (
+                <div className="animate-fade-in flex flex-col flex-grow">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                    <h3 className="text-[1.25rem] font-bold text-text uppercase flex items-center gap-2">
+                      <i className="fa-solid fa-list-check text-primary"></i> Tournament History
+                    </h3>
+
+                    {/* Filter Controls */}
+                    <div className="flex bg-black/10 border border-border rounded-[4px] p-1">
+                      <button
+                        onClick={() => setHistoryFilter('all')}
+                        className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'all' ? 'bg-surface shadow-sm text-text' : 'text-text-secondary hover:text-text'}`}
+                      >
+                        All ({completedHistory.length})
+                      </button>
+                      <button
+                        onClick={() => setHistoryFilter('win')}
+                        className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'win' ? 'bg-emerald-500/10 text-emerald-500 shadow-sm' : 'text-text-secondary hover:text-emerald-500'}`}
+                      >
+                        Wins ({winCount})
+                      </button>
+                      <button
+                        onClick={() => setHistoryFilter('loss')}
+                        className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'loss' ? 'bg-red-500/10 text-red-500 shadow-sm' : 'text-text-secondary hover:text-red-500'}`}
+                      >
+                        Losses ({lossCount})
+                      </button>
+                    </div>
                   </div>
+
+                  {completedHistory.filter(t => (
+                    historyFilter === 'all' ? true :
+                      historyFilter === 'win' ? String(t.winner) === String(t.myTeamId) :
+                        String(t.winner) !== String(t.myTeamId)
+                  )).length > 0 ? (
+                    <div className="space-y-4">
+                      {completedHistory.filter(t => (
+                        historyFilter === 'all' ? true :
+                          historyFilter === 'win' ? String(t.winner) === String(t.myTeamId) :
+                            String(t.winner) !== String(t.myTeamId)
+                      )).map((t) => {
+                        const isWin = String(t.winner) === String(t.myTeamId);
+                        return (
+                          <Link to={`/tournaments/${t._id}`} key={t._id} className={`block bg-black/10 border border-border rounded-[8px] p-5 transition-all relative overflow-hidden ${isOwnProfile ? 'hover:border-primary/50 group' : 'pointer-events-none'}`}>
+                            {/* Win/Loss background subtle gradient */}
+                            <div className={`absolute right-0 top-0 bottom-0 w-32 pointer-events-none opacity-20 bg-gradient-to-l ${isWin ? 'from-emerald-500' : 'from-red-500'} to-transparent`}></div>
+
+                            <div className="flex justify-between items-start mb-3 relative z-10">
+                              <div>
+                                <h4 className="text-lg font-bold text-text group-hover:text-primary transition-colors">{t.title}</h4>
+                                <div className="text-sm text-text-secondary mt-1">{t.game} • {t.bracketType === 'round-robin' ? 'Round Robin' : 'Single Elim'}</div>
+                              </div>
+                              <div className="flex flex-col items-end gap-2">
+                                <span className="px-2 py-1 rounded-[4px] text-[0.7rem] font-bold uppercase tracking-wider bg-primary-light text-primary border border-[#BFDBFE]">
+                                  Completed
+                                </span>
+                                {isWin ? (
+                                  <span className="text-emerald-500 text-[0.8rem] font-bold uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded flex items-center gap-1 border border-emerald-500/20">
+                                    <i className="fa-solid fa-crown"></i> Victory
+                                  </span>
+                                ) : (
+                                  <span className="text-red-500 text-[0.8rem] font-bold uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded flex items-center gap-1 border border-red-500/20">
+                                    <i className="fa-solid fa-xmark"></i> Defeat
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-border/50 text-sm">
+                              <div>
+                                <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Teams</span>
+                                <span className="font-bold text-text"><i className="fa-solid fa-users text-primary mr-1"></i> {t.enrolledCount || 0}/{t.maxTeams}</span>
+                              </div>
+                              <div>
+                                <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Format</span>
+                                <span className="font-bold text-text"><i className="fa-solid fa-user-group text-accent mr-1"></i> {t.playersPerTeam || 5}v{t.playersPerTeam || 5}</span>
+                              </div>
+                              <div>
+                                <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Prize</span>
+                                <span className="font-bold text-emerald-500"><i className="fa-solid fa-sack-dollar mr-1"></i> {t.prizePool || 'Glory'}</span>
+                              </div>
+                              <div>
+                                <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Ended</span>
+                                <span className="font-bold text-text"><i className="fa-regular fa-calendar-check mr-1"></i> {new Date(t.endDate).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center flex flex-col items-center justify-center flex-grow py-12">
+                      <i className="fa-solid fa-list-check text-4xl text-text-secondary mb-4 opacity-50"></i>
+                      <h3 className="text-[1.25rem] font-bold text-text mb-2">No History Yet</h3>
+                      <p className="text-text-secondary">Your past combat records will appear here.</p>
+                    </div>
+                  )}
                 </div>
-
-                {tournamentHistory.filter(t => t.status === 'completed' && (
-                  historyFilter === 'all' ? true :
-                    historyFilter === 'win' ? String(t.winner) === String(t.myTeamId) :
-                      String(t.winner) !== String(t.myTeamId)
-                )).length > 0 ? (
-                  <div className="space-y-4">
-                    {tournamentHistory.filter(t => t.status === 'completed' && (
-                      historyFilter === 'all' ? true :
-                        historyFilter === 'win' ? String(t.winner) === String(t.myTeamId) :
-                          String(t.winner) !== String(t.myTeamId)
-                    )).map((t) => {
-                      const isWin = String(t.winner) === String(t.myTeamId);
-                      return (
-                        <Link to={`/tournaments/${t._id}`} key={t._id} className={`block bg-black/10 border border-border rounded-[8px] p-5 transition-all relative overflow-hidden ${isOwnProfile ? 'hover:border-primary/50 group' : 'pointer-events-none'}`}>
-                          {/* Win/Loss background subtle gradient */}
-                          <div className={`absolute right-0 top-0 bottom-0 w-32 pointer-events-none opacity-20 bg-gradient-to-l ${isWin ? 'from-emerald-500' : 'from-red-500'} to-transparent`}></div>
-
-                          <div className="flex justify-between items-start mb-3 relative z-10">
-                            <div>
-                              <h4 className="text-lg font-bold text-text group-hover:text-primary transition-colors">{t.title}</h4>
-                              <div className="text-sm text-text-secondary mt-1">{t.game} • {t.bracketType === 'round-robin' ? 'Round Robin' : 'Single Elim'}</div>
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                              <span className="px-2 py-1 rounded-[4px] text-[0.7rem] font-bold uppercase tracking-wider bg-primary-light text-primary border border-[#BFDBFE]">
-                                Completed
-                              </span>
-                              {isWin ? (
-                                <span className="text-emerald-500 text-[0.8rem] font-bold uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded flex items-center gap-1 border border-emerald-500/20">
-                                  <i className="fa-solid fa-crown"></i> Victory
-                                </span>
-                              ) : (
-                                <span className="text-red-500 text-[0.8rem] font-bold uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded flex items-center gap-1 border border-red-500/20">
-                                  <i className="fa-solid fa-xmark"></i> Defeat
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-border/50 text-sm">
-                            <div>
-                              <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Teams</span>
-                              <span className="font-bold text-text"><i className="fa-solid fa-users text-primary mr-1"></i> {t.enrolledCount || 0}/{t.maxTeams}</span>
-                            </div>
-                            <div>
-                              <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Format</span>
-                              <span className="font-bold text-text"><i className="fa-solid fa-user-group text-accent mr-1"></i> {t.playersPerTeam || 5}v{t.playersPerTeam || 5}</span>
-                            </div>
-                            <div>
-                              <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Prize</span>
-                              <span className="font-bold text-emerald-500"><i className="fa-solid fa-sack-dollar mr-1"></i> {t.prizePool || 'Glory'}</span>
-                            </div>
-                            <div>
-                              <span className="block text-[0.65rem] text-text-secondary font-bold uppercase tracking-widest mb-1">Ended</span>
-                              <span className="font-bold text-text"><i className="fa-regular fa-calendar-check mr-1"></i> {new Date(t.endDate).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center flex flex-col items-center justify-center flex-grow py-12">
-                    <i className="fa-solid fa-list-check text-4xl text-text-secondary mb-4 opacity-50"></i>
-                    <h3 className="text-[1.25rem] font-bold text-text mb-2">No History Yet</h3>
-                    <p className="text-text-secondary">Your past combat records will appear here.</p>
-                  </div>
-                )}
-              </div>
-            )}
+              );
+            })()}
 
           </div>
         </div>
