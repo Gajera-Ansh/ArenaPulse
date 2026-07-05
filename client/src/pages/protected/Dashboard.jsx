@@ -283,112 +283,122 @@ const Dashboard = () => {
             </div>
           )}
 
-          {activeTab === 'history' && (
-            <div className="animate-fade-in flex flex-col flex-grow">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                <h3 className="text-[1.25rem] font-bold text-text uppercase flex items-center gap-2">
-                  <i className="fa-solid fa-list-check text-primary"></i> Tournament History
-                </h3>
-                
-                {/* Filter Controls (Only for players) */}
-                {user?.role === 'player' && (
-                  <div className="flex bg-black/10 border border-border rounded-[4px] p-1">
-                    <button 
-                      onClick={() => setHistoryFilter('all')} 
-                      className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'all' ? 'bg-surface shadow-sm text-text' : 'text-text-secondary hover:text-text'}`}
-                    >
-                      All
-                    </button>
-                    <button 
-                      onClick={() => setHistoryFilter('win')} 
-                      className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'win' ? 'bg-emerald-500/10 text-emerald-500 shadow-sm' : 'text-text-secondary hover:text-emerald-500'}`}
-                    >
-                      Wins
-                    </button>
-                    <button 
-                      onClick={() => setHistoryFilter('loss')} 
-                      className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'loss' ? 'bg-red-500/10 text-red-500 shadow-sm' : 'text-text-secondary hover:text-red-500'}`}
-                    >
-                      Losses
-                    </button>
+          {activeTab === 'history' && (() => {
+            const completedHistory = tournaments.filter(t => t.status === 'completed');
+            let winCount = 0;
+            let lossCount = 0;
+            if (user?.role === 'player') {
+              winCount = completedHistory.filter(t => String(t.winner) === String(t.myTeamId)).length;
+              lossCount = completedHistory.length - winCount;
+            }
+
+            return (
+              <div className="animate-fade-in flex flex-col flex-grow">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                  <h3 className="text-[1.25rem] font-bold text-text uppercase flex items-center gap-2">
+                    <i className="fa-solid fa-list-check text-primary"></i> Tournament History
+                  </h3>
+                  
+                  {/* Filter Controls (Only for players) */}
+                  {user?.role === 'player' && (
+                    <div className="flex bg-black/10 border border-border rounded-[4px] p-1">
+                      <button 
+                        onClick={() => setHistoryFilter('all')} 
+                        className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'all' ? 'bg-surface shadow-sm text-text' : 'text-text-secondary hover:text-text'}`}
+                      >
+                        All ({completedHistory.length})
+                      </button>
+                      <button 
+                        onClick={() => setHistoryFilter('win')} 
+                        className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'win' ? 'bg-emerald-500/10 text-emerald-500 shadow-sm' : 'text-text-secondary hover:text-emerald-500'}`}
+                      >
+                        Wins ({winCount})
+                      </button>
+                      <button 
+                        onClick={() => setHistoryFilter('loss')} 
+                        className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'loss' ? 'bg-red-500/10 text-red-500 shadow-sm' : 'text-text-secondary hover:text-red-500'}`}
+                      >
+                        Losses ({lossCount})
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {completedHistory.filter(t => (
+                  user?.role === 'organizer' || historyFilter === 'all' ? true : 
+                  historyFilter === 'win' ? String(t.winner) === String(t.myTeamId) : 
+                  String(t.winner) !== String(t.myTeamId)
+                )).length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {completedHistory.filter(t => (
+                      user?.role === 'organizer' || historyFilter === 'all' ? true : 
+                      historyFilter === 'win' ? String(t.winner) === String(t.myTeamId) : 
+                      String(t.winner) !== String(t.myTeamId)
+                    )).map((t) => {
+                      const isWin = user?.role === 'player' ? String(t.winner) === String(t.myTeamId) : false;
+                      return (
+                      <div key={t._id} className={`bg-surface border ${user?.role === 'player' ? (isWin ? 'border-emerald-500/30' : 'border-red-500/30') : 'border-slate-300'} rounded-[8px] overflow-hidden hover:border-primary transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/20 group flex flex-col h-full opacity-70 hover:opacity-100`}>
+                        <div className="h-20 bg-surface relative p-4 border-b border-border overflow-hidden">
+                          {/* Visible Cyber Design */}
+                          <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 12px)' }}></div>
+                          <div className={`absolute right-0 top-0 w-2/3 h-full bg-gradient-to-l ${user?.role === 'player' ? (isWin ? 'from-emerald-500/20' : 'from-red-500/20') : 'from-primary/20'} to-transparent pointer-events-none`}></div>
+
+                          <div className="absolute top-3 right-3 z-10 flex flex-col gap-1 items-end">
+                            <span className="px-2.5 py-1 rounded-[4px] text-[0.65rem] font-bold uppercase tracking-widest shadow-sm bg-background border border-border text-text-secondary">
+                              Completed
+                            </span>
+                            {user?.role === 'player' && (
+                              isWin ? (
+                                <span className="text-emerald-500 text-[0.65rem] font-bold uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded shadow-sm border border-emerald-500/30">
+                                  Victory
+                                </span>
+                              ) : (
+                                <span className="text-red-500 text-[0.65rem] font-bold uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded shadow-sm border border-red-500/30">
+                                  Defeat
+                                </span>
+                              )
+                            )}
+                          </div>
+                          <span className="inline-block bg-accent/10 border border-accent/20 px-3 py-1 rounded-[4px] text-[0.7rem] font-bold text-accent tracking-wider relative z-10 shadow-sm backdrop-blur-sm">
+                            {t.game}
+                          </span>
+                        </div>
+
+                        <div className="p-5 flex-grow flex flex-col">
+                          <h4 className="text-[1.1rem] font-bold text-text leading-tight mb-3 group-hover:text-primary transition-colors line-clamp-2">
+                            {t.title}
+                          </h4>
+                          <div className="space-y-2 mt-auto">
+                            <div className="flex items-center text-[0.85rem] text-text-secondary">
+                              <i className="fa-solid fa-trophy w-5 text-center mr-2 text-accent"></i>
+                              <span className="font-bold text-text">{t.prizePool || 'Glory & Honor'}</span>
+                            </div>
+                            <div className="flex items-center text-[0.85rem] text-text-secondary">
+                              <i className="fa-solid fa-calendar-check w-5 text-center mr-2"></i>
+                              <span>Ended: <strong className="text-text">{formatDate(t.endDate)}</strong></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-4 border-t border-border bg-background">
+                          <Link to={`/tournaments/${t._id}`} className="block w-full text-center bg-primary hover:bg-primary-hover text-white font-bold py-2 rounded-[4px] transition-all text-[0.85rem] uppercase tracking-wider shadow-sm">
+                            View Details
+                          </Link>
+                        </div>
+                      </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center flex flex-col items-center justify-center flex-grow py-12">
+                    <i className="fa-solid fa-list-check text-4xl text-text-secondary mb-4 opacity-50"></i>
+                    <h3 className="text-[1.25rem] font-bold text-text mb-2">No History Yet</h3>
+                    <p className="text-text-secondary">Your past combat records will appear here.</p>
                   </div>
                 )}
               </div>
-
-              {tournaments.filter(t => t.status === 'completed' && (
-                user?.role === 'organizer' || historyFilter === 'all' ? true : 
-                historyFilter === 'win' ? String(t.winner) === String(t.myTeamId) : 
-                String(t.winner) !== String(t.myTeamId)
-              )).length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {tournaments.filter(t => t.status === 'completed' && (
-                    user?.role === 'organizer' || historyFilter === 'all' ? true : 
-                    historyFilter === 'win' ? String(t.winner) === String(t.myTeamId) : 
-                    String(t.winner) !== String(t.myTeamId)
-                  )).map((t) => {
-                    const isWin = user?.role === 'player' ? String(t.winner) === String(t.myTeamId) : false;
-                    return (
-                    <div key={t._id} className={`bg-surface border ${user?.role === 'player' ? (isWin ? 'border-emerald-500/30' : 'border-red-500/30') : 'border-slate-300'} rounded-[8px] overflow-hidden hover:border-primary transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/20 group flex flex-col h-full opacity-70 hover:opacity-100`}>
-                      <div className="h-20 bg-surface relative p-4 border-b border-border overflow-hidden">
-                        {/* Visible Cyber Design */}
-                        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 12px)' }}></div>
-                        <div className={`absolute right-0 top-0 w-2/3 h-full bg-gradient-to-l ${user?.role === 'player' ? (isWin ? 'from-emerald-500/20' : 'from-red-500/20') : 'from-primary/20'} to-transparent pointer-events-none`}></div>
-
-                        <div className="absolute top-3 right-3 z-10 flex flex-col gap-1 items-end">
-                          <span className="px-2.5 py-1 rounded-[4px] text-[0.65rem] font-bold uppercase tracking-widest shadow-sm bg-background border border-border text-text-secondary">
-                            Completed
-                          </span>
-                          {user?.role === 'player' && (
-                            isWin ? (
-                              <span className="text-emerald-500 text-[0.65rem] font-bold uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded shadow-sm border border-emerald-500/30">
-                                Victory
-                              </span>
-                            ) : (
-                              <span className="text-red-500 text-[0.65rem] font-bold uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded shadow-sm border border-red-500/30">
-                                Defeat
-                              </span>
-                            )
-                          )}
-                        </div>
-                        <span className="inline-block bg-accent/10 border border-accent/20 px-3 py-1 rounded-[4px] text-[0.7rem] font-bold text-accent tracking-wider relative z-10 shadow-sm backdrop-blur-sm">
-                          {t.game}
-                        </span>
-                      </div>
-
-                      <div className="p-5 flex-grow flex flex-col">
-                        <h4 className="text-[1.1rem] font-bold text-text leading-tight mb-3 group-hover:text-primary transition-colors line-clamp-2">
-                          {t.title}
-                        </h4>
-                        <div className="space-y-2 mt-auto">
-                          <div className="flex items-center text-[0.85rem] text-text-secondary">
-                            <i className="fa-solid fa-trophy w-5 text-center mr-2 text-accent"></i>
-                            <span className="font-bold text-text">{t.prizePool || 'Glory & Honor'}</span>
-                          </div>
-                          <div className="flex items-center text-[0.85rem] text-text-secondary">
-                            <i className="fa-solid fa-calendar-check w-5 text-center mr-2"></i>
-                            <span>Ended: <strong className="text-text">{formatDate(t.endDate)}</strong></span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="p-4 border-t border-border bg-background">
-                        <Link to={`/tournaments/${t._id}`} className="block w-full text-center bg-primary hover:bg-primary-hover text-white font-bold py-2 rounded-[4px] transition-all text-[0.85rem] uppercase tracking-wider shadow-sm">
-                          View Details
-                        </Link>
-                      </div>
-                    </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center flex flex-col items-center justify-center flex-grow py-12">
-                  <i className="fa-solid fa-list-check text-4xl text-text-secondary mb-4 opacity-50"></i>
-                  <h3 className="text-[1.25rem] font-bold text-text mb-2">No History Yet</h3>
-                  <p className="text-text-secondary">Your past combat records will appear here.</p>
-                </div>
-              )}
-            </div>
-          )}
+            );
+          })()}
 
 
 
