@@ -328,3 +328,55 @@ export const startTournament = async (req, res, next) => {
     next(error);
   }
 };
+
+// GET /api/tournaments/pending/ratings
+export const getPendingRatings = async (req, res, next) => {
+  try {
+    // Find all approved registrations for the user
+    const registrations = await Registration.find({
+      status: 'approved',
+      lockedRoster: req.user._id
+    }).populate('tournament');
+    
+    // Filter tournaments that are completed and user hasn't rated yet
+    const pendingTournaments = registrations
+      .map(r => r.tournament)
+      .filter(t => t && t.status === 'completed' && !t.ratings?.some(r => r.player.toString() === req.user._id.toString()));
+      
+    // Deduplicate
+    const uniquePending = Array.from(new Set(pendingTournaments.map(t => t._id.toString())))
+      .map(id => pendingTournaments.find(t => t._id.toString() === id));
+
+    res.status(200).json({ success: true, data: uniquePending });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /api/tournaments/:id/rate
+export const rateTournament = async (req, res, next) => {
+  try {
+    const { rating } = req.body;
+    const tournamentId = req.params.id;
+    
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: 'Rating must be between 1 and 5' });
+    }
+    
+    const tournament = await Tournament.findById(tournamentId);
+    if (!tournament) return res.status(404).json({ success: false, message: 'Tournament not found' });
+    
+    // Check if user already rated
+    if (tournament.ratings?.some(r => r.player.toString() === req.user._id.toString())) {
+      return res.status(400).json({ success: false, message: 'You have already rated this tournament' });
+    }
+    
+    tournament.ratings = tournament.ratings || [];
+    tournament.ratings.push({ player: req.user._id, rating: Number(rating) });
+    await tournament.save();
+    
+    res.status(200).json({ success: true, message: 'Rating submitted' });
+  } catch (error) {
+    next(error);
+  }
+};

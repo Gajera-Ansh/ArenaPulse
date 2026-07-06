@@ -716,3 +716,62 @@ export const sendTeamRemovalEmail = async (userEmail, userName, teamName) => {
     return false;
   }
 };
+
+export const sendRatingRequestEmail = async (userEmail, userName, tournamentTitle, organizerName) => {
+  try {
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; margin: 0; padding: 0; color: #1e293b; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .header { background-color: #2563eb; padding: 30px 20px; text-align: center; }
+        .header h1 { color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .content { padding: 40px 30px; }
+        .message { font-size: 16px; line-height: 1.6; margin-bottom: 25px; }
+        .highlight { color: #2563eb; font-weight: 600; }
+        .box { background-color: #f8fafc; border-left: 4px solid #ea580c; padding: 15px 20px; margin-bottom: 30px; font-size: 15px; color: #475569; }
+        .footer { background-color: #f8fafc; padding: 20px; text-align: center; font-size: 13px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+        .btn { display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 4px; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Tournament Completed</h1>
+        </div>
+        <div class="content">
+          <div class="message">
+            Hello <strong>${userName}</strong>,<br><br>
+            The tournament <strong class="highlight">${tournamentTitle}</strong> has officially concluded!
+          </div>
+          <div class="box">
+            Please log into ArenaPulse to leave a rating out of 5 stars for the organizer, <strong>${organizerName}</strong>. Your feedback helps build a better community for everyone.
+          </div>
+          <div style="text-align: center;">
+             <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/dashboard" class="btn">Rate Organizer Now</a>
+          </div>
+        </div>
+        <div class="footer">&copy; ${new Date().getFullYear()} ArenaPulse Esports.</div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    const mailOptions = {
+      from: `"ArenaPulse" <${process.env.EMAIL_USER}>`,
+      to: userEmail,
+      subject: `Rate the Organizer: ${tournamentTitle}`,
+      html: htmlContent,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`[Email Service] Rating request email sent to ${userEmail}`);
+    return true;
+  } catch (error) {
+    console.error('[Email Service] Error sending rating request email:', error);
+    return false;
+  }
+};

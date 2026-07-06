@@ -12,6 +12,13 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [historyFilter, setHistoryFilter] = useState('all');
 
+  // Rating Modal States
+  const [pendingRatings, setPendingRatings] = useState([]);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [currentRating, setCurrentRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [submittingRating, setSubmittingRating] = useState(false);
+
   const formatDate = (dateString) => {
     if (!dateString) return 'TBD';
     return new Date(dateString).toLocaleString(undefined, {
@@ -30,10 +37,11 @@ const Dashboard = () => {
         }
 
         if (user?.role === 'player') {
-          const [invRes, enrRes, activeEnrRes] = await Promise.all([
+          const [invRes, enrRes, activeEnrRes, ratingRes] = await Promise.all([
             expressApi.get('/api/teams/invitations'),
             expressApi.get('/api/registrations/pending-enrollments'),
-            expressApi.get('/api/registrations/my-active-enrollments')
+            expressApi.get('/api/registrations/my-active-enrollments'),
+            expressApi.get('/api/tournaments/pending/ratings')
           ]);
 
           if (invRes.data.success) setInvitations(invRes.data.data);
@@ -46,6 +54,10 @@ const Dashboard = () => {
                 myTeamId: reg.team?._id
               }));
             setTournaments(enrolledTournaments);
+          }
+          if (ratingRes.data.success && ratingRes.data.data.length > 0) {
+            setPendingRatings(ratingRes.data.data);
+            setShowRatingModal(true);
           }
         }
       } catch (err) {
@@ -404,6 +416,77 @@ const Dashboard = () => {
 
         </div>
       </div>
+
+      {/* Rating Modal */}
+      {showRatingModal && pendingRatings.length > 0 && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-surface border border-border rounded-[8px] p-6 max-w-md w-full shadow-2xl relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-accent/20 blur-[50px] rounded-full pointer-events-none"></div>
+            
+            <h3 className="text-xl font-bold text-text uppercase tracking-wide mb-2 flex items-center gap-2 relative z-10">
+              <i className="fa-solid fa-star text-accent"></i> Rate Organizer
+            </h3>
+            <p className="text-sm text-text-secondary mb-6 relative z-10">
+              The tournament <strong>{pendingRatings[0]?.title}</strong> has concluded! How would you rate your experience with the organizer?
+            </p>
+
+            <div 
+              className="flex justify-center gap-2 mb-8 relative z-10"
+              onMouseLeave={() => setHoverRating(0)}
+            >
+              {[1, 2, 3, 4, 5].map((star) => {
+                const isActive = star <= (hoverRating || currentRating);
+                return (
+                  <button
+                    key={star}
+                    onClick={() => setCurrentRating(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    className={`text-4xl transition-all focus:outline-none ${isActive ? 'text-accent drop-shadow-[0_0_8px_rgba(234,88,12,0.6)] scale-110' : 'text-text-secondary/50 hover:text-text-secondary/80'}`}
+                  >
+                    <i className={isActive ? "fa-solid fa-star" : "fa-regular fa-star"}></i>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-end gap-3 relative z-10">
+              <button
+                onClick={() => {
+                  const remaining = pendingRatings.slice(1);
+                  setPendingRatings(remaining);
+                  if (remaining.length === 0) setShowRatingModal(false);
+                  setCurrentRating(0); // Reset for next modal
+                }}
+                className="btn-outline px-4 py-2"
+                disabled={submittingRating}
+              >
+                Skip
+              </button>
+              <button
+                onClick={async () => {
+                  setSubmittingRating(true);
+                  try {
+                    await expressApi.post(`/api/tournaments/${pendingRatings[0]._id}/rate`, { rating: currentRating || 5 }); // Default to 5 if somehow 0
+                    const remaining = pendingRatings.slice(1);
+                    setPendingRatings(remaining);
+                    if (remaining.length === 0) setShowRatingModal(false);
+                    setCurrentRating(0); // Reset for next modal
+                  } catch (err) {
+                    console.error('Failed to submit rating', err);
+                  } finally {
+                    setSubmittingRating(false);
+                  }
+                }}
+                className="btn-accent px-6 py-2"
+                disabled={submittingRating}
+              >
+                {submittingRating ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Submit Rating'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

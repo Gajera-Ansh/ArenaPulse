@@ -76,6 +76,10 @@ const tournamentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    ratings: [{
+      player: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      rating: { type: Number, min: 1, max: 5 }
+    }],
   },
   { timestamps: true }
 );

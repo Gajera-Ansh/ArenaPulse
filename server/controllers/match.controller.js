@@ -4,6 +4,56 @@ import Match from '../models/Match.js';
 import Notification from '../models/Notification.js';
 import Team from '../models/Team.js';
 import Tournament from '../models/Tournament.js';
+import Registration from '../models/Registration.js';
+import User from '../models/User.js';
+import { sendRatingRequestEmail } from '../utils/emailService.js';
+
+const handleTournamentCompletion = async (tournamentId, winnerTeamId, io) => {
+  const tournament = await Tournament.findByIdAndUpdate(tournamentId, {
+    status: 'completed',
+    winner: winnerTeamId
+  }, { new: true }).populate('organizer');
+
+  if (io) {
+    const populatedWinner = await Team.findById(winnerTeamId).select('name tag');
+    io.emit('tournament_completed', { tournamentId, winner: populatedWinner });
+  }
+
+  if (winnerTeamId) {
+    const winningTeam = await Team.findById(winnerTeamId).select('players name');
+    if (winningTeam && winningTeam.players) {
+      const notifs = winningTeam.players.map(p => ({
+        user: p,
+        message: `Congratulations! Your team "${winningTeam.name}" won the tournament!`,
+        type: 'success'
+      }));
+      await Notification.insertMany(notifs);
+    }
+  }
+
+  // Send rating emails to all participants
+  try {
+    const registrations = await Registration.find({ tournament: tournamentId, status: 'approved' });
+    const allPlayerIds = [];
+    registrations.forEach(reg => {
+      if (reg.lockedRoster) {
+        reg.lockedRoster.forEach(playerId => {
+          allPlayerIds.push(playerId);
+        });
+      }
+    });
+
+    const uniquePlayerIds = [...new Set(allPlayerIds.map(id => id.toString()))];
+    const players = await User.find({ _id: { $in: uniquePlayerIds } });
+    const organizerName = tournament.organizer ? tournament.organizer.name : 'the organizer';
+
+    for (const player of players) {
+      sendRatingRequestEmail(player.email, player.name, tournament.title, organizerName);
+    }
+  } catch (error) {
+    console.error('Error sending rating emails:', error);
+  }
+};
 
 // GET /api/matches/tournament/:tournamentId
 export const getMatchesByTournament = async (req, res, next) => {
@@ -152,28 +202,8 @@ export const submitResult = async (req, res, next) => {
           }
         }
         
-        await Tournament.findByIdAndUpdate(match.tournament, {
-          status: 'completed',
-          winner: tournamentWinner
-        });
-
         const io = req.app.get('io');
-        if (io) {
-          const populatedWinner = await Team.findById(tournamentWinner).select('name tag');
-          io.emit('tournament_completed', { tournamentId: match.tournament, winner: populatedWinner });
-        }
-
-        if (tournamentWinner) {
-          const winningTeam = await Team.findById(tournamentWinner).select('players name');
-          if (winningTeam && winningTeam.players) {
-            const notifs = winningTeam.players.map(p => ({
-              user: p,
-              message: `Congratulations! Your team "${winningTeam.name}" won the tournament with the highest score!`,
-              type: 'success'
-            }));
-            await Notification.insertMany(notifs);
-          }
-        }
+        await handleTournamentCompletion(match.tournament, tournamentWinner, io);
       }
     } else {
       // Single elimination logic
@@ -194,29 +224,8 @@ export const submitResult = async (req, res, next) => {
         }
       } else {
         // This is the final match. Mark the tournament as completed.
-        await Tournament.findByIdAndUpdate(match.tournament, {
-          status: 'completed',
-          winner: match.winner
-        });
-        
         const io = req.app.get('io');
-        if (io) {
-          const populatedWinner = await Team.findById(match.winner).select('name tag');
-          io.emit('tournament_completed', { tournamentId: match.tournament, winner: populatedWinner });
-        }
-        
-        // Notify about tournament completion
-        if (match.winner) {
-          const winningTeam = await Team.findById(match.winner).select('players name');
-          if (winningTeam && winningTeam.players) {
-            const notifs = winningTeam.players.map(p => ({
-              user: p,
-              message: `Congratulations! Your team "${winningTeam.name}" won the tournament!`,
-              type: 'success'
-            }));
-            await Notification.insertMany(notifs);
-          }
-        }
+        await handleTournamentCompletion(match.tournament, match.winner, io);
       }
     }
 

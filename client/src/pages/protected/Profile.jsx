@@ -20,6 +20,20 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
+const OrganizerRatingTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-[#1e293b] border border-[#334155] rounded-[8px] p-3 shadow-lg">
+        <p className="text-gray-100 font-bold text-sm">{data.fullTitle}</p>
+        <p className="text-gray-400 text-xs mb-2 pb-2 border-b border-[#334155]">{data.date}</p>
+        <p className="text-[#ea580c] text-sm font-medium">Average Rating: <span className="font-bold">{data.rating} / 5</span></p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const Profile = () => {
   const { user: authUser } = useAuth();
   const { id } = useParams();
@@ -301,38 +315,100 @@ const Profile = () => {
             )}
 
             {/* Organizer: Analytics Tab */}
-            {activeTab === 'analytics' && (
-              <div className="animate-fade-in flex flex-col flex-grow">
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-xl font-bold text-text uppercase flex items-center gap-2">
-                    <i className="fa-solid fa-chart-pie text-accent"></i> Organizer Analytics
-                  </h3>
-                </div>
+            {activeTab === 'analytics' && (() => {
+              const ratingData = organizedTournaments
+                .filter(t => t.status === 'completed')
+                .map(t => {
+                  let avg = null;
+                  if (t.ratings && t.ratings.length > 0) {
+                    avg = t.ratings.reduce((acc, r) => acc + r.rating, 0) / t.ratings.length;
+                  }
+                  return {
+                    name: t.title.length > 15 ? t.title.substring(0, 15) + '...' : t.title,
+                    fullTitle: t.title,
+                    date: new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit' }).format(new Date(t.endDate || t.startDate)),
+                    rawDate: new Date(t.endDate || t.startDate).getTime(),
+                    rating: avg ? parseFloat(avg.toFixed(1)) : null
+                  };
+                })
+                .filter(d => d.rating !== null)
+                .sort((a, b) => a.rawDate - b.rawDate);
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                  <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
-                    <i className="fa-solid fa-sitemap text-primary text-xl mb-2"></i>
-                    <p className="text-3xl font-black text-text">{organizedTournaments.length}</p>
-                    <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Tournaments Hosted</p>
+              const totalRatings = organizedTournaments.reduce((acc, t) => acc + (t.ratings ? t.ratings.length : 0), 0);
+              const sumRatings = organizedTournaments.reduce((acc, t) => acc + (t.ratings ? t.ratings.reduce((s, r) => s + r.rating, 0) : 0), 0);
+              const overallRating = totalRatings > 0 ? (sumRatings / totalRatings).toFixed(1) : 'N/A';
+
+              return (
+                <div className="animate-fade-in flex flex-col flex-grow">
+                  <div className="flex items-center justify-between mb-8">
+                    <h3 className="text-xl font-bold text-text uppercase flex items-center gap-2">
+                      <i className="fa-solid fa-chart-pie text-accent"></i> Organizer Analytics
+                    </h3>
                   </div>
-                  <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
-                    <i className="fa-solid fa-users text-blue-500 text-xl mb-2"></i>
-                    <p className="text-3xl font-black text-text">{organizedTournaments.reduce((acc, t) => acc + (t.maxTeams || 0), 0)}</p>
-                    <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Total Teams Capacity</p>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
+                      <i className="fa-solid fa-sitemap text-primary text-xl mb-2"></i>
+                      <p className="text-2xl font-black text-text">{organizedTournaments.length}</p>
+                      <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Total Matches</p>
+                    </div>
+                    <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
+                      <i className="fa-solid fa-star text-accent text-xl mb-2"></i>
+                      <p className="text-2xl font-black text-text flex items-center justify-center gap-1">
+                        {overallRating} {overallRating !== 'N/A' && <span className="text-sm text-accent"><i className="fa-solid fa-star"></i></span>}
+                      </p>
+                      <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Average Rating</p>
+                    </div>
                   </div>
-                  <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
-                    <i className="fa-solid fa-circle-check text-emerald-500 text-xl mb-2"></i>
-                    <p className="text-3xl font-black text-text">{organizedTournaments.filter(t => t.status === 'completed').length}</p>
-                    <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Completed Events</p>
-                  </div>
-                  <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
-                    <i className="fa-solid fa-star text-accent text-xl mb-2"></i>
-                    <p className="text-3xl font-black text-text">100%</p>
-                    <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Organizer Rating</p>
+
+                  {/* Rating Graph */}
+                  <div className="bg-surface border border-border rounded-[8px] p-6 mb-4">
+                    <h4 className="text-sm font-bold text-text-secondary uppercase tracking-widest mb-6 border-b border-border/50 pb-2">Tournament Rating History</h4>
+                    
+                    {ratingData.length > 0 ? (
+                      <div className="h-[250px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={ratingData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
+                            <XAxis 
+                              dataKey="name" 
+                              stroke="#64748b" 
+                              fontSize={11} 
+                              tickLine={false} 
+                              axisLine={false}
+                              dy={10}
+                            />
+                            <YAxis 
+                              domain={[0, 5]} 
+                              ticks={[1, 2, 3, 4, 5]}
+                              stroke="#64748b" 
+                              fontSize={11}
+                              tickLine={false} 
+                              axisLine={false}
+                            />
+                            <Tooltip content={<OrganizerRatingTooltip />} />
+                            <Line 
+                              type="monotone" 
+                              dataKey="rating" 
+                              name="Avg Rating"
+                              stroke="#ea580c" 
+                              strokeWidth={3}
+                              dot={{ fill: '#ea580c', strokeWidth: 2, r: 4 }}
+                              activeDot={{ r: 6, fill: '#ea580c', stroke: '#fff', strokeWidth: 2 }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="h-[200px] flex flex-col items-center justify-center text-text-secondary">
+                        <i className="fa-solid fa-chart-line text-3xl mb-2 opacity-30"></i>
+                        <p>Not enough ratings collected yet.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Teams (Participations) Tab */}
             {activeTab === 'teams' && (
@@ -411,14 +487,15 @@ const Profile = () => {
             {/* Performance Tab */}
             {activeTab === 'performance' && (() => {
               const getDisplayStats = () => {
-                if (!playerStats) return { kills: 0, deaths: 0, assists: 0, kd: '0.00' };
+                if (!playerStats) return { kills: 0, deaths: 0, assists: 0, damage: 0, kd: '0.00' };
 
-                const stats = playerStats[selectedGame] || { kills: 0, deaths: 0, assists: 0 };
+                const stats = playerStats[selectedGame] || { kills: 0, deaths: 0, assists: 0, damage: 0 };
                 const kd = stats.deaths > 0 ? (stats.kills / stats.deaths).toFixed(2) : (stats.kills > 0 ? stats.kills.toFixed(2) : '0.00');
-                return { kills: stats.kills || 0, deaths: stats.deaths || 0, assists: stats.assists || 0, kd };
+                return { kills: stats.kills || 0, deaths: stats.deaths || 0, assists: stats.assists || 0, damage: stats.damage || 0, kd };
               };
 
-              const currentStats = getDisplayStats();
+                const currentStats = getDisplayStats();
+                const isBattleRoyale = selectedGame === 'BGMI' || selectedGame === 'Free Fire';
 
               return (
                 <div className="animate-fade-in flex flex-col flex-grow">
@@ -449,11 +526,19 @@ const Profile = () => {
                       <p className="text-3xl font-black text-text">{currentStats.deaths}</p>
                       <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Total Deaths</p>
                     </div>
-                    <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
-                      <i className="fa-solid fa-hands-helping text-blue-400 text-xl mb-2"></i>
-                      <p className="text-3xl font-black text-text">{currentStats.assists}</p>
-                      <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Assists</p>
-                    </div>
+                    {isBattleRoyale ? (
+                      <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
+                        <i className="fa-solid fa-burst text-orange-500 text-xl mb-2"></i>
+                        <p className="text-3xl font-black text-text">{currentStats.damage}</p>
+                        <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Damage</p>
+                      </div>
+                    ) : (
+                      <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
+                        <i className="fa-solid fa-hands-helping text-blue-400 text-xl mb-2"></i>
+                        <p className="text-3xl font-black text-text">{currentStats.assists}</p>
+                        <p className="text-[0.65rem] text-text-secondary uppercase font-bold tracking-widest mt-1">Assists</p>
+                      </div>
+                    )}
                     <div className="bg-black/10 border border-border rounded-[8px] p-4 text-center">
                       <i className="fa-solid fa-percent text-accent text-xl mb-2"></i>
                       <p className="text-3xl font-black text-text">{currentStats.kd}</p>
@@ -466,7 +551,7 @@ const Profile = () => {
                     {analyticsData.length > 0 ? (
                       <div className="flex-grow w-full h-[300px] min-h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={analyticsData.filter(d => d.game === selectedGame)}>
+                          <LineChart data={[...analyticsData].reverse().filter(d => d.game === selectedGame)}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
                             <XAxis dataKey="tournament" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />

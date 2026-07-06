@@ -31,6 +31,8 @@ const Leaderboard = () => {
     fetchData();
   }, [activeTab, filterGame]);
 
+  const isBattleRoyale = filterGame === 'BGMI' || filterGame === 'Free Fire';
+
   const getRankStyle = (index) => {
     if (index === 0) return 'bg-gradient-to-r from-yellow-400/20 to-yellow-500/5 border-l-4 border-l-yellow-400';
     if (index === 1) return 'bg-gradient-to-r from-gray-300/20 to-gray-400/5 border-l-4 border-l-gray-400';
@@ -112,8 +114,9 @@ const Leaderboard = () => {
           <div className={`${activeTab === 'teams' ? 'col-span-2' : 'col-span-1'} text-center`} title="Kills">{activeTab === 'teams' ? 'W' : 'K'}</div>
           <div className={`${activeTab === 'teams' ? 'col-span-2' : 'col-span-1'} text-center`} title="Deaths">{activeTab === 'teams' ? 'L' : 'D'}</div>
           
-          {activeTab === 'players' && <div className="col-span-1 text-center" title="Assists">A</div>}
-          {activeTab === 'players' && <div className="col-span-1 text-center" title="Headshots">HS</div>}
+          {activeTab === 'players' && !isBattleRoyale && <div className="col-span-1 text-center" title="Assists">A</div>}
+          {activeTab === 'players' && !isBattleRoyale && <div className="col-span-1 text-center" title="Headshots">HS</div>}
+          {activeTab === 'players' && isBattleRoyale && <div className="col-span-2 text-center" title="Damage">DMG</div>}
           
           <div className="col-span-1 text-center">{activeTab === 'teams' ? 'Win%' : 'K/D'}</div>
           
@@ -254,15 +257,26 @@ const Leaderboard = () => {
               <span className="font-bold text-[1rem] text-red-500">{entry.deaths || 0}</span>
             </div>
 
-            <div className="col-span-1 text-center">
-              <span className="sm:hidden text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider mr-2">Assists:</span>
-              <span className="font-bold text-[0.95rem] text-blue-500">{entry.assists || 0}</span>
-            </div>
+            {!isBattleRoyale && (
+              <>
+                <div className="col-span-1 text-center">
+                  <span className="sm:hidden text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider mr-2">Assists:</span>
+                  <span className="font-bold text-[0.95rem] text-blue-500">{entry.assists || 0}</span>
+                </div>
 
-            <div className="col-span-1 text-center">
-              <span className="sm:hidden text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider mr-2">Headshots:</span>
-              <span className="font-bold text-[0.95rem] text-orange-500">{entry.headshots || 0}</span>
-            </div>
+                <div className="col-span-1 text-center">
+                  <span className="sm:hidden text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider mr-2">Headshots:</span>
+                  <span className="font-bold text-[0.95rem] text-orange-500">{entry.headshots || 0}</span>
+                </div>
+              </>
+            )}
+
+            {isBattleRoyale && (
+              <div className="col-span-2 text-center">
+                <span className="sm:hidden text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider mr-2">Damage:</span>
+                <span className="font-bold text-[0.95rem] text-orange-500">{entry.damage || 0}</span>
+              </div>
+            )}
 
             <div className="col-span-1 text-center">
               <span className="sm:hidden text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider mr-2">K/D:</span>
