@@ -31,7 +31,14 @@ function App() {
       <SocketProvider>
         <BrowserRouter>
           <ScrollToTop />
-          <div className="flex flex-col min-h-screen">
+          <div className="flex flex-col min-h-screen relative">
+            {/* Aurora Background Effects */}
+            <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
+              <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] rounded-full bg-primary/20 blur-[120px] mix-blend-screen opacity-60 animate-aurora"></div>
+              <div className="absolute top-[30%] -right-[15%] w-[50%] h-[70%] rounded-full bg-accent/15 blur-[120px] mix-blend-screen opacity-50 animate-aurora-delayed"></div>
+              <div className="absolute -bottom-[20%] left-[10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[120px] mix-blend-screen opacity-40 animate-aurora-slow"></div>
+            </div>
+            
             <Navbar />
             <main className="flex-grow">
               <Routes>

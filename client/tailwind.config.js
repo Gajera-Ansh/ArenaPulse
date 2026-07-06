@@ -37,6 +37,18 @@ export default {
         btn: '4px',
         badge: '4px',
         panel: '8px'
+      },
+      keyframes: {
+        aurora: {
+          '0%, 100%': { transform: 'scale(1) translate(0px, 0px)', opacity: 0.5 },
+          '33%': { transform: 'scale(1.1) translate(30px, -50px)', opacity: 0.7 },
+          '66%': { transform: 'scale(0.9) translate(-20px, 20px)', opacity: 0.6 },
+        }
+      },
+      animation: {
+        aurora: 'aurora 15s ease-in-out infinite',
+        'aurora-delayed': 'aurora 15s ease-in-out 5s infinite',
+        'aurora-slow': 'aurora 20s ease-in-out 2s infinite',
       }
     },
   },

@@ -6,11 +6,6 @@
   body {
     @apply font-sans text-text leading-relaxed;
     background-color: theme('colors.bg');
-    background-image: 
-      linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
-    background-size: 32px 32px;
-    background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
   }
 
