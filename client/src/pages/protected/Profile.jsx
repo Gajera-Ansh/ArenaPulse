@@ -270,7 +270,7 @@ const Profile = () => {
                 ) : organizedTournaments.length > 0 ? (
                   <div className="space-y-4">
                     {organizedTournaments.map(tournament => (
-                      <Link to={`/tournaments/${tournament._id}/edit`} key={tournament._id} className={`block bg-black/10 border border-border rounded-[8px] p-5 transition-all ${isOwnProfile ? 'hover:border-primary/50 group' : 'pointer-events-none'}`}>
+                      <Link to={`/tournaments/${tournament._id}`} key={tournament._id} className={`block bg-black/10 border border-border rounded-[8px] p-5 transition-all hover:border-primary/50 group`}>
                         <div className="flex justify-between items-start mb-3">
                           <div>
                             <h4 className="text-lg font-bold text-text group-hover:text-primary transition-colors">{tournament.title}</h4>
