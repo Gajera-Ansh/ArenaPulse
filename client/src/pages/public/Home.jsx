@@ -28,7 +28,7 @@ const Home = () => {
       cta: "Find a Tournament",
       ctaLink: "/tournaments",
       visual: (
-        <div className="w-full h-full bg-surface border border-slate-300 rounded-[8px] p-8 shadow-sm flex flex-col justify-between relative overflow-hidden group">
+        <div className="w-full h-full bg-surface border border-slate-300 rounded-[8px] p-4 sm:p-8 shadow-sm flex flex-col justify-between relative overflow-hidden group">
 
           <div className="flex justify-between items-center relative z-10 border-b border-border/60 pb-5">
             <div className="flex items-center gap-3">
@@ -41,8 +41,8 @@ const Home = () => {
           <div className="flex justify-between items-center relative z-10 mt-8">
             {/* Team 1 */}
             <div className="flex flex-col items-center">
-              <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-border group-hover:-translate-y-1 transition-transform">
-                <i className="fa-solid fa-shield-halved text-[2.2rem] text-primary"></i>
+              <div className="w-14 h-14 sm:w-20 sm:h-20 bg-white rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-sm border border-border group-hover:-translate-y-1 transition-transform">
+                <i className="fa-solid fa-shield-halved text-[1.5rem] sm:text-[2.2rem] text-primary"></i>
               </div>
               <div className="font-bold text-[1.1rem]">Sentinels</div>
               <div className="flex gap-1 mt-2">
@@ -53,10 +53,10 @@ const Home = () => {
             </div>
 
             {/* Score */}
-            <div className="flex flex-col items-center px-4">
-              <div className="text-[0.85rem] font-bold text-accent uppercase tracking-widest mb-1">Map 3: Ascent</div>
-              <div className="text-[4rem] leading-none font-bold text-text tracking-tighter flex items-center">
-                13<span className="text-border mx-3 font-light text-[3rem]">-</span>11
+            <div className="flex flex-col items-center px-2 sm:px-4">
+              <div className="text-[0.7rem] sm:text-[0.85rem] font-bold text-accent uppercase tracking-widest mb-1">Map 3: Ascent</div>
+              <div className="text-[2.5rem] sm:text-[4rem] leading-none font-bold text-text tracking-tighter flex items-center">
+                13<span className="text-border mx-2 sm:mx-3 font-light text-[2rem] sm:text-[3rem]">-</span>11
               </div>
               <div className="text-[0.8rem] text-text-secondary font-medium mt-2 flex items-center gap-2 bg-bg px-3 py-1 rounded-full">
                 <i className="fa-solid fa-users text-[0.9rem]"></i> 45.2k watching
@@ -65,8 +65,8 @@ const Home = () => {
 
             {/* Team 2 */}
             <div className="flex flex-col items-center">
-              <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-border group-hover:-translate-y-1 transition-transform delay-75">
-                <i className="fa-solid fa-crosshairs text-[2.2rem] text-slate-700"></i>
+              <div className="w-14 h-14 sm:w-20 sm:h-20 bg-white rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-sm border border-border group-hover:-translate-y-1 transition-transform delay-75">
+                <i className="fa-solid fa-crosshairs text-[1.5rem] sm:text-[2.2rem] text-slate-700"></i>
               </div>
               <div className="font-bold text-[1.1rem]">Fnatic</div>
               <div className="flex gap-1 mt-2">
@@ -85,14 +85,14 @@ const Home = () => {
       cta: "Create an Event",
       ctaLink: "/register",
       visual: (
-        <div className="w-full h-full bg-surface border border-slate-300 rounded-[8px] p-8 shadow-sm flex flex-col justify-center relative overflow-hidden">
+        <div className="w-full h-full bg-surface border border-slate-300 rounded-[8px] p-4 sm:p-8 shadow-sm flex flex-col justify-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent"></div>
 
           {/* Animated Bracket Graphic */}
-          <div className="relative w-full max-w-[400px] mx-auto h-[160px]">
+          <div className="relative w-full max-w-[400px] mx-auto h-[120px] sm:h-[160px]">
             {/* Round 1 */}
-            <div className="absolute left-0 top-0 w-[120px] h-10 bg-white border border-border rounded-xl shadow-sm flex items-center px-3 font-bold text-[0.8rem]">Team Alpha</div>
-            <div className="absolute left-0 bottom-0 w-[120px] h-10 bg-white border border-border rounded-xl shadow-sm flex items-center px-3 font-bold text-[0.8rem]">Team Bravo</div>
+            <div className="absolute left-0 top-0 w-[90px] sm:w-[120px] h-9 sm:h-10 bg-white border border-border rounded-xl shadow-sm flex items-center px-2 sm:px-3 font-bold text-[0.7rem] sm:text-[0.8rem]">Team Alpha</div>
+            <div className="absolute left-0 bottom-0 w-[90px] sm:w-[120px] h-9 sm:h-10 bg-white border border-border rounded-xl shadow-sm flex items-center px-2 sm:px-3 font-bold text-[0.7rem] sm:text-[0.8rem]">Team Bravo</div>
 
             {/* Connecting Lines */}
             <div className="absolute left-[120px] top-[19px] w-8 border-b-2 border-border"></div>
@@ -122,7 +122,7 @@ const Home = () => {
       cta: "View Leaderboard",
       ctaLink: "/leaderboard",
       visual: (
-        <div className="w-full h-full bg-surface border border-slate-300 rounded-[8px] p-8 shadow-sm flex flex-col justify-between relative overflow-hidden">
+        <div className="w-full h-full bg-surface border border-slate-300 rounded-[8px] p-4 sm:p-8 shadow-sm flex flex-col justify-between relative overflow-hidden">
 
           <div className="relative z-10 h-full flex flex-col">
             <div className="flex items-center gap-3 mb-5">
@@ -172,10 +172,10 @@ const Home = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-80px)] flex flex-col lg:flex-row overflow-hidden relative">
+    <div className="min-h-[calc(100vh-80px)] flex flex-col lg:flex-row overflow-hidden relative">
 
       {/* LEFT SIDE: Interactive Typography Menu */}
-      <div className="w-full lg:w-[45%] flex flex-col justify-center px-6 sm:px-12 lg:px-20 py-0 border-r border-border/40 bg-transparent z-10 h-full">
+      <div className="w-full lg:w-[45%] flex flex-col justify-center px-6 sm:px-12 lg:px-20 py-8 lg:py-0 border-b lg:border-b-0 lg:border-r border-border/40 bg-transparent z-10 lg:h-full">
 
         <div className="mb-8">
           <div className="inline-flex items-center gap-3 bg-text text-white px-3 py-1.5 rounded-[4px] shadow-lg mb-5 relative overflow-hidden group cursor-default">
@@ -193,7 +193,7 @@ const Home = () => {
           </p>
         </div>
 
-        <nav className="flex flex-col items-start gap-6 relative w-max">
+        <nav className="flex flex-col items-start gap-4 sm:gap-6 relative w-max">
           {Object.keys(panelContent).map((key) => {
             const isActive = activeTab === key;
             return (
@@ -201,7 +201,7 @@ const Home = () => {
                 key={key}
                 onMouseEnter={() => handleTabChange(key)}
                 onClick={() => handleTabChange(key)}
-                className={`w-fit text-left text-[3rem] sm:text-[4rem] lg:text-[4rem] xl:text-[5rem] font-bold uppercase tracking-tighter leading-[0.85] transition-all duration-500 ease-out relative group flex items-center
+                className={`w-fit text-left text-[2.5rem] sm:text-[3rem] md:text-[4rem] xl:text-[5rem] font-bold uppercase tracking-tighter leading-[0.85] transition-all duration-500 ease-out relative group flex items-center
                   ${isActive ? 'text-text scale-[1.03] translate-x-4' : 'text-transparent hover:text-text/20 hover:translate-x-2'}`}
                 style={!isActive ? { WebkitTextStroke: '2px rgba(100, 116, 139, 0.2)' } : {}}
               >
@@ -218,10 +218,10 @@ const Home = () => {
       </div>
 
       {/* RIGHT SIDE: Dynamic Display Panel */}
-      <div className="w-full lg:w-[55%] flex items-center justify-center p-6 sm:p-12 lg:px-20 xl:px-24 relative z-10 h-full">
+      <div className="w-full lg:w-[55%] flex items-center justify-center p-6 sm:p-12 lg:px-20 xl:px-24 relative z-10 lg:h-full">
 
         {/* Container with fixed width/height to prevent jumping */}
-        <div className="w-full max-w-[650px] flex flex-col justify-center h-full max-h-[600px]">
+        <div className="w-full max-w-[650px] flex flex-col justify-center lg:h-full lg:max-h-[600px]">
 
           <div className={`transition-all duration-300 ease-in-out flex flex-col justify-center h-full
             ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
@@ -236,7 +236,7 @@ const Home = () => {
             </div>
 
             {/* Dynamic Visual Box */}
-            <div className="h-[320px] mb-8 w-full shrink-0">
+            <div className="h-[260px] sm:h-[320px] mb-6 sm:mb-8 w-full shrink-0">
               {panelContent[activeTab].visual}
             </div>
 

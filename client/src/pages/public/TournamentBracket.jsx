@@ -511,7 +511,7 @@ const TournamentBracket = () => {
           <Link to={`/tournaments/${id}`} className="text-primary hover:text-primary-hover font-bold text-[0.8rem] flex items-center gap-2 w-fit mb-2">
             <i className="fa-solid fa-arrow-left"></i> Back to Details
           </Link>
-          <h1 className="text-[2rem] font-bold text-text">{tournament.title} <span className="text-primary">Bracket</span></h1>
+          <h1 className="text-[1.5rem] sm:text-[2rem] font-bold text-text">{tournament.title} <span className="text-primary">Bracket</span></h1>
         </div>
         <div className="bg-surface border border-border px-5 py-2.5 rounded-[4px] text-text text-[0.85rem] font-bold shadow-sm flex items-center">
           <i className="fa-solid fa-gamepad mr-2"></i> {tournament.game}
@@ -635,8 +635,8 @@ const TournamentBracket = () => {
 
       {/* Match Score Modal */}
       {selectedMatch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-surface border border-slate-300 rounded-[8px] shadow-xl w-full max-w-lg overflow-hidden animate-slide-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-surface border border-slate-300 rounded-[8px] shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden animate-slide-up">
             <div className="bg-slate-50 p-4 border-b border-slate-300 flex justify-between items-center">
               <h3 className="text-lg font-bold text-text uppercase tracking-widest">
                 Match {selectedMatch.matchNumber} Details
@@ -646,18 +646,18 @@ const TournamentBracket = () => {
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {!isOrganizer ? (
                 // Public View (Read-Only)
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
                     <div className="flex-1 flex flex-col items-center text-center">
                       <img src={getTeamLogo(selectedMatch.teamA)} alt="logo" className="w-10 h-10 rounded-full object-cover mb-2" />
                       <p className="font-bold text-text text-xl truncate w-full">{selectedMatch.teamA?.name || 'TBD'}</p>
                       {selectedMatch.winner?._id === selectedMatch.teamA?._id && <i className="fa-solid fa-crown text-accent mt-2 text-xl"></i>}
                     </div>
-                    <div className="px-6 text-3xl font-bold text-primary">
-                      {selectedMatch.scoreA ?? '-'} <span className="text-text-secondary mx-2 text-xl">vs</span> {selectedMatch.scoreB ?? '-'}
+                    <div className="px-4 sm:px-6 text-2xl sm:text-3xl font-bold text-primary">
+                      {selectedMatch.scoreA ?? '-'} <span className="text-text-secondary mx-1 sm:mx-2 text-lg sm:text-xl">vs</span> {selectedMatch.scoreB ?? '-'}
                     </div>
                     <div className="flex-1 flex flex-col items-center text-center">
                       <img src={getTeamLogo(selectedMatch.teamB)} alt="logo" className="w-10 h-10 rounded-full object-cover mb-2" />
@@ -672,8 +672,8 @@ const TournamentBracket = () => {
                 </div>
               ) : (
                 // Organizer View (Editable Form)
-                <form className="space-y-6">
-                  <div className="flex justify-between items-center gap-4">
+                <form className="space-y-4 sm:space-y-6">
+                  <div className="flex justify-between items-center gap-2 sm:gap-4">
                     <div className="flex-1 text-center">
                       <p className="font-bold text-text mb-3 truncate">{selectedMatch.teamA?.name || 'TBD'}</p>
                       <input

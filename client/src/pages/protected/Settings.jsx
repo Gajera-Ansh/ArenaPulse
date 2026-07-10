@@ -182,7 +182,7 @@ const Settings = () => {
 
         {/* Right Content Area */}
         <div className="md:col-span-3">
-          <div className="bg-surface border border-border rounded-[8px] p-8 shadow-sm">
+          <div className="bg-surface border border-border rounded-[8px] p-4 sm:p-8 shadow-sm">
             
             {status.message && (
               <div className={`mb-6 p-4 rounded-[4px] flex items-center gap-3 font-bold text-[0.9rem] ${status.type === 'success' ? 'bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]' : 'bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]'}`}>

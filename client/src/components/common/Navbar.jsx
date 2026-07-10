@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import expressApi from '../../api/expressApi';
 
@@ -7,10 +7,17 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
 
   const dropdownRef = useRef(null);
   const notifRef = useRef(null);
+  const location = useLocation();
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const fetchNotifications = async () => {
     if (user) {
@@ -66,23 +73,30 @@ const Navbar = () => {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  const navLinks = (
+    <>
+      <li><Link to="/tournaments" className="text-[0.9rem] font-medium text-text-secondary hover:text-text transition-colors block py-2 md:py-0">Tournaments</Link></li>
+      {user && user.role !== 'organizer' && (
+        <li><Link to="/teams" className="text-[0.9rem] font-medium text-text-secondary hover:text-text transition-colors block py-2 md:py-0">Teams</Link></li>
+      )}
+      <li><Link to="/leaderboard" className="text-[0.9rem] font-medium text-text-secondary hover:text-text transition-colors block py-2 md:py-0">Leaderboard</Link></li>
+    </>
+  );
+
   return (
     <nav className="glass-panel border-b border-border py-3 sticky top-0 z-50">
       <div className="container flex items-center justify-between">
         <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2.5 font-extrabold text-[1.25rem] text-primary">
           <img src="/logo.png" alt="ArenaPulse Logo" className="w-10 h-10 object-contain drop-shadow-md" />
-          ArenaPulse
+          <span className="hidden sm:inline">ArenaPulse</span>
         </Link>
 
+        {/* Desktop Nav Links */}
         <ul className="hidden md:flex items-center gap-8 list-none">
-          <li><Link to="/tournaments" className="text-[0.9rem] font-medium text-text-secondary hover:text-text transition-colors">Tournaments</Link></li>
-          {user && user.role !== 'organizer' && (
-            <li><Link to="/teams" className="text-[0.9rem] font-medium text-text-secondary hover:text-text transition-colors">Teams</Link></li>
-          )}
-          <li><Link to="/leaderboard" className="text-[0.9rem] font-medium text-text-secondary hover:text-text transition-colors">Leaderboard</Link></li>
+          {navLinks}
         </ul>
 
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-3 items-center">
           {user ? (
             <>
               {/* Notifications */}
@@ -185,7 +199,7 @@ const Navbar = () => {
                     <span className="text-[0.8rem] font-bold text-text leading-tight">{user.name}</span>
                     <span className="text-[0.65rem] font-medium text-text-secondary uppercase tracking-widest">{user.role}</span>
                   </div>
-                  <i className={`fa-solid fa-chevron-down text-[0.6rem] text-text-secondary ml-1 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}></i>
+                  <i className={`fa-solid fa-chevron-down text-[0.6rem] text-text-secondary ml-1 transition-transform hidden sm:inline ${isDropdownOpen ? 'rotate-180' : ''}`}></i>
                 </button>
 
                 {/* Dropdown Menu */}
@@ -236,15 +250,45 @@ const Navbar = () => {
                   </div>
                 )}
               </div>
+
+              {/* Mobile Hamburger */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-text-secondary hover:text-text hover:bg-white/10 transition-colors focus:outline-none"
+              >
+                <i className={`fa-solid ${isMobileMenuOpen ? 'fa-xmark' : 'fa-bars'} text-[1.2rem]`}></i>
+              </button>
             </>
           ) : (
             <>
               <Link to="/login" className="btn-outline hidden sm:flex !px-4 !py-2 !text-[0.75rem]">Log In</Link>
               <Link to="/register" className="btn-primary !px-4 !py-2 !text-[0.75rem]">Sign Up</Link>
+
+              {/* Mobile Hamburger for guests */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-text-secondary hover:text-text hover:bg-white/10 transition-colors focus:outline-none"
+              >
+                <i className={`fa-solid ${isMobileMenuOpen ? 'fa-xmark' : 'fa-bars'} text-[1.2rem]`}></i>
+              </button>
             </>
           )}
         </div>
       </div>
+
+      {/* Mobile Menu Drawer */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t border-border mt-3 animate-fade-in">
+          <ul className="container flex flex-col gap-1 py-4 list-none">
+            {navLinks}
+            {!user && (
+              <li className="pt-3 mt-2 border-t border-border">
+                <Link to="/login" className="text-[0.9rem] font-medium text-text-secondary hover:text-text transition-colors block py-2">Log In</Link>
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
     </nav>
   );
 };

@@ -208,7 +208,7 @@ const Leaderboard = () => {
           <Link
             to={`/profile/${entry.player._id}`}
             key={entry.player._id}
-            className={`grid grid-cols-1 sm:grid-cols-12 gap-2 px-4 sm:px-6 py-4 items-center border-b border-border/50 hover:bg-primary/[0.03] transition-colors ${getRankStyle(index)} cursor-pointer block sm:grid`}
+            className={`grid grid-cols-1 sm:grid-cols-12 gap-2 px-4 sm:px-6 py-4 items-center border-b border-border/50 hover:bg-primary/[0.03] transition-colors ${getRankStyle(index)}`}
           >
             {/* Rank */}
             <div className="col-span-1 flex items-center justify-center">
