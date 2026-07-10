@@ -175,9 +175,9 @@ const Home = () => {
     <div className="min-h-[calc(100vh-80px)] flex flex-col lg:flex-row overflow-hidden relative">
 
       {/* LEFT SIDE: Interactive Typography Menu */}
-      <div className="w-full lg:w-[45%] flex flex-col justify-center px-6 sm:px-12 lg:px-20 py-8 lg:py-0 border-b lg:border-b-0 lg:border-r border-border/40 bg-transparent z-10 lg:h-full">
+      <div className="w-full lg:w-[45%] flex flex-col justify-center px-6 sm:px-10 md:px-14 lg:px-16 xl:px-24 2xl:px-32 py-8 lg:py-0 border-b lg:border-b-0 lg:border-r border-border/40 bg-transparent z-10 lg:h-full">
 
-        <div className="mb-8">
+        <div className="mb-8 mt-8 lg:mt-12">
           <div className="inline-flex items-center gap-3 bg-text text-white px-3 py-1.5 rounded-[4px] shadow-lg mb-5 relative overflow-hidden group cursor-default">
             <div className="absolute inset-0 bg-primary/20 w-0 group-hover:w-full transition-all duration-500 ease-out"></div>
             <i className="fa-solid fa-wave-square text-[0.9rem] text-primary-light"></i>
@@ -218,7 +218,7 @@ const Home = () => {
       </div>
 
       {/* RIGHT SIDE: Dynamic Display Panel */}
-      <div className="w-full lg:w-[55%] flex items-center justify-center p-6 sm:p-12 lg:px-20 xl:px-24 relative z-10 lg:h-full">
+      <div className="w-full lg:w-[55%] flex items-center justify-center px-6 sm:px-10 md:px-14 lg:px-16 xl:px-24 2xl:px-32 py-6 sm:py-12 relative z-10 lg:h-full">
 
         {/* Container with fixed width/height to prevent jumping */}
         <div className="w-full max-w-[650px] flex flex-col justify-center lg:h-full lg:max-h-[600px]">
