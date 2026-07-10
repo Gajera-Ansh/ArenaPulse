@@ -54,7 +54,7 @@ const Teams = () => {
     <div className="container py-8 sm:py-12 relative min-h-[calc(100vh-80px)] overflow-hidden flex flex-col">
 
       {/* Header Section */}
-      <div className="mb-8 border-b border-border pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="mb-8 border-b border-black/10 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <h1 className="text-[2rem] font-bold text-text uppercase tracking-tight leading-tight mb-1">My Teams</h1>
           <p className="text-text-secondary font-medium text-[0.95rem]">
