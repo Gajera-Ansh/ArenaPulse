@@ -787,24 +787,12 @@ const TournamentBracket = () => {
                   </div>
                 )}
 
-                {selectedMatch.status === 'completed' && selectedMatch.nextMatchNumber === null && (
+                {selectedMatch.status === 'completed' && selectedMatch.nextMatchNumber === null && selectedMatch.summary && (
                   <div className="bg-slate-100 p-4 rounded-[6px] border border-slate-200">
-                    {selectedMatch.summary ? (
-                      <div className="p-4 bg-white border border-slate-200 rounded text-[0.85rem] text-text font-medium italic animate-fade-in shadow-sm">
-                        <i className="fa-solid fa-quote-left text-accent mr-2 opacity-50"></i>
-                        {selectedMatch.summary}
-                      </div>
-                    ) : (
-                      isOrganizer && (
-                        <button 
-                          onClick={() => handleGenerateSummary(selectedMatch._id)}
-                          disabled={loadingSummary}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-[4px] font-bold text-[0.8rem] uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
-                        >
-                          {loadingSummary ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <><i className="fa-solid fa-robot"></i> Generate Grand Final Summary</>}
-                        </button>
-                      )
-                    )}
+                    <div className="p-4 bg-white border border-slate-200 rounded text-[0.85rem] text-text font-medium italic animate-fade-in shadow-sm">
+                      <i className="fa-solid fa-quote-left text-accent mr-2 opacity-50"></i>
+                      {selectedMatch.summary}
+                    </div>
                   </div>
                 )}
               </div>

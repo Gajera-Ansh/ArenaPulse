@@ -263,6 +263,16 @@ export const submitResult = async (req, res, next) => {
     if (io) {
       io.emit('match_completed', match);
     }
+    
+    // Auto-generate AI summary in the background if it's the Grand Final
+    if (match.nextMatchNumber === null && process.env.GEMINI_API_KEY) {
+      generateAndSaveSummary(match._id, io).catch(err => console.error('Background AI generation failed:', err));
+    }
+
+    // Trigger ML Model Retraining asynchronously
+    const djangoUrl = process.env.VITE_DJANGO_URL || 'http://localhost:8000';
+    fetch(`${djangoUrl}/analytics/train/`, { method: 'POST' })
+      .catch(err => console.error('Failed to trigger background model training:', err));
 
     res.status(200).json({ success: true, data: match });
   } catch (error) {
@@ -302,28 +312,14 @@ export const getMatchPrediction = async (req, res, next) => {
   }
 };
 
-export const generateMatchSummary = async (req, res, next) => {
-  try {
-    const match = await Match.findById(req.params.id)
-      .populate('teamA', 'name players')
-      .populate('teamB', 'name players')
-      .populate('tournament', 'game organizer');
-      
-    if (!match) {
-      return res.status(404).json({ success: false, message: 'Match not found.' });
-    }
-
-    if (String(match.tournament.organizer) !== String(req.user.id)) {
-      return res.status(403).json({ success: false, message: 'Not authorized.' });
-    }
-
-    if (match.status !== 'completed' || match.nextMatchNumber !== null) {
-      return res.status(400).json({ success: false, message: 'Can only summarize completed Grand Finals.' });
-    }
+const generateAndSaveSummary = async (matchId, io) => {
+  const match = await Match.findById(matchId)
+    .populate('teamA', 'name players')
+    .populate('teamB', 'name players')
+    .populate('tournament', 'game organizer');
     
-    if (match.summary) {
-      return res.status(200).json({ success: true, data: match });
-    }
+  if (!match || match.status !== 'completed' || match.nextMatchNumber !== null || match.summary) return match;
+
 
     // Determine MVP
     let mvpText = "No player stats available.";
@@ -372,16 +368,17 @@ export const generateMatchSummary = async (req, res, next) => {
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
     
     const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    
-    match.summary = responseText.trim();
+    match.summary = result.response.text().trim();
     await match.save();
 
-    const io = req.app.get('io');
-    if (io) {
-      io.emit('score_updated', match);
-    }
+    if (io) io.emit('score_updated', match);
+    return match;
+};
 
+export const generateMatchSummary = async (req, res, next) => {
+  try {
+    const io = req.app.get('io');
+    const match = await generateAndSaveSummary(req.params.id, io);
     res.status(200).json({ success: true, data: match });
   } catch (error) {
     console.error('Error generating summary:', error);
