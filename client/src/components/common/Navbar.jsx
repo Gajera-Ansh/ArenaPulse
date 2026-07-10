@@ -112,7 +112,7 @@ const Navbar = () => {
                 </button>
 
                 {isNotifOpen && (
-                  <div className="absolute right-0 top-[120%] mt-1 w-80 max-w-[90vw] bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50 animate-fade-in">
+                  <div className="absolute right-[-50px] sm:right-0 top-[120%] mt-1 w-80 max-w-[calc(100vw-2rem)] bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50 animate-fade-in">
                     <div className="p-3 border-b border-white/10 flex justify-between items-center bg-black/10">
                       <h3 className="font-bold text-text text-[0.95rem]">Notifications</h3>
                       {notifications.length > 0 && (

@@ -42,7 +42,7 @@ const MatchNode = ({ match, allMatches, openMatchModal }) => {
       {/* Current Match Box */}
       <div 
         onClick={() => openMatchModal(match)}
-        className={`w-[260px] flex-shrink-0 bg-surface border transition-all cursor-pointer hover:shadow-lg hover:-translate-y-1 ${match.status === 'completed' ? 'border-slate-300' : match.status === 'live' ? 'border-primary shadow-sm' : 'border-slate-300/50'} rounded-[8px] overflow-hidden relative z-10`}
+        className={`w-[220px] sm:w-[260px] flex-shrink-0 bg-surface border transition-all cursor-pointer hover:shadow-lg hover:-translate-y-1 ${match.status === 'completed' ? 'border-slate-300' : match.status === 'live' ? 'border-primary shadow-sm' : 'border-slate-300/50'} rounded-[8px] overflow-hidden relative z-10`}
       >
         <div className="bg-slate-50 px-4 py-2 flex justify-between items-center text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider border-b border-slate-300">
           <span>Match {match.matchNumber}</span>
@@ -543,9 +543,9 @@ const TournamentBracket = () => {
         ) : (
           <>
             {tournament?.bracketType === 'round-robin' ? (
-              <div className="flex gap-12 min-w-max">
+              <div className="flex gap-8 sm:gap-12 min-w-max">
                 {Array.from(new Set(matches.map(m => m.round))).sort().map(round => (
-                  <div key={round} className="flex flex-col gap-8 justify-around min-w-[280px]">
+                  <div key={round} className="flex flex-col gap-6 sm:gap-8 justify-around min-w-[240px] sm:min-w-[280px]">
                     <h4 className="text-center font-bold text-primary mb-4 text-[0.9rem] uppercase tracking-widest bg-primary/10 py-2.5 rounded-xl border border-primary/20 shadow-sm">
                       Round {round}
                     </h4>
@@ -803,7 +803,7 @@ const TournamentBracket = () => {
 
       {/* Player Stats Modal */}
       {showStatsModal && statsMatchData && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
           <div className="bg-surface border border-slate-300 rounded-[8px] shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden animate-slide-up flex flex-col">
             {/* Header */}
             <div className="bg-slate-50 p-4 border-b border-slate-300 flex justify-between items-center flex-shrink-0">
@@ -827,7 +827,7 @@ const TournamentBracket = () => {
             </div>
 
             {/* Scrollable Content */}
-            <div className="overflow-y-auto flex-grow p-6 space-y-8">
+            <div className="overflow-y-auto flex-grow p-4 sm:p-6 space-y-6 sm:space-y-8">
 
               {/* Stat Field Labels */}
               <div className="flex items-center gap-2 flex-wrap">

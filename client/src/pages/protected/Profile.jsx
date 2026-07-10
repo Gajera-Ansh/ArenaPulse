@@ -252,12 +252,12 @@ const Profile = () => {
             {/* Organizer: Tournaments Tab */}
             {activeTab === 'tournaments' && (
               <div className="animate-fade-in flex flex-col flex-grow">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                   <h3 className="text-xl font-bold text-text uppercase flex items-center gap-2">
                     <i className="fa-solid fa-sitemap text-primary"></i> Hosted Tournaments
                   </h3>
                   {isOwnProfile && (
-                    <Link to="/tournaments/create" className="btn-primary text-xs py-2 px-4">
+                    <Link to="/tournaments/create" className="btn-primary text-xs py-2 px-4 w-full sm:w-auto whitespace-nowrap">
                       <i className="fa-solid fa-plus mr-2"></i> Create New
                     </Link>
                   )}
@@ -366,38 +366,40 @@ const Profile = () => {
                     <h4 className="text-sm font-bold text-text-secondary uppercase tracking-widest mb-6 border-b border-border/50 pb-2">Tournament Rating History</h4>
                     
                     {ratingData.length > 0 ? (
-                      <div className="h-[250px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={ratingData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
-                            <XAxis 
-                              dataKey="name" 
-                              stroke="#64748b" 
-                              fontSize={11} 
-                              tickLine={false} 
-                              axisLine={false}
-                              dy={10}
-                            />
-                            <YAxis 
-                              domain={[0, 5]} 
-                              ticks={[1, 2, 3, 4, 5]}
-                              stroke="#64748b" 
-                              fontSize={11}
-                              tickLine={false} 
-                              axisLine={false}
-                            />
-                            <Tooltip content={<OrganizerRatingTooltip />} />
-                            <Line 
-                              type="monotone" 
-                              dataKey="rating" 
-                              name="Avg Rating"
-                              stroke="#ea580c" 
-                              strokeWidth={3}
-                              dot={{ fill: '#ea580c', strokeWidth: 2, r: 4 }}
-                              activeDot={{ r: 6, fill: '#ea580c', stroke: '#fff', strokeWidth: 2 }}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
+                      <div className="w-full overflow-x-auto custom-scrollbar pb-2">
+                        <div className="h-[250px] min-w-[500px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={ratingData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
+                              <XAxis 
+                                dataKey="name" 
+                                stroke="#64748b" 
+                                fontSize={11} 
+                                tickLine={false} 
+                                axisLine={false}
+                                dy={10}
+                              />
+                              <YAxis 
+                                domain={[0, 5]} 
+                                ticks={[1, 2, 3, 4, 5]}
+                                stroke="#64748b" 
+                                fontSize={11}
+                                tickLine={false} 
+                                axisLine={false}
+                              />
+                              <Tooltip content={<OrganizerRatingTooltip />} />
+                              <Line 
+                                type="monotone" 
+                                dataKey="rating" 
+                                name="Avg Rating"
+                                stroke="#ea580c" 
+                                strokeWidth={3}
+                                dot={{ fill: '#ea580c', strokeWidth: 2, r: 4 }}
+                                activeDot={{ r: 6, fill: '#ea580c', stroke: '#fff', strokeWidth: 2 }}
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
                       </div>
                     ) : (
                       <div className="h-[200px] flex flex-col items-center justify-center text-text-secondary">
@@ -499,14 +501,14 @@ const Profile = () => {
 
               return (
                 <div className="animate-fade-in flex flex-col flex-grow">
-                  <div className="flex items-center justify-between mb-8">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                     <h3 className="text-xl font-bold text-text uppercase flex items-center gap-2">
                       <i className="fa-solid fa-chart-pie text-accent"></i> Combat Analytics
                     </h3>
                     <select
                       value={selectedGame}
                       onChange={(e) => setSelectedGame(e.target.value)}
-                      className="bg-background border border-border text-text text-sm rounded-[4px] px-3 py-1.5 focus:outline-none focus:border-primary"
+                      className="bg-background border border-border text-text text-sm rounded-[4px] px-3 py-1.5 focus:outline-none focus:border-primary w-full sm:w-auto"
                     >
                       {SUPPORTED_GAMES.map(game => (
                         <option key={game} value={game}>{game}</option>
@@ -549,18 +551,20 @@ const Profile = () => {
                   <div className="bg-surface border border-border rounded-[8px] p-6 flex flex-col flex-grow mt-4">
                     <h4 className="text-md font-bold text-text mb-4 uppercase tracking-wider">K/D Performance Trend</h4>
                     {analyticsData.length > 0 ? (
-                      <div className="flex-grow w-full h-[300px] min-h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={analyticsData.filter(d => d.game === selectedGame)}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                            <XAxis dataKey="tournament" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                            <Line type="monotone" name="Match K/D" dataKey="match_kd" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4, fill: '#3b82f6' }} activeDot={{ r: 6 }} />
-                            <Line type="monotone" name="Moving Avg (3-Match)" dataKey="moving_avg_kd" stroke="#10b981" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                          </LineChart>
-                        </ResponsiveContainer>
+                      <div className="flex-grow w-full overflow-x-auto custom-scrollbar pb-2">
+                        <div className="h-[300px] min-w-[600px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={analyticsData.filter(d => d.game === selectedGame)}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                              <XAxis dataKey="tournament" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                              <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                              <Tooltip content={<CustomTooltip />} />
+                              <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                              <Line type="monotone" name="Match K/D" dataKey="match_kd" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4, fill: '#3b82f6' }} activeDot={{ r: 6 }} />
+                              <Line type="monotone" name="Moving Avg (3-Match)" dataKey="moving_avg_kd" stroke="#10b981" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
                       </div>
                     ) : (
                       <div className="text-center flex flex-col items-center justify-center flex-grow text-text-secondary py-12">

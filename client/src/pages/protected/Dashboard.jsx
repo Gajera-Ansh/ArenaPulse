@@ -195,13 +195,13 @@ const Dashboard = () => {
                 </div>
               )}
 
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <h3 className="text-[1.25rem] font-bold text-text uppercase flex items-center gap-2">
                   <i className={`fa-solid ${user?.role === 'organizer' ? 'fa-tower-broadcast text-primary' : 'fa-gamepad text-accent'}`}></i>
                   {user?.role === 'organizer' ? 'Active Tournaments' : 'My Enrollments'}
                 </h3>
                 {user?.role === 'organizer' && (
-                  <Link to="/tournaments/create" className="btn-primary text-[0.8rem] py-2 px-4">
+                  <Link to="/tournaments/create" className="btn-primary text-[0.8rem] py-2 px-4 w-full sm:w-auto whitespace-nowrap">
                     <i className="fa-solid fa-plus"></i> New Tournament
                   </Link>
                 )}
@@ -272,7 +272,7 @@ const Dashboard = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="bg-white/5 border border-dashed border-black/30 rounded-xl p-8 text-center flex flex-col items-center justify-center flex-grow">
+                    <div className="bg-white/5 border border-dashed border-black/30 rounded-xl p-5 sm:p-8 text-center flex flex-col items-center justify-center flex-grow">
                       <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-text-secondary text-2xl mb-4 mt-20">
                         <i className={`fa-solid ${user?.role === 'organizer' ? 'fa-tower-broadcast' : 'fa-gamepad'}`}></i>
                       </div>
