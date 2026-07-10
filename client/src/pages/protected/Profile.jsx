@@ -551,7 +551,7 @@ const Profile = () => {
                     {analyticsData.length > 0 ? (
                       <div className="flex-grow w-full h-[300px] min-h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={[...analyticsData].reverse().filter(d => d.game === selectedGame)}>
+                          <LineChart data={analyticsData.filter(d => d.game === selectedGame)}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
                             <XAxis dataKey="tournament" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />

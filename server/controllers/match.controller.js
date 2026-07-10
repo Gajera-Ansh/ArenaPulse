@@ -7,6 +7,7 @@ import Tournament from '../models/Tournament.js';
 import Registration from '../models/Registration.js';
 import User from '../models/User.js';
 import { sendRatingRequestEmail } from '../utils/emailService.js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const handleTournamentCompletion = async (tournamentId, winnerTeamId, io) => {
   const tournament = await Tournament.findByIdAndUpdate(tournamentId, {
@@ -266,5 +267,124 @@ export const submitResult = async (req, res, next) => {
     res.status(200).json({ success: true, data: match });
   } catch (error) {
     next(error);
+  }
+};
+
+export const getMatchPrediction = async (req, res, next) => {
+  try {
+    const match = await Match.findById(req.params.id).populate('tournament', 'game');
+    if (!match || !match.teamA || !match.teamB) {
+      return res.status(404).json({ success: false, message: 'Match or teams not found.' });
+    }
+
+    const djangoUrl = process.env.VITE_DJANGO_URL || 'http://localhost:8000';
+    const response = await fetch(`${djangoUrl}/analytics/predict/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        teamA: match.teamA, 
+        teamB: match.teamB, 
+        game: match.tournament?.game,
+        scoreA: match.scoreA,
+        scoreB: match.scoreB
+      })
+    });
+
+    const data = await response.json();
+    if (!data.success) {
+      return res.status(400).json({ success: false, message: data.message });
+    }
+
+    res.status(200).json({ success: true, data: data.data });
+  } catch (error) {
+    console.error('Error fetching prediction:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch prediction.' });
+  }
+};
+
+export const generateMatchSummary = async (req, res, next) => {
+  try {
+    const match = await Match.findById(req.params.id)
+      .populate('teamA', 'name players')
+      .populate('teamB', 'name players')
+      .populate('tournament', 'game organizer');
+      
+    if (!match) {
+      return res.status(404).json({ success: false, message: 'Match not found.' });
+    }
+
+    if (String(match.tournament.organizer) !== String(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'Not authorized.' });
+    }
+
+    if (match.status !== 'completed' || match.nextMatchNumber !== null) {
+      return res.status(400).json({ success: false, message: 'Can only summarize completed Grand Finals.' });
+    }
+    
+    if (match.summary) {
+      return res.status(200).json({ success: true, data: match });
+    }
+
+    // Determine MVP
+    let mvpText = "No player stats available.";
+    if (match.playerStats && match.playerStats.size > 0) {
+      let bestPlayer = null;
+      let highestKills = -1;
+      
+      for (const [playerId, stats] of match.playerStats.entries()) {
+        const kills = Number(stats.kills) || 0;
+        if (kills > highestKills) {
+          highestKills = kills;
+          let pName = stats.name;
+          if (!pName && playerId) {
+            try {
+              const user = await User.findById(playerId).select('username');
+              pName = user ? user.username : 'An unknown player';
+            } catch (e) {
+              pName = 'An unknown player';
+            }
+          }
+          bestPlayer = pName || 'An unknown player';
+        }
+      }
+      if (bestPlayer && highestKills > 0) {
+        mvpText = `The MVP was ${bestPlayer} with an impressive ${highestKills} kills.`;
+      }
+    }
+
+    const winnerName = String(match.winner) === String(match.teamA._id) ? match.teamA.name : match.teamB.name;
+    const loserName = String(match.winner) === String(match.teamA._id) ? match.teamB.name : match.teamA.name;
+    const winScore = String(match.winner) === String(match.teamA._id) ? match.scoreA : match.scoreB;
+    const loseScore = String(match.winner) === String(match.teamA._id) ? match.scoreB : match.scoreA;
+
+    const prompt = `
+      Act as an energetic esports caster. Write a thrilling 3-sentence summary of this Grand Final match for the game "${match.tournament.game}".
+      Team "${winnerName}" defeated "${loserName}" with a final score of ${winScore} to ${loseScore}.
+      ${mvpText}
+      Make it sound hype, prestigious, and highlight the winning team's ultimate victory. Do not use hashtags.
+    `;
+
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(400).json({ success: false, message: 'Gemini API key is not configured in the server environment variables.' });
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+    
+    match.summary = responseText.trim();
+    await match.save();
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('score_updated', match);
+    }
+
+    res.status(200).json({ success: true, data: match });
+  } catch (error) {
+    console.error('Error generating summary:', error);
+    res.status(500).json({ success: false, message: 'Failed to generate match summary.' });
   }
 };

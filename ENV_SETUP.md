@@ -33,6 +33,7 @@
 | `CLOUDINARY_API_KEY` | Your API key | See **Cloudinary** section below. |
 | `CLOUDINARY_API_SECRET` | Your API secret | See **Cloudinary** section below. |
 | `GOOGLE_CLIENT_ID` | `12345.apps.google...` | See **Google OAuth** section below. |
+| `GEMINI_API_KEY` | `AIzaSy...` | See **Gemini API** section below. |
 
 ---
 
@@ -185,6 +186,21 @@ Used to enable "Continue with Google" one-click login and registration.
 
 ---
 
+### 7. Gemini API (GEMINI_API_KEY)
+
+Used by the Node.js backend to generate AI-powered Match Summaries for Grand Finals.
+
+1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Click **Create API Key** in a new or existing Google Cloud project.
+3. Copy the generated key (usually starts with `AIzaSy`).
+4. Paste it in `server/.env`:
+
+```
+GEMINI_API_KEY=your_actual_api_key_here
+```
+
+---
+
 ## Quick Checklist
 
 - [ ] Created MongoDB Atlas cluster (free M0)
@@ -196,4 +212,5 @@ Used to enable "Continue with Google" one-click login and registration.
 - [ ] Set up Gmail App Password and added to `server/.env`
 - [ ] Created Cloudinary account and added credentials to `server/.env`
 - [ ] Created Google Cloud Project, got Client ID, and added to both `client/.env` and `server/.env`
+- [ ] Created Gemini API Key in Google AI Studio and added it to `server/.env`
 - [ ] All `.env` files are in `.gitignore` (never commit secrets!)

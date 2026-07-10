@@ -57,6 +57,10 @@ const matchSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    summary: {
+      type: String,
+      default: null,
+    },
     playerStats: {
       type: Map,
       of: mongoose.Schema.Types.Mixed,

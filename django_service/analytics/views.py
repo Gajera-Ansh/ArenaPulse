@@ -2,6 +2,34 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .db import db
 import pandas as pd
+from .model import train_model, predict_match, generate_match_summary
+
+@api_view(['POST'])
+def trigger_training(request):
+    success, msg = train_model()
+    return Response({"success": success, "message": msg})
+
+@api_view(['POST'])
+def get_match_prediction(request):
+    teamA_id = request.data.get('teamA')
+    teamB_id = request.data.get('teamB')
+    game_name = request.data.get('game')
+    scoreA = request.data.get('scoreA', 0)
+    scoreB = request.data.get('scoreB', 0)
+    
+    if not teamA_id or not teamB_id:
+        return Response({"success": False, "message": "Missing team IDs"}, status=400)
+        
+    result, error = predict_match(teamA_id, teamB_id, game_name=game_name, scoreA=scoreA, scoreB=scoreB)
+    if error:
+        return Response({"success": False, "message": error}, status=400)
+        
+    return Response({"success": True, "data": result})
+
+@api_view(['GET'])
+def get_match_summary(request, match_id):
+    summary = generate_match_summary(match_id)
+    return Response({"success": True, "data": {"summary": summary}})
 
 @api_view(['GET'])
 def player_analytics(request, player_id):

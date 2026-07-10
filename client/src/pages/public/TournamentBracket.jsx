@@ -111,6 +111,12 @@ const TournamentBracket = () => {
   const [scoreB, setScoreB] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // ML Feature States
+  const [predictionData, setPredictionData] = useState(null);
+  const [summaryData, setSummaryData] = useState(null);
+  const [loadingPrediction, setLoadingPrediction] = useState(false);
+  const [loadingSummary, setLoadingSummary] = useState(false);
+
   // Player Stats Modal State
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [statsMatchData, setStatsMatchData] = useState(null); // { match, teamAPlayers, teamBPlayers }
@@ -194,6 +200,20 @@ const TournamentBracket = () => {
     };
   }, [socket, id]);
 
+  // Keep selectedMatch in sync when matches update via socket
+  useEffect(() => {
+    if (selectedMatch) {
+      const updated = matches.find(m => m._id === selectedMatch._id);
+      if (updated && (updated.scoreA !== selectedMatch.scoreA || updated.scoreB !== selectedMatch.scoreB)) {
+        setSelectedMatch(updated);
+        // Automatically re-fetch prediction to update the UI progress bar if it's currently open
+        if (predictionData) {
+          fetchPrediction(updated._id);
+        }
+      }
+    }
+  }, [matches, selectedMatch, predictionData]);
+
   // Prevent background scrolling when modal is open
   useEffect(() => {
     if (selectedMatch || showStatsModal) {
@@ -216,6 +236,37 @@ const TournamentBracket = () => {
 
   const closeMatchModal = () => {
     setSelectedMatch(null);
+    setPredictionData(null);
+    setSummaryData(null);
+  };
+
+  const fetchPrediction = async (matchId) => {
+    setLoadingPrediction(true);
+    try {
+      const res = await expressApi.get(`/api/matches/${matchId}/prediction`);
+      if (res.data.success) {
+        setPredictionData(res.data.data);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to load prediction');
+    } finally {
+      setLoadingPrediction(false);
+    }
+  };
+
+  const handleGenerateSummary = async (matchId) => {
+    setLoadingSummary(true);
+    try {
+      const res = await expressApi.post(`/api/matches/${matchId}/summary`);
+      if (res.data.success) {
+        // Update local state to show the new summary immediately
+        setSelectedMatch(res.data.data);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to generate summary');
+    } finally {
+      setLoadingSummary(false);
+    }
   };
 
   const handleLiveScoreUpdate = async (e) => {
@@ -702,6 +753,61 @@ const TournamentBracket = () => {
                   )}
                 </form>
               )}
+
+              {/* ML Features Section */}
+              <div className="mt-8 border-t border-slate-200 pt-6">
+                <h4 className="text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <i className="fa-solid fa-microchip text-accent"></i> AI Analysis
+                </h4>
+
+                {selectedMatch.status !== 'completed' && selectedMatch.teamA && selectedMatch.teamB && (
+                  <div className="bg-slate-100 p-4 rounded-[6px] border border-slate-200">
+                    <button 
+                      onClick={() => fetchPrediction(selectedMatch._id)}
+                      disabled={loadingPrediction}
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-[4px] font-bold text-[0.8rem] uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+                    >
+                      {loadingPrediction ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <><i className="fa-solid fa-wand-magic-sparkles"></i> Live Prediction</>}
+                    </button>
+
+                    {predictionData && (
+                      <div className="mt-4 animate-fade-in">
+                        <div className="flex justify-between text-xs font-bold mb-1">
+                          <span className="text-blue-600">{selectedMatch.teamA.name} ({predictionData.team_a_prob}%)</span>
+                          <span className="text-red-500">{selectedMatch.teamB.name} ({predictionData.team_b_prob}%)</span>
+                        </div>
+                        <div className="w-full h-3 bg-red-400 rounded-full overflow-hidden flex">
+                          <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${predictionData.team_a_prob}%` }}></div>
+                        </div>
+                        <p className="text-[0.7rem] text-text-secondary mt-3 text-center">
+                          Based on historical win rates (Team A: {predictionData.team_a_stats.win_rate.toFixed(2)} vs Team B: {predictionData.team_b_stats.win_rate.toFixed(2)})
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {selectedMatch.status === 'completed' && selectedMatch.nextMatchNumber === null && (
+                  <div className="bg-slate-100 p-4 rounded-[6px] border border-slate-200">
+                    {selectedMatch.summary ? (
+                      <div className="p-4 bg-white border border-slate-200 rounded text-[0.85rem] text-text font-medium italic animate-fade-in shadow-sm">
+                        <i className="fa-solid fa-quote-left text-accent mr-2 opacity-50"></i>
+                        {selectedMatch.summary}
+                      </div>
+                    ) : (
+                      isOrganizer && (
+                        <button 
+                          onClick={() => handleGenerateSummary(selectedMatch._id)}
+                          disabled={loadingSummary}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-[4px] font-bold text-[0.8rem] uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+                        >
+                          {loadingSummary ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <><i className="fa-solid fa-robot"></i> Generate Grand Final Summary</>}
+                        </button>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
