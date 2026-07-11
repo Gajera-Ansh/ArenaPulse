@@ -133,13 +133,25 @@ export const changeRole = async (req, res, next) => {
 export const getPlatformStats = async (req, res, next) => {
   try {
     const totalUsers = await User.countDocuments();
+    const totalPlayers = await User.countDocuments({ role: 'player' });
+    const totalOrganizers = await User.countDocuments({ role: 'organizer' });
+    const totalBanned = await User.countDocuments({ banned: true });
+
     const totalTournaments = await Tournament.countDocuments();
     const activeTournaments = await Tournament.countDocuments({ status: { $in: ['open', 'live'] } });
     const completedTournaments = await Tournament.countDocuments({ status: 'completed' });
 
     res.status(200).json({
       success: true,
-      data: { totalUsers, totalTournaments, activeTournaments, completedTournaments },
+      data: { 
+        totalUsers, 
+        totalPlayers,
+        totalOrganizers,
+        totalBanned,
+        totalTournaments, 
+        activeTournaments, 
+        completedTournaments 
+      },
     });
   } catch (error) {
     next(error);

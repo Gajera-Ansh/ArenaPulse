@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import expressApi from '../../api/expressApi';
+import djangoApi from '../../api/djangoApi';
 import { useAuth } from '../../context/AuthContext';
 
 const AdminDashboard = () => {
@@ -12,6 +14,7 @@ const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('users');
   const [reports, setReports] = useState([]);
+  const [djangoStats, setDjangoStats] = useState(null);
 
   const filteredUsers = users.filter(u =>
     (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -21,10 +24,11 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [statsRes, usersRes, reportsRes] = await Promise.all([
+      const [statsRes, usersRes, reportsRes, djangoRes] = await Promise.all([
         expressApi.get('/api/admin/stats'),
         expressApi.get('/api/admin/users'),
-        expressApi.get('/api/reports')
+        expressApi.get('/api/reports'),
+        djangoApi.get(`/analytics/admin/?t=${new Date().getTime()}`).catch(() => ({ data: { success: false } })) // Fallback if Django is off
       ]);
 
       if (statsRes.data.success) {
@@ -35,6 +39,9 @@ const AdminDashboard = () => {
       }
       if (reportsRes.data.success) {
         setReports(reportsRes.data.data);
+      }
+      if (djangoRes.data && djangoRes.data.success) {
+        setDjangoStats(djangoRes.data.data);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load admin data');
@@ -121,7 +128,7 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         <div className="bg-surface border border-border rounded-[8px] p-6 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-[0.8rem] text-text-secondary uppercase font-bold tracking-widest mb-1">Total Users</p>
+            <p className="text-[0.8rem] text-text-secondary uppercase font-bold tracking-widest mb-1 group-hover:text-primary transition-colors">Total Users</p>
             <p className="text-[2rem] font-bold text-text leading-none">{stats.totalUsers}</p>
           </div>
           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary text-xl">
@@ -146,8 +153,84 @@ const AdminDashboard = () => {
             <i className="fa-solid fa-bolt"></i>
           </div>
         </Link>
-
       </div>
+
+      {/* Django Data Science Analytics Section */}
+      {djangoStats && (
+        <div className="mb-10 bg-surface border border-border rounded-[8px] p-6 shadow-sm animate-fade-in">
+          <div className="flex items-center gap-3 mb-6">
+            <i className="fa-solid fa-chart-pie text-2xl text-primary"></i>
+            <h2 className="text-[1.2rem] font-bold text-text">Platform Intelligence</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1 space-y-4">
+              <div className="bg-background border border-border rounded-[4px] p-4 border-l-4 border-l-primary flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-text-secondary uppercase font-bold">Total Players</p>
+                  <p className="text-[1.5rem] font-bold text-text">{djangoStats.totalPlayers}</p>
+                </div>
+                <i className="fa-solid fa-gamepad text-primary text-2xl"></i>
+              </div>
+              <div className="bg-background border border-border rounded-[4px] p-4 border-l-4 border-l-accent flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-text-secondary uppercase font-bold">Total Organizers</p>
+                  <p className="text-[1.5rem] font-bold text-text">{djangoStats.totalOrganizers}</p>
+                </div>
+                <i className="fa-solid fa-sitemap text-accent text-2xl"></i>
+              </div>
+              <div className="bg-background border border-border rounded-[4px] p-4 border-l-4 border-l-purple-500 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-text-secondary uppercase font-bold">Total Admins</p>
+                  <p className="text-[1.5rem] font-bold text-text">{djangoStats.totalAdmins || 0}</p>
+                </div>
+                <i className="fa-solid fa-shield-halved text-purple-500 text-2xl"></i>
+              </div>
+              <div className="bg-background border border-border rounded-[4px] p-4 border-l-4 border-l-red-500 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-text-secondary uppercase font-bold">Banned Users</p>
+                  <p className="text-[1.5rem] font-bold text-text">{djangoStats.totalBanned}</p>
+                </div>
+                <i className="fa-solid fa-gavel text-red-500 text-2xl"></i>
+              </div>
+              <div className="bg-background border border-border rounded-[4px] p-4">
+                  <p className="text-text text-sm">
+                    Engagement: <span className="font-bold text-primary">{djangoStats.totalOrganizers > 0 ? Math.round(djangoStats.totalPlayers / djangoStats.totalOrganizers) : (djangoStats.totalPlayers || 0)} Players</span> for every <span className="font-bold text-accent">1 Organizer</span>.
+                  </p>
+                  <div className="w-full bg-slate-800 h-2 rounded-full mt-3 overflow-hidden flex">
+                    <div className="bg-primary h-full" style={{ width: `${((djangoStats.totalPlayers || 0) / ((djangoStats.totalPlayers || 0) + (djangoStats.totalOrganizers || 0))) * 100 || 0}%` }}></div>
+                    <div className="bg-accent h-full" style={{ width: `${((djangoStats.totalOrganizers || 0) / ((djangoStats.totalPlayers || 0) + (djangoStats.totalOrganizers || 0))) * 100 || 0}%` }}></div>
+                  </div>
+              </div>
+            </div>
+            
+            <div className="lg:col-span-2 bg-background border border-border rounded-[4px] flex flex-col items-center justify-center p-2 min-h-[300px]">
+              {djangoStats.growthData && djangoStats.growthData.length > 0 ? (
+                <div className="w-full h-full min-h-[300px] p-4">
+                  <h3 className="text-center text-text-secondary font-bold uppercase tracking-widest text-sm mb-4">Platform Growth Timeline</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={djangoStats.growthData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} vertical={false} />
+                      <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                      <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px', color: '#f8fafc' }}
+                        itemStyle={{ color: '#ea580c', fontWeight: 'bold' }}
+                      />
+                      <Line type="monotone" dataKey="users" name="Total Users" stroke="#ea580c" strokeWidth={3} dot={{ r: 4, fill: '#ea580c', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="text-text-secondary flex flex-col items-center">
+                  <i className="fa-solid fa-chart-line text-4xl mb-3 opacity-50"></i>
+                  <p>Not enough data to generate growth model.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-4 mb-6 border-b border-border pb-1">
@@ -317,6 +400,7 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };
