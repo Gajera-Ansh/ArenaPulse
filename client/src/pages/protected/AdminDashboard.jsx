@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { useAuth } from '../../context/AuthContext';
 
@@ -9,6 +10,8 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('users');
+  const [reports, setReports] = useState([]);
 
   const filteredUsers = users.filter(u => 
     (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) || 
@@ -18,9 +21,10 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [statsRes, usersRes] = await Promise.all([
+      const [statsRes, usersRes, reportsRes] = await Promise.all([
         expressApi.get('/api/admin/stats'),
-        expressApi.get('/api/admin/users')
+        expressApi.get('/api/admin/users'),
+        expressApi.get('/api/reports')
       ]);
 
       if (statsRes.data.success) {
@@ -28,6 +32,9 @@ const AdminDashboard = () => {
       }
       if (usersRes.data.success) {
         setUsers(usersRes.data.data);
+      }
+      if (reportsRes.data.success) {
+        setReports(reportsRes.data.data);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load admin data');
@@ -40,9 +47,9 @@ const AdminDashboard = () => {
     fetchData();
   }, []);
 
-  const handleToggleBan = async (userId) => {
+  const handleToggleBan = async (userId, reportId = null) => {
     try {
-      const res = await expressApi.patch(`/api/admin/users/${userId}/ban`);
+      const res = await expressApi.patch(`/api/admin/users/${userId}/ban`, { reportId });
       if (res.data.success) {
         setUsers(users.map(u => u._id === userId ? { ...u, banned: res.data.data.banned } : u));
       }
@@ -59,6 +66,28 @@ const AdminDashboard = () => {
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to change role');
+    }
+  };
+
+  const handleResolveReport = async (reportId) => {
+    try {
+      const res = await expressApi.patch(`/api/reports/${reportId}/status`, { status: 'resolved' });
+      if (res.data.success) {
+        setReports(reports.map(r => r._id === reportId ? { ...r, status: 'resolved' } : r));
+      }
+    } catch (err) {
+      alert('Failed to resolve report');
+    }
+  };
+  
+  const handleDismissReport = async (reportId) => {
+    try {
+      const res = await expressApi.patch(`/api/reports/${reportId}/status`, { status: 'dismissed' });
+      if (res.data.success) {
+        setReports(reports.map(r => r._id === reportId ? { ...r, status: 'dismissed' } : r));
+      }
+    } catch (err) {
+      alert('Failed to dismiss report');
     }
   };
 
@@ -119,8 +148,25 @@ const AdminDashboard = () => {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-4 mb-6 border-b border-border pb-1">
+        <button 
+          onClick={() => setActiveTab('users')} 
+          className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${activeTab === 'users' ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'}`}
+        >
+          <i className="fa-solid fa-users mr-2"></i> User Management
+        </button>
+        <button 
+          onClick={() => setActiveTab('reports')} 
+          className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${activeTab === 'reports' ? 'text-red-500 border-b-2 border-red-500' : 'text-text-secondary hover:text-text'}`}
+        >
+          <i className="fa-solid fa-flag mr-2"></i> Reports Queue {reports.filter(r => r.status === 'pending').length > 0 && <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full ml-2">{reports.filter(r => r.status === 'pending').length}</span>}
+        </button>
+      </div>
+
       {/* User Management Table */}
-      <div className="bg-surface border border-border rounded-[8px] shadow-sm overflow-hidden">
+      {activeTab === 'users' && (
+      <div className="bg-surface border border-border rounded-[8px] shadow-sm overflow-hidden animate-fade-in">
         <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-[1.2rem] font-bold text-text">User Management</h2>
           <div className="relative w-full sm:w-[300px]">
@@ -150,12 +196,12 @@ const AdminDashboard = () => {
               {filteredUsers.map(u => (
                 <tr key={u._id} className="hover:bg-white/5 transition-colors">
                   <td className="p-4">
-                    <div className="flex items-center gap-3">
+                    <Link to={`/profile/${u._id}`} className="flex items-center gap-3 group w-fit">
                       <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center border border-white shadow-sm shrink-0">
-                        {u.avatar ? <img src={u.avatar} className="w-full h-full rounded-full object-cover" referrerPolicy="no-referrer" /> : <i className="fa-solid fa-user text-slate-400 text-xs"></i>}
+                        {u.avatar ? <img src={u.avatar} className="w-full h-full rounded-full object-cover group-hover:scale-110 transition-transform" referrerPolicy="no-referrer" /> : <i className="fa-solid fa-user text-slate-400 text-xs"></i>}
                       </div>
-                      <span className="font-medium text-text">{u.name}</span>
-                    </div>
+                      <span className="font-medium text-text group-hover:text-primary transition-colors">{u.name}</span>
+                    </Link>
                   </td>
                   <td className="p-4 text-text-secondary text-[0.9rem]">{u.email}</td>
                   <td className="p-4">
@@ -192,6 +238,85 @@ const AdminDashboard = () => {
           </table>
         </div>
       </div>
+      )}
+
+      {/* Reports Queue Table */}
+      {activeTab === 'reports' && (
+        <div className="bg-surface border border-border rounded-[8px] shadow-sm overflow-hidden animate-fade-in">
+          <div className="p-6 border-b border-border">
+            <h2 className="text-[1.2rem] font-bold text-text">Player Reports</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-background border-b border-border">
+                  <th className="p-4 text-[0.8rem] font-bold text-text-secondary uppercase tracking-wider">Reported User</th>
+                  <th className="p-4 text-[0.8rem] font-bold text-text-secondary uppercase tracking-wider">Reason</th>
+                  <th className="p-4 text-[0.8rem] font-bold text-text-secondary uppercase tracking-wider">Description & Evidence</th>
+                  <th className="p-4 text-[0.8rem] font-bold text-text-secondary uppercase tracking-wider">Status</th>
+                  <th className="p-4 text-[0.8rem] font-bold text-text-secondary uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {reports.map(r => (
+                  <tr key={r._id} className="hover:bg-white/5 transition-colors">
+                    <td className="p-4">
+                      <Link to={`/profile/${r.reportedUser?._id}`} className="flex items-center gap-3 group w-fit">
+                        <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center shrink-0">
+                          {r.reportedUser?.avatar ? <img src={r.reportedUser.avatar} className="w-full h-full object-cover group-hover:scale-110 transition-transform" /> : <i className="fa-solid fa-user text-slate-400 text-xs"></i>}
+                        </div>
+                        <div>
+                          <p className="font-medium text-text group-hover:text-primary transition-colors">{r.reportedUser?.name || 'Unknown'}</p>
+                          <p className="text-[0.7rem] text-text-secondary group-hover:text-text-secondary/70 transition-colors">Reported by: {r.reportedBy?.name || 'Unknown'}</p>
+                        </div>
+                      </Link>
+                    </td>
+                    <td className="p-4">
+                      <span className="px-2 py-1 rounded bg-red-500/10 text-red-500 border border-red-500/20 text-[0.75rem] font-bold uppercase tracking-widest">
+                        {r.reason}
+                      </span>
+                    </td>
+                    <td className="p-4 max-w-xs">
+                      <p className="text-[0.85rem] text-text truncate mb-1" title={r.description}>{r.description}</p>
+                      {r.evidenceUrl && (
+                        <a href={r.evidenceUrl} target="_blank" rel="noopener noreferrer" className="text-[0.75rem] text-primary hover:underline">
+                          <i className="fa-solid fa-link mr-1"></i> View Evidence
+                        </a>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      <span className={`px-2 py-1 rounded text-[0.75rem] font-bold uppercase tracking-widest ${r.status === 'pending' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' : r.status === 'resolved' ? 'bg-green-500/20 text-green-500 border border-green-500/30' : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'}`}>
+                        {r.status}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col gap-2">
+                        {r.status === 'pending' ? (
+                          <>
+                            <button onClick={() => { handleToggleBan(r.reportedUser?._id, r._id); handleResolveReport(r._id); }} className="px-3 py-1.5 rounded text-[0.75rem] font-bold uppercase tracking-wider bg-red-500 text-white hover:bg-red-600 w-full text-center transition-colors shadow-sm">
+                              Ban & Resolve
+                            </button>
+                            <button onClick={() => handleDismissReport(r._id)} className="px-3 py-1.5 rounded text-[0.75rem] font-bold uppercase tracking-wider bg-white/5 border border-border text-text hover:bg-white/10 w-full text-center transition-colors">
+                              Dismiss
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-[0.75rem] text-text-secondary italic">Closed</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {reports.length === 0 && (
+                  <tr>
+                    <td colSpan="5" className="p-8 text-center text-text-secondary">No reports in queue.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -790,3 +790,74 @@ export const sendRatingRequestEmail = async (userEmail, userName, tournamentTitl
     return false;
   }
 };
+
+export const sendBanEmail = async (userEmail, userName, reason, description, evidenceUrl) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return false;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { margin: 0; padding: 0; background-color: #0F172A; font-family: 'Inter', sans-serif; color: #f1f5f9; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #1E293B; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
+        .header { background: #ef4444; padding: 30px; text-align: center; }
+        .header h1 { margin: 0; color: #fff; font-size: 24px; font-weight: 800; text-transform: uppercase; }
+        .content { padding: 40px 30px; text-align: left; }
+        .message { font-size: 16px; line-height: 1.6; color: #94a3b8; margin-bottom: 20px; }
+        .box { background-color: #0F172A; border: 1px dashed #ef4444; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .label { font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; display: block; }
+        .val { font-size: 16px; color: #f1f5f9; margin-bottom: 15px; }
+        .footer { padding: 20px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #334155; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header"><h1>Account Suspended</h1></div>
+        <div class="content">
+          <div class="message">
+            Hello <strong>${userName}</strong>,<br><br>
+            Your ArenaPulse account has been permanently suspended due to severe violations of our community guidelines.
+          </div>
+          <div class="box">
+            <span class="label">Reason</span>
+            <div class="val" style="color: #ef4444; font-weight: bold;">${reason}</div>
+            <span class="label">Details</span>
+            <div class="val">${description}</div>
+            <span class="label">Evidence Provided</span>
+            <div class="val"><a href="${evidenceUrl}" style="color: #3b82f6;">View Evidence</a></div>
+          </div>
+          <div class="message" style="font-size: 14px;">
+            This decision is final. You may no longer log in or participate in any ArenaPulse events.
+          </div>
+        </div>
+        <div class="footer">&copy; ${new Date().getFullYear()} ArenaPulse Esports.</div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    const mailOptions = {
+      from: `"ArenaPulse Trust & Safety" <${process.env.EMAIL_USER}>`,
+      to: userEmail,
+      subject: `Account Suspended: Community Guidelines Violation`,
+      html: htmlContent,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('[Email Service] Error sending ban email:', error);
+    return false;
+  }
+};
+

@@ -24,6 +24,7 @@ import leaderboardRoutes from './routes/leaderboard.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import playerstatRoutes from './routes/playerstat.routes.js';
+import reportRoutes from './routes/report.routes.js';
 
 // Initialize Express
 const app = express();
@@ -77,6 +78,7 @@ app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/playerstats', playerstatRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);

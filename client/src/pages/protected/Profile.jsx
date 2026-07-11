@@ -48,6 +48,13 @@ const Profile = () => {
   const [playerStats, setPlayerStats] = useState(null);
   const [selectedGame, setSelectedGame] = useState(SUPPORTED_GAMES[0]);
   const [analyticsData, setAnalyticsData] = useState([]);
+  
+  // Reporting state
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportData, setReportData] = useState({ reason: 'Cheating/Hacking', description: '', evidenceUrl: '' });
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportSuccess, setReportSuccess] = useState('');
+  const [reportError, setReportError] = useState('');
 
   const isOwnProfile = !id || (authUser && id === authUser.id);
   const user = isOwnProfile ? authUser : profileUser;
@@ -131,6 +138,32 @@ const Profile = () => {
        fetchData();
     }
   }, [authUser, id, isOwnProfile, profileUser?.role]);
+
+  const submitReport = async (e) => {
+    e.preventDefault();
+    setReportLoading(true);
+    setReportError('');
+    setReportSuccess('');
+    
+    try {
+      const res = await expressApi.post('/api/reports', {
+        reportedUserId: id,
+        ...reportData
+      });
+      if (res.data.success) {
+        setReportSuccess('Report submitted successfully. Admins will review this shortly.');
+        setTimeout(() => {
+          setShowReportModal(false);
+          setReportSuccess('');
+          setReportData({ reason: 'Cheating/Hacking', description: '', evidenceUrl: '' });
+        }, 3000);
+      }
+    } catch (err) {
+      setReportError(err.response?.data?.message || 'Failed to submit report.');
+    } finally {
+      setReportLoading(false);
+    }
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Unknown';
@@ -228,10 +261,17 @@ const Profile = () => {
             )}
           </div>
 
-          {isOwnProfile && (
+          {isOwnProfile ? (
             <Link to="/settings" className="block w-full mt-8 py-3 bg-white/5 hover:bg-white/10 text-text border border-border hover:border-primary/50 rounded-[4px] text-sm font-bold transition-colors">
               <i className="fa-solid fa-pen-to-square mr-2"></i> Edit Profile
             </Link>
+          ) : authUser && (
+            <button 
+              onClick={() => setShowReportModal(true)}
+              className="block w-full mt-8 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 hover:border-red-500/50 rounded-[4px] text-sm font-bold transition-colors"
+            >
+              <i className="fa-solid fa-flag mr-2"></i> Report User
+            </button>
           )}
         </div>
 
@@ -712,6 +752,86 @@ const Profile = () => {
         </div>
 
       </div>
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-surface border border-border rounded-[8px] p-6 max-w-lg w-full shadow-2xl relative">
+            <button onClick={() => setShowReportModal(false)} className="absolute top-4 right-4 text-text-secondary hover:text-text">
+              <i className="fa-solid fa-xmark text-xl"></i>
+            </button>
+            
+            <h3 className="text-xl font-bold text-text uppercase tracking-wide mb-2 flex items-center gap-2">
+              <i className="fa-solid fa-flag text-red-500"></i> Report User
+            </h3>
+            <p className="text-sm text-text-secondary mb-6">
+              Reporting <strong>{user?.name}</strong>. Please provide details and evidence if possible. False reports may result in a ban.
+            </p>
+
+            {reportError && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-600 rounded-[4px] p-3 mb-4 text-sm font-medium">
+                {reportError}
+              </div>
+            )}
+            
+            {reportSuccess && (
+              <div className="bg-green-500/10 border border-green-500/20 text-green-500 rounded-[4px] p-3 mb-4 text-sm font-medium">
+                {reportSuccess}
+              </div>
+            )}
+
+            <form onSubmit={submitReport} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-text-secondary uppercase tracking-widest mb-1">Reason</label>
+                <select 
+                  value={reportData.reason}
+                  onChange={(e) => setReportData({...reportData, reason: e.target.value})}
+                  className="w-full bg-background border border-border rounded-[4px] px-4 py-2.5 text-text focus:outline-none focus:border-red-500"
+                  required
+                >
+                  <option value="Cheating/Hacking">Cheating / Hacking</option>
+                  <option value="Toxicity/Harassment">Toxicity / Harassment</option>
+                  <option value="Smurfing">Smurfing</option>
+                  <option value="Griefing">Griefing / Throwing</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-text-secondary uppercase tracking-widest mb-1">Description</label>
+                <textarea 
+                  value={reportData.description}
+                  onChange={(e) => setReportData({...reportData, description: e.target.value})}
+                  placeholder="Describe exactly what happened..."
+                  className="w-full bg-background border border-border rounded-[4px] px-4 py-2.5 text-text focus:outline-none focus:border-red-500 min-h-[100px]"
+                  required
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-text-secondary uppercase tracking-widest mb-1">Evidence URL</label>
+                <input 
+                  type="url"
+                  value={reportData.evidenceUrl}
+                  onChange={(e) => setReportData({...reportData, evidenceUrl: e.target.value})}
+                  placeholder="Link to YouTube, Twitch Clip, Streamable, etc."
+                  className="w-full bg-background border border-border rounded-[4px] px-4 py-2.5 text-text focus:outline-none focus:border-red-500"
+                  required
+                />
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3">
+                <button type="button" onClick={() => setShowReportModal(false)} className="px-5 py-2.5 text-text-secondary hover:text-text font-bold text-sm">
+                  Cancel
+                </button>
+                <button type="submit" disabled={reportLoading || reportSuccess} className="bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-[4px] font-bold text-sm transition-colors disabled:opacity-50">
+                  {reportLoading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Submit Report'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
