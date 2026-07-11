@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { SUPPORTED_GAMES } from '../../utils/constants';
 
 const Tournaments = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filterStatus = searchParams.get('status') || 'open';
+  
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterGame, setFilterGame] = useState('');
@@ -40,7 +43,7 @@ const Tournaments = () => {
 
   const filteredTournaments = tournaments.filter(t =>
     t.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-    t.status === 'open'
+    t.status === filterStatus
   );
 
   return (
@@ -48,10 +51,30 @@ const Tournaments = () => {
 
       {/* Header Section */}
       <div className="mb-8 sm:mb-10 text-center max-w-3xl mx-auto px-4">
-        <h1 className="text-[2rem] sm:text-[2.5rem] font-bold text-text uppercase tracking-tight mb-2 sm:mb-4 drop-shadow-md leading-tight">Tournament Board</h1>
+        <h1 className="text-[2rem] sm:text-[2.5rem] font-bold text-text uppercase tracking-tight mb-2 sm:mb-4 drop-shadow-md leading-tight">
+          {filterStatus === 'completed' ? 'Completed Tournaments' : 'Tournament Board'}
+        </h1>
         <p className="text-text-secondary font-medium text-[0.95rem] sm:text-[1.1rem]">
-          Browse active tournaments and find your next challenge. Enroll your team and dominate the arena.
+          {filterStatus === 'completed' 
+            ? 'Browse past tournaments to view final brackets and champions.'
+            : 'Browse active tournaments and find your next challenge. Enroll your team and dominate the arena.'}
         </p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-4 mb-6 border-b border-border pb-1">
+        <button 
+          onClick={() => setSearchParams({ status: 'open' })} 
+          className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'open' ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'}`}
+        >
+          <i className="fa-solid fa-door-open mr-2"></i> Open Registration
+        </button>
+        <button 
+          onClick={() => setSearchParams({ status: 'completed' })} 
+          className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'completed' ? 'text-accent border-b-2 border-accent' : 'text-text-secondary hover:text-text'}`}
+        >
+          <i className="fa-solid fa-trophy mr-2"></i> Completed
+        </button>
       </div>
 
       {/* Controls & Filters */}

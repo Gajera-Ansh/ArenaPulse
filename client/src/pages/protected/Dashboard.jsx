@@ -18,6 +18,8 @@ const Dashboard = () => {
   const [currentRating, setCurrentRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [submittingRating, setSubmittingRating] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [reportData, setReportData] = useState({ reason: 'Prize Pool Scamming', description: '' });
 
   const formatDate = (dateString) => {
     if (!dateString) return 'TBD';
@@ -448,6 +450,45 @@ const Dashboard = () => {
                 );
               })}
             </div>
+            
+            {/* Organizer Report Section */}
+            <div className="mb-6 border-t border-border pt-4 relative z-10">
+              <button 
+                onClick={() => setShowReportForm(!showReportForm)}
+                className="text-sm text-red-500 hover:text-red-400 font-bold flex items-center gap-1 transition-colors"
+              >
+                <i className="fa-solid fa-flag"></i> Report Organizer for Misconduct
+              </button>
+              
+              {showReportForm && (
+                <div className="mt-3 space-y-3 animate-fade-in text-left">
+                  <div>
+                    <label className="block text-xs font-bold text-text-secondary uppercase tracking-widest mb-1">Reason</label>
+                    <select 
+                      value={reportData.reason}
+                      onChange={(e) => setReportData({...reportData, reason: e.target.value})}
+                      className="w-full bg-background border border-border rounded-[4px] px-3 py-2 text-text focus:outline-none focus:border-red-500 text-sm"
+                    >
+                      <option value="Prize Pool Scamming">Prize Pool Scamming</option>
+                      <option value="Bracket Manipulation">Bracket Manipulation</option>
+                      <option value="Fake Tournament / Spam">Fake Tournament / Spam</option>
+                      <option value="Toxicity / Harassment">Toxicity / Harassment</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-text-secondary uppercase tracking-widest mb-1">Description</label>
+                    <textarea 
+                      value={reportData.description}
+                      onChange={(e) => setReportData({...reportData, description: e.target.value})}
+                      placeholder="Describe exactly what happened..."
+                      className="w-full bg-background border border-border rounded-[4px] px-3 py-2 text-text focus:outline-none focus:border-red-500 min-h-[80px] text-sm"
+                      required={showReportForm}
+                    ></textarea>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="flex justify-end gap-3 relative z-10">
               <button
@@ -466,13 +507,26 @@ const Dashboard = () => {
                 onClick={async () => {
                   setSubmittingRating(true);
                   try {
-                    await expressApi.post(`/api/tournaments/${pendingRatings[0]._id}/rate`, { rating: currentRating || 5 }); // Default to 5 if somehow 0
+                    const t = pendingRatings[0];
+                    await expressApi.post(`/api/tournaments/${t._id}/rate`, { rating: currentRating || 5 }); 
+                    
+                    if (showReportForm && reportData.description) {
+                       await expressApi.post('/api/reports', {
+                         reportedUserId: t.organizer._id || t.organizer, // Handle populated or unpopulated
+                         reason: reportData.reason,
+                         description: `[Tournament: ${t.title}] - ${reportData.description}`
+                       });
+                    }
+
                     const remaining = pendingRatings.slice(1);
                     setPendingRatings(remaining);
                     if (remaining.length === 0) setShowRatingModal(false);
-                    setCurrentRating(0); // Reset for next modal
+                    setCurrentRating(0); 
+                    setShowReportForm(false);
+                    setReportData({ reason: 'Prize Pool Scamming', description: '' });
                   } catch (err) {
-                    console.error('Failed to submit rating', err);
+                    console.error('Failed to submit rating or report', err);
+                    alert(err.response?.data?.message || 'Failed to submit rating or report. Check console for details.');
                   } finally {
                     setSubmittingRating(false);
                   }

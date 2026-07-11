@@ -135,10 +135,11 @@ export const getPlatformStats = async (req, res, next) => {
     const totalUsers = await User.countDocuments();
     const totalTournaments = await Tournament.countDocuments();
     const activeTournaments = await Tournament.countDocuments({ status: { $in: ['open', 'live'] } });
+    const completedTournaments = await Tournament.countDocuments({ status: 'completed' });
 
     res.status(200).json({
       success: true,
-      data: { totalUsers, totalTournaments, activeTournaments },
+      data: { totalUsers, totalTournaments, activeTournaments, completedTournaments },
     });
   } catch (error) {
     next(error);

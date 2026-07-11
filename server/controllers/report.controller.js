@@ -6,8 +6,8 @@ export const createReport = async (req, res, next) => {
   try {
     const { reportedUserId, reason, description, evidenceUrl } = req.body;
 
-    if (!reportedUserId || !reason || !description || !evidenceUrl) {
-      return res.status(400).json({ success: false, message: 'Please provide all required fields, including an evidence link.' });
+    if (!reportedUserId || !reason || !description) {
+      return res.status(400).json({ success: false, message: 'Please provide all required fields.' });
     }
 
     if (reportedUserId === req.user._id.toString()) {

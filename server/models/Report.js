@@ -15,7 +15,7 @@ const reportSchema = new mongoose.Schema(
     reason: {
       type: String,
       required: true,
-      enum: ['Cheating/Hacking', 'Toxicity/Harassment', 'Smurfing', 'Griefing', 'Other'],
+      enum: ['Cheating/Hacking', 'Toxicity/Harassment', 'Smurfing', 'Griefing', 'Prize Pool Scamming', 'Bracket Manipulation', 'Fake Tournament / Spam', 'Toxicity / Harassment', 'Other'],
     },
     description: {
       type: String,
@@ -25,7 +25,6 @@ const reportSchema = new mongoose.Schema(
     evidenceUrl: {
       type: String,
       trim: true,
-      required: [true, 'Evidence URL is required to submit a report'],
     },
     status: {
       type: String,
