@@ -469,9 +469,11 @@ const TournamentDetails = () => {
               <Link to="/login" className="btn-primary w-full justify-center flex items-center gap-2 py-3.5 text-[1rem]">
                 <i className="fa-solid fa-right-to-bracket"></i> Login to Register
               </Link>
-            ) : isOrganizer ? (
+            ) : user.role === 'organizer' ? (
               <div className="bg-white/5 border border-border rounded-xl p-4 text-center">
-                <p className="text-[0.85rem] text-text-secondary font-medium">You are the organizer of this tournament.</p>
+                <p className="text-[0.85rem] text-text-secondary font-medium">
+                  {isOrganizer ? "You are the organizer of this tournament." : "Organizer accounts cannot enroll in tournaments."}
+                </p>
               </div>
             ) : myRegistration ? (
               <div className="bg-white/5 border border-border rounded-xl p-5 shadow-inner">
