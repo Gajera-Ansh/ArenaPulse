@@ -162,7 +162,7 @@ const AdminDashboard = () => {
             <i className="fa-solid fa-chart-pie text-2xl text-primary"></i>
             <h2 className="text-[1.2rem] font-bold text-text">Platform Intelligence</h2>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1 space-y-4">
               <div className="bg-background border border-border rounded-[4px] p-4 border-l-4 border-l-primary flex items-center justify-between">
@@ -194,16 +194,16 @@ const AdminDashboard = () => {
                 <i className="fa-solid fa-gavel text-red-500 text-2xl"></i>
               </div>
               <div className="bg-background border border-border rounded-[4px] p-4">
-                  <p className="text-text text-sm">
-                    Engagement: <span className="font-bold text-primary">{djangoStats.totalOrganizers > 0 ? Math.round(djangoStats.totalPlayers / djangoStats.totalOrganizers) : (djangoStats.totalPlayers || 0)} Players</span> for every <span className="font-bold text-accent">1 Organizer</span>.
-                  </p>
-                  <div className="w-full bg-slate-800 h-2 rounded-full mt-3 overflow-hidden flex">
-                    <div className="bg-primary h-full" style={{ width: `${((djangoStats.totalPlayers || 0) / ((djangoStats.totalPlayers || 0) + (djangoStats.totalOrganizers || 0))) * 100 || 0}%` }}></div>
-                    <div className="bg-accent h-full" style={{ width: `${((djangoStats.totalOrganizers || 0) / ((djangoStats.totalPlayers || 0) + (djangoStats.totalOrganizers || 0))) * 100 || 0}%` }}></div>
-                  </div>
+                <p className="text-text text-sm">
+                  Engagement: <span className="font-bold text-primary">{djangoStats.totalOrganizers > 0 ? Math.round(djangoStats.totalPlayers / djangoStats.totalOrganizers) : (djangoStats.totalPlayers || 0)} Players</span> for every <span className="font-bold text-accent">1 Organizer</span>.
+                </p>
+                <div className="w-full bg-slate-800 h-2 rounded-full mt-3 overflow-hidden flex">
+                  <div className="bg-primary h-full" style={{ width: `${((djangoStats.totalPlayers || 0) / ((djangoStats.totalPlayers || 0) + (djangoStats.totalOrganizers || 0))) * 100 || 0}%` }}></div>
+                  <div className="bg-accent h-full" style={{ width: `${((djangoStats.totalOrganizers || 0) / ((djangoStats.totalPlayers || 0) + (djangoStats.totalOrganizers || 0))) * 100 || 0}%` }}></div>
+                </div>
               </div>
             </div>
-            
+
             <div className="lg:col-span-2 bg-background border border-border rounded-[4px] flex flex-col items-center justify-center p-2 min-h-[300px]">
               {djangoStats.growthData && djangoStats.growthData.length > 0 ? (
                 <div className="w-full h-full min-h-[300px] p-4">
@@ -213,7 +213,7 @@ const AdminDashboard = () => {
                       <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} vertical={false} />
                       <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                       <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                      <Tooltip 
+                      <Tooltip
                         contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px', color: '#f8fafc' }}
                         itemStyle={{ color: '#ea580c', fontWeight: 'bold' }}
                       />

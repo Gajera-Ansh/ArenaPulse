@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { SUPPORTED_GAMES } from '../../utils/constants';
+import { useAuth } from '../../context/AuthContext';
 
 const Tournaments = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [searchParams, setSearchParams] = useSearchParams();
-  const filterStatus = searchParams.get('status') || 'open';
+  const filterStatus = isAdmin ? (searchParams.get('status') || 'open') : 'open';
   
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,21 +64,23 @@ const Tournaments = () => {
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 mb-6 border-b border-border pb-1">
-        <button 
-          onClick={() => setSearchParams({ status: 'open' })} 
-          className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'open' ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'}`}
-        >
-          <i className="fa-solid fa-door-open mr-2"></i> Open Registration
-        </button>
-        <button 
-          onClick={() => setSearchParams({ status: 'completed' })} 
-          className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'completed' ? 'text-accent border-b-2 border-accent' : 'text-text-secondary hover:text-text'}`}
-        >
-          <i className="fa-solid fa-trophy mr-2"></i> Completed
-        </button>
-      </div>
+      {/* Tabs - Only Admins can switch to Completed */}
+      {isAdmin && (
+        <div className="flex gap-4 mb-6 border-b border-border pb-1">
+          <button 
+            onClick={() => setSearchParams({ status: 'open' })} 
+            className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'open' ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'}`}
+          >
+            <i className="fa-solid fa-door-open mr-2"></i> Open Registration
+          </button>
+          <button 
+            onClick={() => setSearchParams({ status: 'completed' })} 
+            className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'completed' ? 'text-accent border-b-2 border-accent' : 'text-text-secondary hover:text-text'}`}
+          >
+            <i className="fa-solid fa-trophy mr-2"></i> Completed
+          </button>
+        </div>
+      )}
 
       {/* Controls & Filters */}
       <div className="bg-surface border border-border rounded-[8px] p-4 sm:p-6 mb-8 sm:mb-10 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between mx-0 sm:mx-4 lg:mx-0">

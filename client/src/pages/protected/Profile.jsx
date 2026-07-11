@@ -70,6 +70,20 @@ const Profile = () => {
   }, [user?.role]);
 
   useEffect(() => {
+    if (showReportModal) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+      document.documentElement.style.overflow = 'unset';
+    }
+    return () => { 
+      document.body.style.overflow = 'unset'; 
+      document.documentElement.style.overflow = 'unset';
+    };
+  }, [showReportModal]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
