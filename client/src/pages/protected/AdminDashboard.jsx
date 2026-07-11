@@ -8,6 +8,12 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredUsers = users.filter(u => 
+    (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) || 
+    (u.email && u.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   const fetchData = async () => {
     try {
@@ -115,8 +121,18 @@ const AdminDashboard = () => {
 
       {/* User Management Table */}
       <div className="bg-surface border border-border rounded-[8px] shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-border">
+        <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-[1.2rem] font-bold text-text">User Management</h2>
+          <div className="relative w-full sm:w-[300px]">
+            <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary text-[0.9rem]"></i>
+            <input 
+              type="text" 
+              placeholder="Search by name or email..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-background border border-border rounded-[4px] pl-10 pr-4 py-2 text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-[0.9rem]"
+            />
+          </div>
         </div>
         
         <div className="overflow-x-auto">
@@ -131,7 +147,7 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {users.map(u => (
+              {filteredUsers.map(u => (
                 <tr key={u._id} className="hover:bg-white/5 transition-colors">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
@@ -167,7 +183,7 @@ const AdminDashboard = () => {
                   </td>
                 </tr>
               ))}
-              {users.length === 0 && (
+              {filteredUsers.length === 0 && (
                 <tr>
                   <td colSpan="5" className="p-8 text-center text-text-secondary">No users found.</td>
                 </tr>
