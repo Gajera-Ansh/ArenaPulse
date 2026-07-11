@@ -46,8 +46,8 @@ export const createTeam = async (req, res, next) => {
 export const getMyTeams = async (req, res, next) => {
   try {
     const teams = await Team.find({ $or: [{ players: req.user._id }, { formerPlayers: req.user._id }] })
-      .populate('captain', 'name email avatar')
-      .populate('players', 'name email avatar');
+      .populate('captain', 'name email avatar banned')
+      .populate('players', 'name email avatar banned');
 
     // Fetch tournament count for each team
     const teamsWithCounts = await Promise.all(teams.map(async (team) => {
@@ -70,8 +70,8 @@ export const getMyTeams = async (req, res, next) => {
 export const getUserTeams = async (req, res, next) => {
   try {
     const teams = await Team.find({ $or: [{ players: req.params.userId }, { formerPlayers: req.params.userId }] })
-      .populate('captain', 'name email avatar')
-      .populate('players', 'name email avatar');
+      .populate('captain', 'name email avatar banned')
+      .populate('players', 'name email avatar banned');
 
     const teamsWithCounts = await Promise.all(teams.map(async (team) => {
       const tournamentCount = await Registration.countDocuments({ 
@@ -93,7 +93,7 @@ export const getUserTeams = async (req, res, next) => {
 export const getInvitations = async (req, res, next) => {
   try {
     const invitations = await Team.find({ pendingPlayers: req.user._id })
-      .populate('captain', 'name avatar')
+      .populate('captain', 'name avatar banned')
       .select('name tag game logo captain createdAt');
 
     res.status(200).json({ success: true, data: invitations });
@@ -106,8 +106,8 @@ export const getInvitations = async (req, res, next) => {
 export const getAllTeams = async (req, res, next) => {
   try {
     const teams = await Team.find()
-      .populate('captain', 'name email avatar')
-      .populate('players', 'name email avatar')
+      .populate('captain', 'name email avatar banned')
+      .populate('players', 'name email avatar banned')
       .sort('-createdAt');
 
     res.status(200).json({ success: true, data: teams });
@@ -120,9 +120,9 @@ export const getAllTeams = async (req, res, next) => {
 export const getTeamById = async (req, res, next) => {
   try {
     const team = await Team.findById(req.params.id)
-      .populate('captain', 'name email avatar')
-      .populate('players', 'name email avatar')
-      .populate('pendingPlayers', 'name email avatar');
+      .populate('captain', 'name email avatar banned')
+      .populate('players', 'name email avatar banned')
+      .populate('pendingPlayers', 'name email avatar banned');
 
     if (!team) {
       return res.status(404).json({ success: false, message: 'Team not found.' });

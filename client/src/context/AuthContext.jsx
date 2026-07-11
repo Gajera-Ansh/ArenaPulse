@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
       const res = await expressApi.post('/api/auth/login', { email, password });
       if (res.data.success) {
         login(res.data.data.user, res.data.data.token);
-        return true;
+        return res.data.data.user;
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
       const res = await expressApi.post('/api/auth/google', { token: googleToken, role });
       if (res.data.success) {
         login(res.data.data.user, res.data.data.token);
-        return true;
+        return res.data.data.user;
       }
     } catch (error) {
       console.error('Google login error:', error);

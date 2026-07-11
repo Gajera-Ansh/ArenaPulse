@@ -130,7 +130,10 @@ const Teams = () => {
                   </div>
                   <div>
                     <p className="text-[0.65rem] text-primary font-bold uppercase tracking-widest">Captain</p>
-                    <p className="text-[0.9rem] font-bold text-text">{t.captain?.name || 'Unknown'}</p>
+                    <p className="text-[0.9rem] font-bold text-text flex items-center gap-2">
+                      {t.captain?.name || 'Unknown'}
+                      {t.captain?.banned && <i className="fa-solid fa-ban text-red-500 text-[10px]" title="Banned"></i>}
+                    </p>
                   </div>
                 </div>
                 
@@ -138,8 +141,8 @@ const Teams = () => {
                   <p className="text-[0.75rem] text-text-secondary font-bold uppercase tracking-widest mb-3">Roster ({t.players?.length || 1}/10)</p>
                   <div className="flex flex-wrap gap-2">
                     {t.players?.filter(p => p._id !== t.captain?._id).map(p => (
-                      <span key={p._id} className="bg-white/5 border border-border px-3 py-1.5 rounded-lg text-[0.8rem] text-text-secondary flex items-center gap-2">
-                        {p.name}
+                      <span key={p._id} className={`bg-white/5 border ${p.banned ? 'border-red-500/50 text-red-500/80' : 'border-border text-text-secondary'} px-3 py-1.5 rounded-lg text-[0.8rem] flex items-center gap-2`}>
+                        {p.name} {p.banned && <i className="fa-solid fa-ban text-[10px]" title="Banned"></i>}
                       </span>
                     ))}
                     {(!t.players || t.players.length === 1) && (

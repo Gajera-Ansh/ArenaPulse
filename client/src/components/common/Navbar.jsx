@@ -76,17 +76,18 @@ const Navbar = () => {
   const navLinks = (
     <>
       <li><Link to="/tournaments" className="text-[0.9rem] font-medium text-text-secondary hover:text-text transition-colors block py-2 md:py-0">Tournaments</Link></li>
-      {user && user.role !== 'organizer' && (
+      {user && user.role === 'player' && (
         <li><Link to="/teams" className="text-[0.9rem] font-medium text-text-secondary hover:text-text transition-colors block py-2 md:py-0">Teams</Link></li>
       )}
       <li><Link to="/leaderboard" className="text-[0.9rem] font-medium text-text-secondary hover:text-text transition-colors block py-2 md:py-0">Leaderboard</Link></li>
+
     </>
   );
 
   return (
     <nav className="glass-panel border-b border-border py-3 sticky top-0 z-50">
       <div className="container flex items-center justify-between">
-        <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2.5 font-extrabold text-[1.25rem] text-primary">
+        <Link to={user ? (user.role === 'admin' ? '/admin' : '/dashboard') : "/"} className="flex items-center gap-2.5 font-extrabold text-[1.25rem] text-primary">
           <img src="/logo.png" alt="ArenaPulse Logo" className="w-10 h-10 object-contain drop-shadow-md" />
           <span className="hidden sm:inline">ArenaPulse</span>
         </Link>

@@ -469,10 +469,10 @@ const TournamentDetails = () => {
               <Link to="/login" className="btn-primary w-full justify-center flex items-center gap-2 py-3.5 text-[1rem]">
                 <i className="fa-solid fa-right-to-bracket"></i> Login to Register
               </Link>
-            ) : user.role === 'organizer' ? (
+            ) : user.role === 'organizer' || user.role === 'admin' ? (
               <div className="bg-white/5 border border-border rounded-xl p-4 text-center">
                 <p className="text-[0.85rem] text-text-secondary font-medium">
-                  {isOrganizer ? "You are the organizer of this tournament." : "Organizer accounts cannot enroll in tournaments."}
+                  {isOrganizer ? "You are the organizer of this tournament." : `${user.role.charAt(0).toUpperCase() + user.role.slice(1)} accounts cannot enroll in tournaments.`}
                 </p>
               </div>
             ) : myRegistration ? (

@@ -23,8 +23,7 @@ import Teams from './pages/public/Teams';
 import Leaderboard from './pages/public/Leaderboard';
 import Settings from './pages/protected/Settings';
 import Profile from './pages/protected/Profile';
-
-
+import AdminDashboard from './pages/protected/AdminDashboard';
 function App() {
   return (
     <AuthProvider>
@@ -63,6 +62,12 @@ function App() {
                 <Route path="/settings" element={
                   <ProtectedRoute>
                     <Settings />
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/admin" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminDashboard />
                   </ProtectedRoute>
                 } />
 

@@ -171,7 +171,13 @@ const Profile = () => {
                 <i className="fa-solid fa-user text-4xl text-slate-400"></i>
               )}
             </div>
-            <div className="absolute bottom-0 right-1 w-5 h-5 bg-green-500 border-2 border-surface rounded-full shadow-sm" title="Online"></div>
+            {user?.banned ? (
+              <div className="absolute bottom-0 right-1 w-5 h-5 bg-red-500 border-2 border-surface rounded-full shadow-sm flex items-center justify-center" title="Banned">
+                <i className="fa-solid fa-ban text-white text-[8px]"></i>
+              </div>
+            ) : (
+              <div className="absolute bottom-0 right-1 w-5 h-5 bg-green-500 border-2 border-surface rounded-full shadow-sm" title="Online"></div>
+            )}
           </div>
 
           <h2 className="text-2xl font-black text-text uppercase tracking-tight">{user?.name}</h2>

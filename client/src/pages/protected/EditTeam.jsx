@@ -280,6 +280,7 @@ const EditTeam = () => {
                   <span className="flex items-center gap-2">
                     <i className="fa-solid fa-crown text-[0.8rem]"></i>
                     {isCaptain ? 'You (Captain)' : (captainInfo?.name || 'Captain')}
+                    {captainInfo?.banned && <i className="fa-solid fa-ban text-red-500 text-[10px]" title="Banned"></i>}
                   </span>
                   <span className="text-[0.75rem] bg-primary/20 px-2 py-0.5 rounded text-primary">Ready</span>
                 </div>
@@ -290,6 +291,7 @@ const EditTeam = () => {
                       <span className="flex items-center gap-2">
                         <i className={`fa-solid fa-circle text-[0.5rem] ${p.status === 'pending' ? 'text-orange-500' : 'text-green-500'}`}></i>
                         {p.name} {isMe && <span className="text-text-secondary text-[0.75rem]">(You)</span>}
+                        {p.banned && <i className="fa-solid fa-ban text-red-500 text-[10px]" title="Banned"></i>}
                       </span>
                       <div className="flex items-center gap-3">
                         <span className={`text-[0.75rem] font-bold uppercase tracking-wider ${p.status === 'pending' ? 'text-orange-500' : 'text-green-500'}`}>

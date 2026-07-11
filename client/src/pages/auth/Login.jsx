@@ -22,10 +22,14 @@ const Login = () => {
     onSuccess: async (tokenResponse) => {
       if (googleLogin) {
         try {
-          await googleLogin(tokenResponse.access_token);
-          navigate('/dashboard');
+          const user = await googleLogin(tokenResponse.access_token);
+          if (user && user.role === 'admin') {
+            navigate('/admin');
+          } else {
+            navigate('/dashboard');
+          }
         } catch (error) {
-          setErrorMsg('Google login failed. Please check the backend server console for errors.');
+          setErrorMsg(error.response?.data?.message || 'Google login failed. Please check the backend server console for errors.');
         }
       }
     },
@@ -46,8 +50,12 @@ const Login = () => {
     setErrorMsg('');
     setSuccessMsg('');
     try {
-      await loginAccount(email, password);
-      navigate('/dashboard');
+      const user = await loginAccount(email, password);
+      if (user && user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
       setErrorMsg('Login failed. Please check your credentials.');
     } finally {
