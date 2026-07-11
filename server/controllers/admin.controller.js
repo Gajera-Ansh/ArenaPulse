@@ -5,7 +5,7 @@ import Tournament from '../models/Tournament.js';
 import Registration from '../models/Registration.js';
 import Team from '../models/Team.js';
 import Report from '../models/Report.js';
-import { sendTournamentUpdateEmail, sendBanEmail } from '../utils/emailService.js';
+import { sendTournamentUpdateEmail, sendBanEmail, sendDisqualificationEmail } from '../utils/emailService.js';
 
 // GET /api/admin/users
 export const getAllUsers = async (req, res, next) => {
@@ -61,6 +61,52 @@ export const toggleBan = async (req, res, next) => {
         if (playerEmails.length > 0) {
            await sendTournamentUpdateEmail(playerEmails, t.title, 'canceled', user.name);
         }
+      }
+    }
+
+    // If user is banned, remove them from teams and disqualify teams from pending/approved tournaments
+    if (user.banned) {
+      const userTeams = await Team.find({ players: user._id }).populate('captain', 'email');
+      
+      for (const team of userTeams) {
+        const enrollments = await Registration.find({ 
+          team: team._id, 
+          status: { $in: ['pending', 'approved'] } 
+        }).populate('tournament');
+
+        for (const reg of enrollments) {
+          // Disqualify team
+          reg.status = 'rejected';
+          reg.note = `Disqualified: Player ${user.name} was banned from ArenaPulse.`;
+          await reg.save();
+
+          // Decrease enrolledCount if it was approved
+          if (reg.status === 'approved') {
+            await Tournament.findByIdAndUpdate(reg.tournament._id, { $inc: { enrolledCount: -1 } });
+          }
+
+          // Send disqualification email to captain
+          if (team.captain && team.captain.email) {
+            await sendDisqualificationEmail(team.captain.email, team.name, reg.tournament.title, user.name);
+          }
+        }
+
+        // Pull player from team roster
+        team.players = team.players.filter(p => p.toString() !== user._id.toString());
+        
+        // Handle Captain Bans
+        if (team.captain && team.captain._id.toString() === user._id.toString()) {
+          if (team.players.length > 0) {
+            // Promote next available player to captain
+            team.captain = team.players[0];
+          } else {
+            // If no players are left on the team, delete it
+            await Team.findByIdAndDelete(team._id);
+            continue; // Skip the save since it's deleted
+          }
+        }
+
+        await team.save();
       }
     }
 

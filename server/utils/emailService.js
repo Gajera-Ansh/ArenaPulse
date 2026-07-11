@@ -861,3 +861,60 @@ export const sendBanEmail = async (userEmail, userName, reason, description, evi
   }
 };
 
+export const sendDisqualificationEmail = async (captainEmail, teamName, tournamentName, bannedPlayerName) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return false;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { margin: 0; padding: 0; background-color: #0F172A; font-family: 'Inter', sans-serif; color: #f1f5f9; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #1E293B; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
+        .header { background: #ef4444; padding: 30px; text-align: center; }
+        .header h1 { margin: 0; color: #fff; font-size: 24px; font-weight: 800; text-transform: uppercase; }
+        .content { padding: 40px 30px; text-align: center; }
+        .message { font-size: 16px; line-height: 1.6; color: #94a3b8; }
+        .highlight { color: #ef4444; font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header"><h1>Team Disqualified</h1></div>
+        <div class="content">
+          <div class="message">
+            <strong>Urgent Alert for Team ${teamName}</strong><br><br>
+            Player <strong class="highlight">${bannedPlayerName}</strong> has been banned from ArenaPulse.<br><br>
+            Because they were on your active roster, your team's enrollment for <strong>${tournamentName}</strong> has been revoked and you have been disqualified from the bracket.<br><br>
+            The player has been removed from your team. You may recruit a replacement and attempt to re-enroll if registration is still open.
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    const mailOptions = {
+      from: `"ArenaPulse Trust & Safety" <${process.env.EMAIL_USER}>`,
+      to: captainEmail,
+      subject: `Disqualified from ${tournamentName}`,
+      html: htmlContent,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('[Email Service] Error sending disqualify email:', error);
+    return false;
+  }
+};
+
