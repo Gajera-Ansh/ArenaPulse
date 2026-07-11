@@ -55,6 +55,8 @@ const Profile = () => {
   useEffect(() => {
     if (user?.role === 'organizer') {
       setActiveTab('tournaments');
+    } else if (user?.role === 'admin') {
+      setActiveTab('overview');
     } else if (user?.role === 'player') {
       setActiveTab('teams');
     }
@@ -198,28 +200,32 @@ const Profile = () => {
               <span className="text-text-secondary text-xs uppercase font-bold tracking-widest"><i className="fa-solid fa-calendar-plus mr-2 w-4"></i>Joined</span>
               <span className="text-text font-medium text-sm">{formatDate(user?.createdAt || Date.now())}</span>
             </div>
-            <div className="flex justify-between items-center pb-3 border-b border-border/50">
-              <span className="text-text-secondary text-xs uppercase font-bold tracking-widest"><i className="fa-solid fa-shield-halved mr-2 w-4"></i>{user?.role === 'organizer' ? 'Hosted' : 'Teams'}</span>
-              <span className="text-text font-bold text-sm text-primary">{user?.role === 'organizer' ? organizedTournaments.length : teams.length}</span>
-            </div>
-            {user?.role === 'player' && (
-              <div className="flex justify-between items-center pb-3 border-b border-border/50">
-                <span className="text-text-secondary text-xs uppercase font-bold tracking-widest"><i className="fa-solid fa-sitemap mr-2 w-4"></i>Tournaments</span>
-                <span className="text-text font-bold text-sm text-primary">{tournamentHistory.length}</span>
-              </div>
+            {user?.role !== 'admin' && (
+              <>
+                <div className="flex justify-between items-center pb-3 border-b border-border/50">
+                  <span className="text-text-secondary text-xs uppercase font-bold tracking-widest"><i className="fa-solid fa-shield-halved mr-2 w-4"></i>{user?.role === 'organizer' ? 'Hosted' : 'Teams'}</span>
+                  <span className="text-text font-bold text-sm text-primary">{user?.role === 'organizer' ? organizedTournaments.length : teams.length}</span>
+                </div>
+                {user?.role === 'player' && (
+                  <div className="flex justify-between items-center pb-3 border-b border-border/50">
+                    <span className="text-text-secondary text-xs uppercase font-bold tracking-widest"><i className="fa-solid fa-sitemap mr-2 w-4"></i>Tournaments</span>
+                    <span className="text-text font-bold text-sm text-primary">{tournamentHistory.length}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-text-secondary text-xs uppercase font-bold tracking-widest"><i className="fa-solid fa-trophy mr-2 w-4"></i>{user?.role === 'organizer' ? 'Status' : 'Win Rate'}</span>
+                  <span className="text-text font-bold text-sm text-emerald-500">
+                    {user?.role === 'organizer' ? 'Active' : (() => {
+                      if (!tournamentHistory || tournamentHistory.length === 0) return '0%';
+                      const completedTournaments = tournamentHistory.filter(t => t.status === 'completed');
+                      if (completedTournaments.length === 0) return '0%';
+                      const wins = completedTournaments.filter(t => t.winner && t.winner.toString() === t.myTeamId?.toString()).length;
+                      return `${Math.round((wins / completedTournaments.length) * 100)}%`;
+                    })()}
+                  </span>
+                </div>
+              </>
             )}
-            <div className="flex justify-between items-center">
-              <span className="text-text-secondary text-xs uppercase font-bold tracking-widest"><i className="fa-solid fa-trophy mr-2 w-4"></i>{user?.role === 'organizer' ? 'Status' : 'Win Rate'}</span>
-              <span className="text-text font-bold text-sm text-emerald-500">
-                {user?.role === 'organizer' ? 'Active' : (() => {
-                  if (!tournamentHistory || tournamentHistory.length === 0) return '0%';
-                  const completedTournaments = tournamentHistory.filter(t => t.status === 'completed');
-                  if (completedTournaments.length === 0) return '0%';
-                  const wins = completedTournaments.filter(t => t.winner && t.winner.toString() === t.myTeamId?.toString()).length;
-                  return `${Math.round((wins / completedTournaments.length) * 100)}%`;
-                })()}
-              </span>
-            </div>
           </div>
 
           {isOwnProfile && (
@@ -234,7 +240,7 @@ const Profile = () => {
 
           {/* Tabs Navigation */}
           <div className="flex gap-2 overflow-x-auto pb-4 hide-scrollbar">
-            {(user?.role === 'organizer' ? ['tournaments', 'analytics'] : ['teams', 'performance', 'history']).map((tab) => (
+            {(user?.role === 'organizer' ? ['tournaments', 'analytics'] : user?.role === 'admin' ? ['overview'] : ['teams', 'performance', 'history']).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -247,6 +253,7 @@ const Profile = () => {
                   tab === 'performance' ? <><i className="fa-solid fa-chart-line mr-2"></i> Performance</> :
                     tab === 'history' ? <><i className="fa-solid fa-clock-rotate-left mr-2"></i> Match History</> :
                       tab === 'tournaments' ? <><i className="fa-solid fa-sitemap mr-2"></i> Hosted Tournaments</> :
+                        tab === 'overview' ? <><i className="fa-solid fa-shield-halved mr-2"></i> Overview</> :
                         <><i className="fa-solid fa-chart-pie mr-2"></i> Organizer Analytics</>}
               </button>
             ))}
@@ -254,6 +261,19 @@ const Profile = () => {
 
           {/* Tab Content */}
           <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm flex flex-col flex-grow">
+
+            {/* Admin: Overview Tab */}
+            {activeTab === 'overview' && (
+              <div className="bg-white/5 border border-dashed border-border rounded-xl p-12 text-center flex flex-col items-center justify-center flex-grow animate-fade-in">
+                <div className="w-20 h-20 bg-primary/10 text-primary border border-primary/20 rounded-full flex items-center justify-center text-3xl mb-4">
+                  <i className="fa-solid fa-user-shield"></i>
+                </div>
+                <h4 className="text-[1.5rem] font-bold text-text mb-3">Admin Account</h4>
+                <p className="text-[1rem] text-text-secondary max-w-lg mx-auto">
+                  This is an administrative account. Player statistics, team participations, and match history are not tracked for administrators.
+                </p>
+              </div>
+            )}
 
             {/* Organizer: Tournaments Tab */}
             {activeTab === 'tournaments' && (
