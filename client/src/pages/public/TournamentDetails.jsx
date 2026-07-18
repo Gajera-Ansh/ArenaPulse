@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { useAuth } from '../../context/AuthContext';
 
+const GAME_STATS_FIELDS = {
+  'Valorant': ['kills', 'deaths', 'assists', 'headshots'],
+  'Counter-Strike 2': ['kills', 'deaths', 'assists', 'headshots'],
+  'BGMI': ['kills', 'deaths', 'damage'],
+  'Free Fire': ['kills', 'deaths', 'damage'],
+  'Dota 2': ['kills', 'deaths', 'assists'],
+  'League of Legends': ['kills', 'deaths', 'assists'],
+};
+
 const TournamentDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [tournament, setTournament] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -99,6 +109,30 @@ const TournamentDetails = () => {
   const [myRegistration, setMyRegistration] = useState(null);
   const [allRegistrations, setAllRegistrations] = useState([]);
   const [actionLoading, setActionLoading] = useState(null);
+  
+  // Tabs State
+  const [activeTab, setActiveTab] = useState('overview');
+  const [standings, setStandings] = useState([]);
+  const [loadingStandings, setLoadingStandings] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'leaderboard' && standings.length === 0) {
+      const fetchStandings = async () => {
+        setLoadingStandings(true);
+        try {
+          const res = await expressApi.get(`/api/tournaments/${id}/standings`);
+          if (res.data.success) {
+            setStandings(res.data.data);
+          }
+        } catch (err) {
+          console.error("Failed to load standings", err);
+        } finally {
+          setLoadingStandings(false);
+        }
+      };
+      fetchStandings();
+    }
+  }, [activeTab, id, standings.length]);
 
   useEffect(() => {
     const fetchTournamentAndRegistration = async () => {
@@ -321,24 +355,44 @@ const TournamentDetails = () => {
             </div>
           </div>
 
-          {/* Winner Celebration Banner */}
-          {tournament.status === 'completed' && tournament.winner && (
-            <div className="bg-surface border-2 border-accent/50 rounded-[8px] p-8 text-center relative overflow-hidden shadow-sm animate-fade-in mt-8">
-              <div className="absolute -top-20 -left-20 w-64 h-64 bg-accent/20 rounded-full blur-[80px] pointer-events-none"></div>
-              <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/20 rounded-full blur-[80px] pointer-events-none"></div>
+          {/* Tabs */}
+          <div className="flex gap-4 border-b border-border mt-6">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${activeTab === 'overview' ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'}`}
+            >
+              <i className="fa-solid fa-circle-info mr-2"></i> Overview
+            </button>
+            {tournament.status !== 'open' && (
+              <button
+                onClick={() => setActiveTab('leaderboard')}
+                className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${activeTab === 'leaderboard' ? 'text-accent border-b-2 border-accent' : 'text-text-secondary hover:text-text'}`}
+              >
+                <i className="fa-solid fa-ranking-star mr-2"></i> Leaderboard
+              </button>
+            )}
+          </div>
 
-              <i className="fa-solid fa-trophy text-6xl text-accent mb-6 animate-bounce"></i>
-              <h2 className="text-[1.1rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Tournament Champion</h2>
-              <h1 className="text-[3rem] sm:text-[4rem] font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent via-yellow-300 to-accent leading-tight mb-2 drop-shadow-lg">
-                {tournament.winner.name}
-              </h1>
-              <p className="text-[1.2rem] text-text font-bold">[{tournament.winner.tag}]</p>
-            </div>
-          )}
+          {activeTab === 'overview' ? (
+            <>
+              {/* Winner Celebration Banner */}
+              {tournament.status === 'completed' && tournament.winner && (
+                <div className="bg-surface border-2 border-accent/50 rounded-[8px] p-8 text-center relative overflow-hidden shadow-sm animate-fade-in mt-6">
+                  <div className="absolute -top-20 -left-20 w-64 h-64 bg-accent/20 rounded-full blur-[80px] pointer-events-none"></div>
+                  <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/20 rounded-full blur-[80px] pointer-events-none"></div>
 
-          {/* Rules Section */}
-          <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm">
-            <h3 className="text-[1.1rem] font-bold text-text uppercase tracking-widest border-b border-border pb-3 mb-6 flex items-center gap-3">
+                  <i className="fa-solid fa-trophy text-6xl text-accent mb-6 animate-bounce"></i>
+                  <h2 className="text-[1.1rem] font-bold text-text-secondary uppercase tracking-widest mb-2">Tournament Champion</h2>
+                  <h1 className="text-[3rem] sm:text-[4rem] font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent via-yellow-300 to-accent leading-tight mb-2 drop-shadow-lg">
+                    {tournament.winner.name}
+                  </h1>
+                  <p className="text-[1.2rem] text-text font-bold">[{tournament.winner.tag}]</p>
+                </div>
+              )}
+
+              {/* Rules Section */}
+              <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm mt-6">
+                <h3 className="text-[1.1rem] font-bold text-text uppercase tracking-widest border-b border-border pb-3 mb-6 flex items-center gap-3">
               <i className="fa-solid fa-clipboard-list text-primary"></i> Tournament Briefing
             </h3>
             <div className="prose prose-invert max-w-none">
@@ -432,6 +486,81 @@ const TournamentDetails = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          )}
+            </>
+          ) : (
+            <div className="bg-surface border border-border rounded-[8px] overflow-hidden shadow-sm mt-6 animate-fade-in">
+              <div className="p-4 sm:px-6 border-b border-border flex justify-between items-center bg-slate-50 dark:bg-black/10">
+                <h3 className="text-[1.0rem] font-bold text-text uppercase tracking-widest flex items-center gap-3">
+                  <i className="fa-solid fa-ranking-star text-accent"></i> Final Standings
+                </h3>
+              </div>
+              
+              {loadingStandings ? (
+                <div className="p-12 flex justify-center items-center">
+                  <i className="fa-solid fa-circle-notch fa-spin text-3xl text-primary"></i>
+                </div>
+              ) : standings.length === 0 ? (
+                <div className="p-12 text-center text-text-secondary">
+                  <i className="fa-solid fa-list-ol text-4xl mb-3 opacity-50"></i>
+                  <p>No standings available yet. Check back after matches have concluded.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto custom-scrollbar">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-bg border-b border-border">
+                        <th className="p-4 text-[0.8rem] font-bold text-text-secondary uppercase tracking-wider text-center w-24">Rank</th>
+                        <th className="p-4 text-[0.8rem] font-bold text-text-secondary uppercase tracking-wider">Player</th>
+                        <th className="p-4 text-[0.8rem] font-bold text-text-secondary uppercase tracking-wider text-center">Team</th>
+                        {GAME_STATS_FIELDS[tournament?.game || 'Valorant']?.map(field => (
+                          <th key={field} className="p-4 text-[0.8rem] font-bold text-text-secondary uppercase tracking-wider text-center">{field}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {standings.map((player, idx) => (
+                        <tr 
+                          key={idx} 
+                          onClick={() => navigate(`/profile/${player._id}`)}
+                          className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer group"
+                        >
+                          <td className="p-4 text-center">
+                            {player.rank === 1 ? (
+                              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 border border-yellow-200 shadow-sm font-bold text-sm">1st</div>
+                            ) : player.rank === 2 ? (
+                              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-200 text-slate-600 border border-slate-300 shadow-sm font-bold text-sm">2nd</div>
+                            ) : player.rank === 3 ? (
+                              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100/50 text-amber-700 border border-amber-200 shadow-sm font-bold text-sm">3rd</div>
+                            ) : (
+                              <span className="font-bold text-text-secondary text-sm">{player.rank}th</span>
+                            )}
+                          </td>
+                          <td className="p-4 flex items-center gap-3">
+                            <div className="w-10 h-10 rounded bg-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden border border-border">
+                              {player.avatar ? (
+                                <img src={player.avatar} alt="avatar" className="w-full h-full object-cover" />
+                              ) : (
+                                <i className="fa-solid fa-user text-slate-400"></i>
+                              )}
+                            </div>
+                            <span className="font-bold text-text text-[1.1rem] group-hover:text-primary transition-colors">{player.name}</span>
+                          </td>
+                          <td className="p-4 text-center text-[0.85rem] font-medium text-text-secondary">
+                            {player.team}
+                          </td>
+                          {GAME_STATS_FIELDS[tournament?.game || 'Valorant']?.map(field => (
+                            <td key={field} className="p-4 text-center text-[1rem] font-bold text-text">
+                              {player.stats[field] || '-'}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>

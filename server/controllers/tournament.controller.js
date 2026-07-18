@@ -387,54 +387,75 @@ export const getTournamentStandings = async (req, res, next) => {
     const tournament = await Tournament.findById(req.params.id);
     if (!tournament) return res.status(404).json({ success: false, message: 'Tournament not found' });
 
+    // Deep populate to get player names and avatars
     const matches = await Match.find({ tournament: req.params.id, status: 'completed' })
-      .populate('teamA', 'name logo')
-      .populate('teamB', 'name logo')
-      .populate('winner', 'name logo')
-      .sort({ round: -1 });
+      .populate({
+        path: 'teamA',
+        select: 'name players captain',
+        populate: [
+          { path: 'players', select: 'name avatar' },
+          { path: 'captain', select: 'name avatar' }
+        ]
+      })
+      .populate({
+        path: 'teamB',
+        select: 'name players captain',
+        populate: [
+          { path: 'players', select: 'name avatar' },
+          { path: 'captain', select: 'name avatar' }
+        ]
+      });
 
-    if (matches.length === 0) {
-      return res.status(200).json({ success: true, data: [] });
-    }
+    const playerAgg = {};
 
-    const maxRound = Math.max(...matches.map(m => m.round));
-    const standings = [];
-    const seenTeams = new Set();
-    
-    // Process final match (1st and 2nd)
-    const finalMatch = matches.find(m => m.round === maxRound);
-    if (finalMatch && finalMatch.winner) {
-      standings.push({ rank: 1, team: finalMatch.winner });
-      seenTeams.add(finalMatch.winner._id.toString());
+    matches.forEach(m => {
+      if (!m.playerStats || m.playerStats.size === 0) return;
       
-      const loser = finalMatch.teamA?._id.toString() === finalMatch.winner._id.toString() ? finalMatch.teamB : finalMatch.teamA;
-      if (loser) {
-        standings.push({ rank: 2, team: loser });
-        seenTeams.add(loser._id.toString());
-      }
-    }
-    
-    // Process backwards from semi-finals down
-    let currentRank = 3;
-    for (let r = maxRound - 1; r >= 1; r--) {
-      const roundMatches = matches.filter(m => m.round === r);
-      let teamsAddedThisRound = 0;
-      
-      for (const m of roundMatches) {
-        if (!m.winner) continue;
-        const loser = m.teamA?._id.toString() === m.winner._id.toString() ? m.teamB : m.teamA;
-        if (loser && !seenTeams.has(loser._id.toString())) {
-           standings.push({ rank: currentRank, team: loser });
-           seenTeams.add(loser._id.toString());
-           teamsAddedThisRound++;
+      const teamA_players = [...(m.teamA?.players || [])];
+      if (m.teamA?.captain) teamA_players.push(m.teamA.captain);
+      const teamB_players = [...(m.teamB?.players || [])];
+      if (m.teamB?.captain) teamB_players.push(m.teamB.captain);
+
+      for (const [pId, stats] of m.playerStats.entries()) {
+        if (!playerAgg[pId]) {
+          let playerObj = teamA_players.find(p => p && String(p._id) === pId);
+          let teamName = m.teamA?.name;
+          if (!playerObj) {
+            playerObj = teamB_players.find(p => p && String(p._id) === pId);
+            teamName = m.teamB?.name;
+          }
+          
+          if (!playerObj) continue;
+          
+          playerAgg[pId] = {
+            _id: playerObj._id,
+            name: playerObj.name,
+            avatar: playerObj.avatar,
+            team: teamName,
+            matchesPlayed: 0,
+            stats: {}
+          };
         }
+        
+        playerAgg[pId].matchesPlayed += 1;
+        
+        // Sum up stats
+        Object.entries(stats).forEach(([key, val]) => {
+          if (typeof val === 'number') {
+            playerAgg[pId].stats[key] = (playerAgg[pId].stats[key] || 0) + val;
+          }
+        });
       }
-      
-      if (teamsAddedThisRound > 0) {
-        currentRank += teamsAddedThisRound; 
-      }
-    }
+    });
+
+    const standings = Object.values(playerAgg);
     
+    // Sort primarily by kills if available
+    standings.sort((a, b) => (b.stats.kills || 0) - (a.stats.kills || 0));
+    
+    // Assign ranks
+    standings.forEach((p, idx) => p.rank = idx + 1);
+
     res.status(200).json({ success: true, data: standings });
   } catch (error) {
     next(error);
