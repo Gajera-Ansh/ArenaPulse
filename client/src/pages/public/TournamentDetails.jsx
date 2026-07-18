@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { useAuth } from '../../context/AuthContext';
 
@@ -15,6 +15,7 @@ const GAME_STATS_FIELDS = {
 const TournamentDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [tournament, setTournament] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -109,7 +110,7 @@ const TournamentDetails = () => {
   const [myRegistration, setMyRegistration] = useState(null);
   const [allRegistrations, setAllRegistrations] = useState([]);
   const [actionLoading, setActionLoading] = useState(null);
-  
+
   // Tabs State
   const [activeTab, setActiveTab] = useState('overview');
   const [standings, setStandings] = useState([]);
@@ -170,7 +171,7 @@ const TournamentDetails = () => {
             const registration = allRegs.find(reg => {
               if (!reg.team) return false;
               if (reg.team.captain === user.id) return true;
-              
+
               const roster = reg.lockedRoster?.length > 0 ? reg.lockedRoster : reg.team.players;
               return roster.some(p => typeof p === 'object' ? p._id === user.id : p === user.id);
             });
@@ -282,8 +283,8 @@ const TournamentDetails = () => {
     <div className="container py-8 sm:py-12 relative min-h-[calc(100vh-80px)]">
 
       {/* Back Button */}
-      <Link to="/tournaments" className="text-primary hover:text-primary-hover font-bold text-[0.9rem] flex items-center gap-2 w-fit transition-transform hover:-translate-x-1 mb-6">
-        <i className="fa-solid fa-arrow-left"></i> Back to Board
+      <Link to={location.state?.from || '/tournaments'} className="text-primary hover:text-primary-hover font-bold text-[0.9rem] flex items-center gap-2 w-fit transition-transform hover:-translate-x-1 mb-6">
+        <i className="fa-solid fa-arrow-left"></i> {location.state?.label || 'Back to Board'}
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -294,7 +295,7 @@ const TournamentDetails = () => {
           {/* Header Banner */}
           <div className="bg-surface border border-border rounded-[8px] overflow-hidden shadow-sm">
             <div className="min-h-[10rem] sm:min-h-[14rem] pt-16 bg-surface relative border-b border-border flex items-end p-6 sm:p-8 overflow-hidden">
-              
+
               {/* Visible Cyber Design (matching tournament cards) */}
               <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 12px)' }}></div>
               <div className="absolute right-0 top-0 w-2/3 h-full bg-gradient-to-l from-primary/20 to-transparent pointer-events-none"></div>
@@ -410,135 +411,135 @@ const TournamentDetails = () => {
               {/* Rules Section */}
               <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm mt-6">
                 <h3 className="text-[1.1rem] font-bold text-text uppercase tracking-widest border-b border-border pb-3 mb-6 flex items-center gap-3">
-              <i className="fa-solid fa-clipboard-list text-primary"></i> Tournament Briefing
-            </h3>
-            <div className="prose prose-invert max-w-none">
-              <p className="text-[1rem] text-text-secondary whitespace-pre-wrap leading-relaxed">
-                {tournament.rules || 'No briefing or rules provided for this tournament. Standby for further comms.'}
-              </p>
-            </div>
-          </div>
-
-          {/* Participating Teams (Public View) */}
-          {!isOrganizer && tournament.status === 'completed' && participants.length > 0 && (
-            <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm mt-6">
-              <h3 className="text-[1.1rem] font-bold text-text uppercase tracking-widest border-b border-border pb-3 mb-6 flex items-center gap-3">
-                <i className="fa-solid fa-users text-primary"></i> Participating Teams
-              </h3>
-              
-              <div className="space-y-4">
-                {participants.map(team => (
-                  <div key={team._id} className="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors hover:border-primary/30">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <img 
-                          src={team.logo ? (team.logo.startsWith('http') ? team.logo : `http://localhost:5000/${team.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(team.tag || team.name || 'T')}&background=random&color=fff&size=200&bold=true`} 
-                          alt={`${team.name || 'Team'} Logo`} 
-                          className="w-10 h-10 rounded border border-border object-cover bg-slate-800" 
-                        />
-                        <Link to={`/teams`} className="text-[1.1rem] font-bold text-text hover:text-primary transition-colors">{team.name}</Link>
-                        <span className="text-[0.7rem] bg-accent/20 text-accent font-bold px-2 py-0.5 rounded uppercase tracking-wider">[{team.tag}]</span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span className="text-[0.8rem] text-text-secondary">
-                          <i className="fa-solid fa-user-group mr-1"></i> {team.players?.length || 0} Players
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Organizer Registration Management Section */}
-          {isOrganizer && (
-            <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm mt-8">
-              <h3 className="text-[1.1rem] font-bold text-text uppercase tracking-widest border-b border-border pb-3 mb-6 flex items-center gap-3">
-                <i className="fa-solid fa-clipboard-check text-primary"></i> Manage Registrations
-              </h3>
-
-              {allRegistrations.length === 0 ? (
-                <div className="bg-white/5 border border-dashed border-border rounded-xl p-8 text-center flex flex-col items-center justify-center">
-                  <i className="fa-solid fa-users-slash text-text-secondary text-2xl mb-3"></i>
-                  <p className="text-text-secondary text-[0.95rem]">No teams have applied for this tournament yet.</p>
+                  <i className="fa-solid fa-clipboard-list text-primary"></i> Tournament Briefing
+                </h3>
+                <div className="prose prose-invert max-w-none">
+                  <p className="text-[1rem] text-text-secondary whitespace-pre-wrap leading-relaxed">
+                    {tournament.rules || 'No briefing or rules provided for this tournament. Standby for further comms.'}
+                  </p>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {allRegistrations.map(reg => (
-                    <div key={reg._id} className="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <img 
-                            src={reg.team?.logo ? (reg.team.logo.startsWith('http') ? reg.team.logo : `http://localhost:5000/${reg.team.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(reg.team?.tag || reg.team?.name || 'T')}&background=random&color=fff&size=200&bold=true`} 
-                            alt={`${reg.team?.name || 'Team'} Logo`} 
-                            className="w-10 h-10 rounded border border-border object-cover" 
-                          />
-                          <h4 className="text-[1.1rem] font-bold text-text">{reg.team?.name}</h4>
-                          <span className="text-[0.7rem] bg-accent/20 text-accent font-bold px-2 py-0.5 rounded uppercase tracking-wider">[{reg.team?.tag}]</span>
-                        </div>
+              </div>
 
-                        <div className="flex flex-wrap items-center gap-3">
-                          <span className={`px-2 py-1 rounded text-[0.7rem] font-bold uppercase tracking-widest ${reg.status === 'approved' ? 'bg-green-500/20 text-green-500 border border-green-500/30' :
-                            reg.status === 'rejected' ? 'bg-red-500/20 text-red-500 border border-red-500/30' :
-                              reg.status === 'awaiting_players' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' :
-                                'bg-primary/20 text-primary border border-primary/30'
-                            }`}>
-                            {reg.status.replace('_', ' ')}
-                          </span>
-                          <span className="text-[0.8rem] text-text-secondary">
-                            <i className="fa-solid fa-user-group mr-1"></i> {reg.team?.players?.length || 0} Players
-                          </span>
-                          {reg.status === 'awaiting_players' && reg.pendingPlayers && (
-                            <span className="text-[0.8rem] text-orange-400">
-                              <i className="fa-solid fa-clock mr-1"></i> Waiting on {reg.pendingPlayers.length} player(s)
+              {/* Participating Teams (Public View) */}
+              {!isOrganizer && tournament.status === 'completed' && participants.length > 0 && (
+                <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm mt-6">
+                  <h3 className="text-[1.1rem] font-bold text-text uppercase tracking-widest border-b border-border pb-3 mb-6 flex items-center gap-3">
+                    <i className="fa-solid fa-users text-primary"></i> Participating Teams
+                  </h3>
+
+                  <div className="space-y-4">
+                    {participants.map(team => (
+                      <div key={team._id} className="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors hover:border-primary/30">
+                        <div>
+                          <div className="flex items-center gap-3 mb-2">
+                            <img
+                              src={team.logo ? (team.logo.startsWith('http') ? team.logo : `http://localhost:5000/${team.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(team.tag || team.name || 'T')}&background=random&color=fff&size=200&bold=true`}
+                              alt={`${team.name || 'Team'} Logo`}
+                              className="w-10 h-10 rounded border border-border object-cover bg-slate-800"
+                            />
+                            <Link to={`/teams`} className="text-[1.1rem] font-bold text-text hover:text-primary transition-colors">{team.name}</Link>
+                            <span className="text-[0.7rem] bg-accent/20 text-accent font-bold px-2 py-0.5 rounded uppercase tracking-wider">[{team.tag}]</span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <span className="text-[0.8rem] text-text-secondary">
+                              <i className="fa-solid fa-user-group mr-1"></i> {team.players?.length || 0} Players
                             </span>
-                          )}
+                          </div>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-2 w-full md:w-auto">
-                        {tournament.status === 'open' && (
-                          <>
-                            {reg.status === 'pending' && (
-                              <>
-                                <button
-                                  onClick={() => handleOrganizerAction(reg._id, 'approved')}
-                                  disabled={actionLoading === reg._id}
-                                  className="flex-1 md:flex-none bg-green-500/20 hover:bg-green-500 text-green-500 hover:text-white border border-green-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
-                                >
-                                  {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-check"></i>}
-                                  Approve
-                                </button>
-                                <button
-                                  onClick={() => handleOrganizerAction(reg._id, 'rejected')}
-                                  disabled={actionLoading === reg._id}
-                                  className="flex-1 md:flex-none bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
-                                >
-                                  {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-xmark"></i>}
-                                  Reject
-                                </button>
-                              </>
-                            )}
-                            {reg.status === 'approved' && (
-                              <button
-                                onClick={() => handleOrganizerAction(reg._id, 'rejected')}
-                                disabled={actionLoading === reg._id}
-                                className="flex-1 md:flex-none bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-transparent hover:border-red-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
-                              >
-                                {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-ban"></i>}
-                                Revoke
-                              </button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               )}
-            </div>
-          )}
+
+              {/* Organizer Registration Management Section */}
+              {isOrganizer && (
+                <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm mt-8">
+                  <h3 className="text-[1.1rem] font-bold text-text uppercase tracking-widest border-b border-border pb-3 mb-6 flex items-center gap-3">
+                    <i className="fa-solid fa-clipboard-check text-primary"></i> Manage Registrations
+                  </h3>
+
+                  {allRegistrations.length === 0 ? (
+                    <div className="bg-white/5 border border-dashed border-border rounded-xl p-8 text-center flex flex-col items-center justify-center">
+                      <i className="fa-solid fa-users-slash text-text-secondary text-2xl mb-3"></i>
+                      <p className="text-text-secondary text-[0.95rem]">No teams have applied for this tournament yet.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {allRegistrations.map(reg => (
+                        <div key={reg._id} className="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                          <div>
+                            <div className="flex items-center gap-3 mb-2">
+                              <img
+                                src={reg.team?.logo ? (reg.team.logo.startsWith('http') ? reg.team.logo : `http://localhost:5000/${reg.team.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(reg.team?.tag || reg.team?.name || 'T')}&background=random&color=fff&size=200&bold=true`}
+                                alt={`${reg.team?.name || 'Team'} Logo`}
+                                className="w-10 h-10 rounded border border-border object-cover"
+                              />
+                              <h4 className="text-[1.1rem] font-bold text-text">{reg.team?.name}</h4>
+                              <span className="text-[0.7rem] bg-accent/20 text-accent font-bold px-2 py-0.5 rounded uppercase tracking-wider">[{reg.team?.tag}]</span>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3">
+                              <span className={`px-2 py-1 rounded text-[0.7rem] font-bold uppercase tracking-widest ${reg.status === 'approved' ? 'bg-green-500/20 text-green-500 border border-green-500/30' :
+                                reg.status === 'rejected' ? 'bg-red-500/20 text-red-500 border border-red-500/30' :
+                                  reg.status === 'awaiting_players' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' :
+                                    'bg-primary/20 text-primary border border-primary/30'
+                                }`}>
+                                {reg.status.replace('_', ' ')}
+                              </span>
+                              <span className="text-[0.8rem] text-text-secondary">
+                                <i className="fa-solid fa-user-group mr-1"></i> {reg.team?.players?.length || 0} Players
+                              </span>
+                              {reg.status === 'awaiting_players' && reg.pendingPlayers && (
+                                <span className="text-[0.8rem] text-orange-400">
+                                  <i className="fa-solid fa-clock mr-1"></i> Waiting on {reg.pendingPlayers.length} player(s)
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 w-full md:w-auto">
+                            {tournament.status === 'open' && (
+                              <>
+                                {reg.status === 'pending' && (
+                                  <>
+                                    <button
+                                      onClick={() => handleOrganizerAction(reg._id, 'approved')}
+                                      disabled={actionLoading === reg._id}
+                                      className="flex-1 md:flex-none bg-green-500/20 hover:bg-green-500 text-green-500 hover:text-white border border-green-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
+                                    >
+                                      {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-check"></i>}
+                                      Approve
+                                    </button>
+                                    <button
+                                      onClick={() => handleOrganizerAction(reg._id, 'rejected')}
+                                      disabled={actionLoading === reg._id}
+                                      className="flex-1 md:flex-none bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
+                                    >
+                                      {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-xmark"></i>}
+                                      Reject
+                                    </button>
+                                  </>
+                                )}
+                                {reg.status === 'approved' && (
+                                  <button
+                                    onClick={() => handleOrganizerAction(reg._id, 'rejected')}
+                                    disabled={actionLoading === reg._id}
+                                    className="flex-1 md:flex-none bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-transparent hover:border-red-500/30 font-bold py-2 px-4 rounded-lg text-[0.85rem] transition-all flex items-center justify-center gap-2"
+                                  >
+                                    {actionLoading === reg._id ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-ban"></i>}
+                                    Revoke
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           ) : (
             <div className="bg-surface border border-border rounded-[8px] overflow-hidden shadow-sm mt-6 animate-fade-in">
@@ -547,7 +548,7 @@ const TournamentDetails = () => {
                   <i className="fa-solid fa-ranking-star text-accent"></i> Final Standings
                 </h3>
               </div>
-              
+
               {loadingStandings ? (
                 <div className="p-12 flex justify-center items-center">
                   <i className="fa-solid fa-circle-notch fa-spin text-3xl text-primary"></i>
@@ -572,8 +573,8 @@ const TournamentDetails = () => {
                     </thead>
                     <tbody className="divide-y divide-border/50">
                       {standings.map((player, idx) => (
-                        <tr 
-                          key={idx} 
+                        <tr
+                          key={idx}
                           onClick={() => navigate(`/profile/${player._id}`)}
                           className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer group"
                         >
@@ -645,15 +646,15 @@ const TournamentDetails = () => {
 
             {!user ? (
               tournament.status === 'completed' ? null :
-              tournament.status !== 'open' || new Date(tournament.registrationDeadline) < new Date() ? (
-                <button disabled className="btn bg-black/5 text-text-secondary w-full border border-border cursor-not-allowed">
-                  <i className="fa-solid fa-lock"></i> Registration Closed
-                </button>
-              ) : (
-                <Link to="/login" className="btn-primary w-full justify-center flex items-center gap-2 py-3.5 text-[1rem]">
-                  <i className="fa-solid fa-right-to-bracket"></i> Login to Register
-                </Link>
-              )
+                tournament.status !== 'open' || new Date(tournament.registrationDeadline) < new Date() ? (
+                  <button disabled className="btn bg-black/5 text-text-secondary w-full border border-border cursor-not-allowed">
+                    <i className="fa-solid fa-lock"></i> Registration Closed
+                  </button>
+                ) : (
+                  <Link to="/login" className="btn-primary w-full justify-center flex items-center gap-2 py-3.5 text-[1rem]">
+                    <i className="fa-solid fa-right-to-bracket"></i> Login to Register
+                  </Link>
+                )
             ) : user.role === 'organizer' || user.role === 'admin' ? (
               <div className="bg-white/5 border border-border rounded-xl p-4 text-center">
                 <p className="text-[0.85rem] text-text-secondary font-medium">
@@ -796,10 +797,10 @@ const TournamentDetails = () => {
                     {myTeams.map(team => (
                       <div key={team._id} className="flex items-center justify-between p-4 bg-white/5 border border-border rounded-xl hover:border-primary/50 transition-colors">
                         <div className="flex items-center gap-3">
-                          <img 
-                            src={team.logo ? (team.logo.startsWith('http') ? team.logo : `http://localhost:5000/${team.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(team.tag || team.name)}&background=random&color=fff&size=200&bold=true`} 
-                            alt={`${team.name} Logo`} 
-                            className="w-10 h-10 rounded border border-border object-cover" 
+                          <img
+                            src={team.logo ? (team.logo.startsWith('http') ? team.logo : `http://localhost:5000/${team.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(team.tag || team.name)}&background=random&color=fff&size=200&bold=true`}
+                            alt={`${team.name} Logo`}
+                            className="w-10 h-10 rounded border border-border object-cover"
                           />
                           <div>
                             <h5 className="font-bold text-text text-[1rem] leading-tight">{team.name}</h5>

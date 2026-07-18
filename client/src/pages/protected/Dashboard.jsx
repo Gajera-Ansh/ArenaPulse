@@ -1,11 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const hashTab = location.hash.replace('#', '');
+  
   const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    if (hashTab && ['overview', 'history'].includes(hashTab)) {
+      setActiveTab(hashTab);
+    } else {
+      setActiveTab('overview');
+    }
+  }, [hashTab]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    navigate(`${location.pathname}#${tab}`, { replace: true });
+  };
   const [tournaments, setTournaments] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
@@ -123,7 +140,7 @@ const Dashboard = () => {
           {['overview', 'history'].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => handleTabChange(tab)}
               className={`px-5 py-2.5 rounded-t-xl font-bold text-[0.9rem] uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === tab
                 ? 'bg-primary text-white shadow-md transform translate-y-1'
                 : 'text-text-secondary hover:bg-white/10 hover:text-text'
@@ -280,7 +297,7 @@ const Dashboard = () => {
 
                           {/* Card Footer */}
                           <div className="p-4 border-t border-border bg-background">
-                            <Link to={`/tournaments/${t._id}`} className="block w-full text-center bg-primary hover:bg-primary-hover text-white font-bold py-2 rounded-[4px] transition-all text-[0.85rem] uppercase tracking-wider shadow-sm">
+                            <Link to={`/tournaments/${t._id}`} state={{ from: `/dashboard#${activeTab}`, label: 'Back to Dashboard' }} className="block w-full text-center bg-primary hover:bg-primary-hover text-white font-bold py-2 rounded-[4px] transition-all text-[0.85rem] uppercase tracking-wider shadow-sm">
                               View Details
                             </Link>
                           </div>
@@ -409,7 +426,7 @@ const Dashboard = () => {
                         </div>
 
                         <div className="p-4 border-t border-border bg-background">
-                          <Link to={`/tournaments/${t._id}`} className="block w-full text-center bg-primary hover:bg-primary-hover text-white font-bold py-2 rounded-[4px] transition-all text-[0.85rem] uppercase tracking-wider shadow-sm">
+                          <Link to={`/tournaments/${t._id}`} state={{ from: `/dashboard#${activeTab}`, label: 'Back to Dashboard' }} className="block w-full text-center bg-primary hover:bg-primary-hover text-white font-bold py-2 rounded-[4px] transition-all text-[0.85rem] uppercase tracking-wider shadow-sm">
                             View Details
                           </Link>
                         </div>

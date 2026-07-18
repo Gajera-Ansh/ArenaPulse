@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { SUPPORTED_GAMES } from '../../utils/constants';
 import { useAuth } from '../../context/AuthContext';
 
 const Tournaments = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const filterStatus = searchParams.get('status') || 'open';
   
@@ -169,7 +170,7 @@ const Tournaments = () => {
               </div>
 
               <div className="p-4 border-t border-border bg-background">
-                <Link to={`/tournaments/${t._id}`} className="block w-full text-center bg-primary hover:bg-primary-hover text-white font-bold py-2.5 rounded-[4px] transition-all text-[0.85rem] uppercase tracking-wider shadow-sm">
+                <Link to={`/tournaments/${t._id}`} state={{ from: `${location.pathname}${location.search}`, label: 'Back to Board' }} className="block w-full text-center bg-primary hover:bg-primary-hover text-white font-bold py-2.5 rounded-[4px] transition-all text-[0.85rem] uppercase tracking-wider shadow-sm">
                   View Details
                 </Link>
               </div>

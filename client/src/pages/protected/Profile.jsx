@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import expressApi from '../../api/expressApi';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { SUPPORTED_GAMES } from '../../utils/constants';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -50,6 +50,7 @@ const Profile = () => {
   const [analyticsData, setAnalyticsData] = useState([]);
   
   // Reporting state
+
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportData, setReportData] = useState({ reason: 'Cheating/Hacking', description: '', evidenceUrl: '' });
   const [reportLoading, setReportLoading] = useState(false);
@@ -58,16 +59,28 @@ const Profile = () => {
 
   const isOwnProfile = !id || (authUser && id === authUser.id);
   const user = isOwnProfile ? authUser : profileUser;
+  const location = useLocation();
+  const navigate = useNavigate();
+  const hashTab = location.hash.replace('#', '');
 
   useEffect(() => {
-    if (user?.role === 'organizer') {
-      setActiveTab('tournaments');
-    } else if (user?.role === 'admin') {
-      setActiveTab('overview');
-    } else if (user?.role === 'player') {
-      setActiveTab('teams');
+    if (hashTab && ['teams', 'tournaments', 'history', 'stats', 'analytics', 'performance', 'overview'].includes(hashTab)) {
+      setActiveTab(hashTab);
+    } else {
+      if (user?.role === 'organizer') {
+        setActiveTab('tournaments');
+      } else if (user?.role === 'admin') {
+        setActiveTab('overview');
+      } else if (user?.role === 'player') {
+        setActiveTab('teams');
+      }
     }
-  }, [user?.role]);
+  }, [user?.role, hashTab]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    navigate(`${location.pathname}#${tab}`, { replace: true });
+  };
 
   useEffect(() => {
     if (showReportModal) {
@@ -297,7 +310,7 @@ const Profile = () => {
             {(user?.role === 'organizer' ? ['tournaments', 'analytics'] : user?.role === 'admin' ? ['overview'] : ['teams', 'performance', 'history']).map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => handleTabChange(tab)}
                 className={`whitespace-nowrap px-6 py-3 rounded-[4px] text-[0.85rem] font-bold uppercase tracking-widest transition-all ${activeTab === tab
                     ? 'bg-primary text-white shadow-lg shadow-primary/20'
                     : 'bg-surface border border-border text-text-secondary hover:bg-white/5 hover:text-text'
@@ -350,7 +363,7 @@ const Profile = () => {
                 ) : organizedTournaments.length > 0 ? (
                   <div className="space-y-4">
                     {organizedTournaments.map(tournament => (
-                      <Link to={`/tournaments/${tournament._id}`} key={tournament._id} className={`block bg-black/10 border border-border rounded-[8px] p-5 transition-all hover:border-primary/50 group`}>
+                      <Link to={`/tournaments/${tournament._id}`} state={{ from: `${location.pathname}#${activeTab}`, label: 'Back to Profile' }} key={tournament._id} className={`block bg-black/10 border border-border rounded-[8px] p-5 transition-all hover:border-primary/50 group`}>
                         <div className="flex justify-between items-start mb-3">
                           <div>
                             <h4 className="text-lg font-bold text-text group-hover:text-primary transition-colors">{tournament.title}</h4>
@@ -705,7 +718,7 @@ const Profile = () => {
                       )).map((t) => {
                         const isWin = String(t.winner) === String(t.myTeamId);
                         return (
-                          <Link to={`/tournaments/${t._id}`} key={t._id} className={`block bg-black/10 border border-border rounded-[8px] p-5 transition-all relative overflow-hidden ${isOwnProfile ? 'hover:border-primary/50 group' : 'pointer-events-none'}`}>
+                          <Link to={`/tournaments/${t._id}`} state={{ from: `${location.pathname}#${activeTab}`, label: 'Back to Profile' }} key={t._id} className={`block bg-black/10 border border-border rounded-[8px] p-5 transition-all relative overflow-hidden hover:border-primary/50 group`}>
                             {/* Win/Loss background subtle gradient */}
                             <div className={`absolute right-0 top-0 bottom-0 w-32 pointer-events-none opacity-20 bg-gradient-to-l ${isWin ? 'from-emerald-500' : 'from-red-500'} to-transparent`}></div>
 
