@@ -650,6 +650,10 @@ const TournamentDetails = () => {
                   <button disabled className="btn bg-black/5 text-text-secondary w-full border border-border cursor-not-allowed">
                     <i className="fa-solid fa-lock"></i> Registration Closed
                   </button>
+                ) : tournament.enrolledCount >= tournament.maxTeams ? (
+                  <button disabled className="btn bg-black/5 text-text-secondary w-full border border-border cursor-not-allowed">
+                    <i className="fa-solid fa-ban"></i> Tournament Full
+                  </button>
                 ) : (
                   <Link to="/login" className="btn-primary w-full justify-center flex items-center gap-2 py-3.5 text-[1rem]">
                     <i className="fa-solid fa-right-to-bracket"></i> Login to Register
@@ -699,6 +703,10 @@ const TournamentDetails = () => {
             ) : tournament.status === 'completed' ? null : tournament.status !== 'open' || new Date(tournament.registrationDeadline) < new Date() ? (
               <button disabled className="btn bg-black/5 text-text-secondary w-full border border-border cursor-not-allowed">
                 <i className="fa-solid fa-lock"></i> Registration Closed
+              </button>
+            ) : tournament.enrolledCount >= tournament.maxTeams ? (
+              <button disabled className="btn bg-black/5 text-text-secondary w-full border border-border cursor-not-allowed">
+                <i className="fa-solid fa-ban"></i> Tournament Full
               </button>
             ) : (
               <button onClick={handleOpenModal} className="btn-primary w-full justify-center text-[1rem] py-3">

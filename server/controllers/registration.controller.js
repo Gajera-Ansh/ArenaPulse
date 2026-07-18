@@ -135,6 +135,14 @@ export const updateRegistrationStatus = async (req, res, next) => {
     }
 
     const previousStatus = registration.status;
+    
+    // Prevent approving if tournament is full
+    if (status === 'approved' && previousStatus !== 'approved') {
+      if (registration.tournament.enrolledCount >= registration.tournament.maxTeams) {
+        return res.status(400).json({ success: false, message: 'Tournament is already at maximum capacity. Cannot approve more teams.' });
+      }
+    }
+
     registration.status = status;
     registration.note = note || '';
     await registration.save();
