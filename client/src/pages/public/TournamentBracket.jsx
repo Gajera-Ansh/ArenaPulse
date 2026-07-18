@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
@@ -97,6 +97,7 @@ const MatchNode = ({ match, allMatches, openMatchModal }) => {
 
 const TournamentBracket = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { socket } = useSocket();
 
@@ -636,8 +637,8 @@ const TournamentBracket = () => {
       {/* Match Score Modal */}
       {selectedMatch && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-surface border border-slate-300 rounded-[8px] shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden animate-slide-up">
-            <div className="bg-slate-50 p-4 border-b border-slate-300 flex justify-between items-center">
+          <div className="bg-surface border border-slate-300 rounded-[8px] shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-slide-up">
+            <div className="bg-slate-50 p-4 border-b border-slate-300 flex justify-between items-center flex-shrink-0">
               <h3 className="text-lg font-bold text-text uppercase tracking-widest">
                 Match {selectedMatch.matchNumber} Details
               </h3>
@@ -646,7 +647,7 @@ const TournamentBracket = () => {
               </button>
             </div>
 
-            <div className="p-4 sm:p-6">
+            <div className="p-4 sm:p-6 overflow-y-auto flex-grow custom-scrollbar">
               {!isOrganizer ? (
                 // Public View (Read-Only)
                 <div className="space-y-4 sm:space-y-6">
@@ -796,6 +797,76 @@ const TournamentBracket = () => {
                   </div>
                 )}
               </div>
+              
+              {/* Mini Match Leaderboard (Player Stats) */}
+              {selectedMatch.status === 'completed' && selectedMatch.playerStats && Object.keys(selectedMatch.playerStats).length > 0 && (
+                <div className="mt-8 border-t border-slate-200 pt-6 animate-fade-in">
+                  <h4 className="text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <i className="fa-solid fa-chart-line text-primary"></i> Match Leaderboard
+                  </h4>
+                  <div className="bg-white border border-slate-200 rounded-[6px] overflow-hidden shadow-sm">
+                    <div className="overflow-x-auto custom-scrollbar">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200">
+                            <th className="p-3 text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider">Player</th>
+                            <th className="p-3 text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider text-center">Team</th>
+                            {GAME_STATS_FIELDS[tournament?.game || 'Valorant']?.map(field => (
+                              <th key={field} className="p-3 text-[0.7rem] font-bold text-text-secondary uppercase tracking-wider text-center">{field}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {(() => {
+                            // Extract players and stats
+                            const players = [];
+                            const teamA_players = [...(selectedMatch.teamA?.players || [])];
+                            if (selectedMatch.teamA?.captain) teamA_players.push(selectedMatch.teamA.captain);
+                            const teamB_players = [...(selectedMatch.teamB?.players || [])];
+                            if (selectedMatch.teamB?.captain) teamB_players.push(selectedMatch.teamB.captain);
+
+                            Object.entries(selectedMatch.playerStats).forEach(([pId, stats]) => {
+                              let playerObj = teamA_players.find(p => p && String(p._id) === pId);
+                              let teamName = selectedMatch.teamA?.name;
+                              
+                              if (!playerObj) {
+                                playerObj = teamB_players.find(p => p && String(p._id) === pId);
+                                teamName = selectedMatch.teamB?.name;
+                              }
+                              
+                              if (playerObj) {
+                                players.push({ _id: playerObj._id, name: playerObj.name, team: teamName, stats });
+                              }
+                            });
+
+                            // Sort primarily by kills if available, else standard
+                            players.sort((a, b) => (b.stats.kills || 0) - (a.stats.kills || 0));
+
+                            return players.map((p, idx) => (
+                              <tr 
+                                key={idx} 
+                                onClick={() => navigate(`/profile/${p._id}`)}
+                                className="hover:bg-slate-50 transition-colors cursor-pointer group"
+                              >
+                                <td className="p-3 flex items-center gap-2">
+                                  {idx === 0 && <i className="fa-solid fa-medal text-yellow-500"></i>}
+                                  <span className={`font-bold text-[0.85rem] group-hover:text-primary transition-colors ${idx === 0 ? 'text-text' : 'text-text-secondary'}`}>{p.name}</span>
+                                </td>
+                                <td className="p-3 text-center text-[0.75rem] font-medium text-text-secondary">{p.team}</td>
+                                {GAME_STATS_FIELDS[tournament?.game || 'Valorant']?.map(field => (
+                                  <td key={field} className="p-3 text-center text-[0.85rem] font-bold text-text">
+                                    {p.stats[field] || '-'}
+                                  </td>
+                                ))}
+                              </tr>
+                            ));
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

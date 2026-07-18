@@ -102,11 +102,7 @@ function App() {
                 } />
 
                 <Route path="/tournaments" element={<Tournaments />} />
-                <Route path="/tournaments/:id" element={
-                  <ProtectedRoute>
-                    <TournamentDetails />
-                  </ProtectedRoute>
-                } />
+                <Route path="/tournaments/:id" element={<TournamentDetails />} />
                 <Route path="/tournaments/:id/bracket" element={<TournamentBracket />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
               </Routes>

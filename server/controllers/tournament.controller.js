@@ -380,3 +380,63 @@ export const rateTournament = async (req, res, next) => {
     next(error);
   }
 };
+
+// GET /api/tournaments/:id/standings
+export const getTournamentStandings = async (req, res, next) => {
+  try {
+    const tournament = await Tournament.findById(req.params.id);
+    if (!tournament) return res.status(404).json({ success: false, message: 'Tournament not found' });
+
+    const matches = await Match.find({ tournament: req.params.id, status: 'completed' })
+      .populate('teamA', 'name logo')
+      .populate('teamB', 'name logo')
+      .populate('winner', 'name logo')
+      .sort({ round: -1 });
+
+    if (matches.length === 0) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    const maxRound = Math.max(...matches.map(m => m.round));
+    const standings = [];
+    const seenTeams = new Set();
+    
+    // Process final match (1st and 2nd)
+    const finalMatch = matches.find(m => m.round === maxRound);
+    if (finalMatch && finalMatch.winner) {
+      standings.push({ rank: 1, team: finalMatch.winner });
+      seenTeams.add(finalMatch.winner._id.toString());
+      
+      const loser = finalMatch.teamA?._id.toString() === finalMatch.winner._id.toString() ? finalMatch.teamB : finalMatch.teamA;
+      if (loser) {
+        standings.push({ rank: 2, team: loser });
+        seenTeams.add(loser._id.toString());
+      }
+    }
+    
+    // Process backwards from semi-finals down
+    let currentRank = 3;
+    for (let r = maxRound - 1; r >= 1; r--) {
+      const roundMatches = matches.filter(m => m.round === r);
+      let teamsAddedThisRound = 0;
+      
+      for (const m of roundMatches) {
+        if (!m.winner) continue;
+        const loser = m.teamA?._id.toString() === m.winner._id.toString() ? m.teamB : m.teamA;
+        if (loser && !seenTeams.has(loser._id.toString())) {
+           standings.push({ rank: currentRank, team: loser });
+           seenTeams.add(loser._id.toString());
+           teamsAddedThisRound++;
+        }
+      }
+      
+      if (teamsAddedThisRound > 0) {
+        currentRank += teamsAddedThisRound; 
+      }
+    }
+    
+    res.status(200).json({ success: true, data: standings });
+  } catch (error) {
+    next(error);
+  }
+};

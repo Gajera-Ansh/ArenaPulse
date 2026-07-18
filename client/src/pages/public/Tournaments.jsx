@@ -6,9 +6,8 @@ import { useAuth } from '../../context/AuthContext';
 
 const Tournaments = () => {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
   const [searchParams, setSearchParams] = useSearchParams();
-  const filterStatus = isAdmin ? (searchParams.get('status') || 'open') : 'open';
+  const filterStatus = searchParams.get('status') || 'open';
   
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,10 +43,12 @@ const Tournaments = () => {
     fetchTournaments();
   }, [filterGame]);
 
-  const filteredTournaments = tournaments.filter(t =>
-    t.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-    t.status === filterStatus
-  );
+  const filteredTournaments = tournaments
+    .filter(t =>
+      t.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      t.status === filterStatus
+    )
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Newest first
 
   return (
     <div className="container py-8 sm:py-12 relative min-h-[calc(100vh-80px)] overflow-hidden flex flex-col">
@@ -64,23 +65,21 @@ const Tournaments = () => {
         </p>
       </div>
 
-      {/* Tabs - Only Admins can switch to Completed */}
-      {isAdmin && (
-        <div className="flex gap-4 mb-6 border-b border-border pb-1">
-          <button 
-            onClick={() => setSearchParams({ status: 'open' })} 
-            className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'open' ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'}`}
-          >
-            <i className="fa-solid fa-door-open mr-2"></i> Open Registration
-          </button>
-          <button 
-            onClick={() => setSearchParams({ status: 'completed' })} 
-            className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'completed' ? 'text-accent border-b-2 border-accent' : 'text-text-secondary hover:text-text'}`}
-          >
-            <i className="fa-solid fa-trophy mr-2"></i> Completed
-          </button>
-        </div>
-      )}
+      {/* Tabs */}
+      <div className="flex gap-4 mb-6 border-b border-border pb-1">
+        <button 
+          onClick={() => setSearchParams({ status: 'open' })} 
+          className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'open' ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'}`}
+        >
+          <i className="fa-solid fa-door-open mr-2"></i> Open Registration
+        </button>
+        <button 
+          onClick={() => setSearchParams({ status: 'completed' })} 
+          className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'completed' ? 'text-accent border-b-2 border-accent' : 'text-text-secondary hover:text-text'}`}
+        >
+          <i className="fa-solid fa-clock-rotate-left mr-2"></i> Past Events
+        </button>
+      </div>
 
       {/* Controls & Filters */}
       <div className="bg-surface border border-border rounded-[8px] p-4 sm:p-6 mb-8 sm:mb-10 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between mx-0 sm:mx-4 lg:mx-0">

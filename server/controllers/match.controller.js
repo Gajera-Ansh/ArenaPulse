@@ -60,8 +60,22 @@ const handleTournamentCompletion = async (tournamentId, winnerTeamId, io) => {
 export const getMatchesByTournament = async (req, res, next) => {
   try {
     const matches = await Match.find({ tournament: req.params.tournamentId })
-      .populate('teamA', 'name tag logo')
-      .populate('teamB', 'name tag logo')
+      .populate({
+        path: 'teamA',
+        select: 'name tag logo players captain',
+        populate: [
+          { path: 'players', select: 'name' },
+          { path: 'captain', select: 'name' }
+        ]
+      })
+      .populate({
+        path: 'teamB',
+        select: 'name tag logo players captain',
+        populate: [
+          { path: 'players', select: 'name' },
+          { path: 'captain', select: 'name' }
+        ]
+      })
       .populate('winner', 'name tag')
       .sort({ round: 1, matchNumber: 1 });
 
