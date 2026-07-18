@@ -1,7 +1,7 @@
 // Tournament routes - CRUD, status updates
 
 import { Router } from 'express';
-import { createTournament, getAllTournaments, getTournamentById, updateTournament, updateStatus, deleteTournament, startTournament, getPendingRatings, rateTournament, getTournamentStandings } from '../controllers/tournament.controller.js';
+import { createTournament, getAllTournaments, getTournamentById, updateTournament, updateStatus, deleteTournament, startTournament, getPendingRatings, rateTournament, getTournamentStandings, getTournamentParticipants } from '../controllers/tournament.controller.js';
 import authMiddleware from '../middleware/auth.middleware.js';
 import roleMiddleware from '../middleware/role.middleware.js';
 
@@ -11,6 +11,7 @@ router.get('/', getAllTournaments);
 router.get('/pending/ratings', authMiddleware, roleMiddleware('player'), getPendingRatings);
 router.get('/:id', getTournamentById);
 router.get('/:id/standings', getTournamentStandings);
+router.get('/:id/participants', getTournamentParticipants);
 router.post('/', authMiddleware, roleMiddleware('organizer', 'admin'), createTournament);
 router.put('/:id', authMiddleware, roleMiddleware('organizer', 'admin'), updateTournament);
 router.patch('/:id/status', authMiddleware, roleMiddleware('organizer', 'admin'), updateStatus);

@@ -114,6 +114,23 @@ const TournamentDetails = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [standings, setStandings] = useState([]);
   const [loadingStandings, setLoadingStandings] = useState(false);
+  const [participants, setParticipants] = useState([]);
+
+  useEffect(() => {
+    if (tournament && tournament.status === 'completed') {
+      const fetchParticipants = async () => {
+        try {
+          const res = await expressApi.get(`/api/tournaments/${id}/participants`);
+          if (res.data.success) {
+            setParticipants(res.data.data);
+          }
+        } catch (err) {
+          console.error("Failed to fetch participants", err);
+        }
+      };
+      fetchParticipants();
+    }
+  }, [tournament?.status, id]);
 
   useEffect(() => {
     if (activeTab === 'leaderboard' && standings.length === 0) {
@@ -402,6 +419,38 @@ const TournamentDetails = () => {
             </div>
           </div>
 
+          {/* Participating Teams (Public View) */}
+          {!isOrganizer && tournament.status === 'completed' && participants.length > 0 && (
+            <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm mt-6">
+              <h3 className="text-[1.1rem] font-bold text-text uppercase tracking-widest border-b border-border pb-3 mb-6 flex items-center gap-3">
+                <i className="fa-solid fa-users text-primary"></i> Participating Teams
+              </h3>
+              
+              <div className="space-y-4">
+                {participants.map(team => (
+                  <div key={team._id} className="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors hover:border-primary/30">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <img 
+                          src={team.logo ? (team.logo.startsWith('http') ? team.logo : `http://localhost:5000/${team.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(team.tag || team.name || 'T')}&background=random&color=fff&size=200&bold=true`} 
+                          alt={`${team.name || 'Team'} Logo`} 
+                          className="w-10 h-10 rounded border border-border object-cover bg-slate-800" 
+                        />
+                        <Link to={`/teams`} className="text-[1.1rem] font-bold text-text hover:text-primary transition-colors">{team.name}</Link>
+                        <span className="text-[0.7rem] bg-accent/20 text-accent font-bold px-2 py-0.5 rounded uppercase tracking-wider">[{team.tag}]</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="text-[0.8rem] text-text-secondary">
+                          <i className="fa-solid fa-user-group mr-1"></i> {team.players?.length || 0} Players
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Organizer Registration Management Section */}
           {isOrganizer && (
             <div className="bg-surface border border-border rounded-[8px] p-6 sm:p-8 shadow-sm mt-8">
@@ -595,9 +644,16 @@ const TournamentDetails = () => {
             </div>
 
             {!user ? (
-              <Link to="/login" className="btn-primary w-full justify-center flex items-center gap-2 py-3.5 text-[1rem]">
-                <i className="fa-solid fa-right-to-bracket"></i> Login to Register
-              </Link>
+              tournament.status === 'completed' ? null :
+              tournament.status !== 'open' || new Date(tournament.registrationDeadline) < new Date() ? (
+                <button disabled className="btn bg-black/5 text-text-secondary w-full border border-border cursor-not-allowed">
+                  <i className="fa-solid fa-lock"></i> Registration Closed
+                </button>
+              ) : (
+                <Link to="/login" className="btn-primary w-full justify-center flex items-center gap-2 py-3.5 text-[1rem]">
+                  <i className="fa-solid fa-right-to-bracket"></i> Login to Register
+                </Link>
+              )
             ) : user.role === 'organizer' || user.role === 'admin' ? (
               <div className="bg-white/5 border border-border rounded-xl p-4 text-center">
                 <p className="text-[0.85rem] text-text-secondary font-medium">
@@ -639,7 +695,7 @@ const TournamentDetails = () => {
                   })}
                 </div>
               </div>
-            ) : tournament.status !== 'open' || new Date(tournament.registrationDeadline) < new Date() ? (
+            ) : tournament.status === 'completed' ? null : tournament.status !== 'open' || new Date(tournament.registrationDeadline) < new Date() ? (
               <button disabled className="btn bg-black/5 text-text-secondary w-full border border-border cursor-not-allowed">
                 <i className="fa-solid fa-lock"></i> Registration Closed
               </button>

@@ -461,3 +461,20 @@ export const getTournamentStandings = async (req, res, next) => {
     next(error);
   }
 };
+
+// GET /api/tournaments/:id/participants
+export const getTournamentParticipants = async (req, res, next) => {
+  try {
+    const registrations = await Registration.find({ 
+      tournament: req.params.id,
+      status: 'approved'
+    }).populate('team', 'name tag logo players captain');
+    
+    // Extract unique teams
+    const teams = registrations.map(reg => reg.team).filter(Boolean);
+    
+    res.status(200).json({ success: true, data: teams });
+  } catch (error) {
+    next(error);
+  }
+};
