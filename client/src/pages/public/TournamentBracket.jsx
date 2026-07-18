@@ -219,11 +219,14 @@ const TournamentBracket = () => {
   useEffect(() => {
     if (selectedMatch || showStatsModal) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
+      document.documentElement.style.overflow = 'unset';
     }
     return () => {
       document.body.style.overflow = 'unset';
+      document.documentElement.style.overflow = 'unset';
     };
   }, [selectedMatch, showStatsModal]);
 
@@ -756,6 +759,9 @@ const TournamentBracket = () => {
               )}
 
               {/* ML Features Section */}
+              {((selectedMatch.status !== 'completed' && selectedMatch.teamA && selectedMatch.teamB) || 
+                (selectedMatch.status === 'completed' && selectedMatch.nextMatchNumber === null && selectedMatch.summary) ||
+                (isOrganizer && selectedMatch.status === 'completed' && selectedMatch.nextMatchNumber === null)) && (
               <div className="mt-8 border-t border-slate-200 pt-6">
                 <h4 className="text-[0.8rem] font-bold text-text-secondary uppercase tracking-widest mb-4 flex items-center gap-2">
                   <i className="fa-solid fa-microchip text-accent"></i> AI Analysis
@@ -797,6 +803,7 @@ const TournamentBracket = () => {
                   </div>
                 )}
               </div>
+              )}
               
               {/* Mini Match Leaderboard (Player Stats) */}
               {selectedMatch.status === 'completed' && selectedMatch.playerStats && Object.keys(selectedMatch.playerStats).length > 0 && (
