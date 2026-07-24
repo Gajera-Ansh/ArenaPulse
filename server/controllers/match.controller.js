@@ -56,6 +56,35 @@ const handleTournamentCompletion = async (tournamentId, winnerTeamId, io) => {
   }
 };
 
+// PATCH /api/matches/:id/schedule
+export const scheduleMatch = async (req, res, next) => {
+  try {
+    const { scheduledAt } = req.body;
+    const match = await Match.findById(req.params.id).populate('tournament');
+
+    if (!match) {
+      return res.status(404).json({ success: false, message: 'Match not found.' });
+    }
+
+    if (match.tournament.organizer.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Only the organizer can schedule this match.' });
+    }
+
+    match.scheduledAt = scheduledAt ? new Date(scheduledAt) : null;
+    await match.save();
+
+    // Broadcast the update
+    const io = req.app.get('socketio');
+    if (io) {
+      io.to(match.tournament._id.toString()).emit('score_updated', match);
+    }
+
+    res.status(200).json({ success: true, data: match, message: 'Match schedule updated successfully.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // GET /api/matches/tournament/:tournamentId
 export const getMatchesByTournament = async (req, res, next) => {
   try {

@@ -110,6 +110,7 @@ const TournamentBracket = () => {
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [scoreA, setScoreA] = useState('');
   const [scoreB, setScoreB] = useState('');
+  const [scheduledAt, setScheduledAt] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   // ML Feature States
@@ -236,6 +237,15 @@ const TournamentBracket = () => {
     setSelectedMatch(match);
     setScoreA(match.scoreA !== null ? match.scoreA.toString() : '0');
     setScoreB(match.scoreB !== null ? match.scoreB.toString() : '0');
+    if (match.scheduledAt) {
+      // Convert to local datetime-local string format (YYYY-MM-DDTHH:mm)
+      const date = new Date(match.scheduledAt);
+      const tzOffset = date.getTimezoneOffset() * 60000;
+      const localISOTime = (new Date(date - tzOffset)).toISOString().slice(0, 16);
+      setScheduledAt(localISOTime);
+    } else {
+      setScheduledAt('');
+    }
   };
 
   const closeMatchModal = () => {
@@ -289,11 +299,28 @@ const TournamentBracket = () => {
             setMatches(resMatches.data.data);
           }
         });
+        setSelectedMatch(res.data.data);
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to update live score');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleScheduleUpdate = async () => {
+    try {
+      const res = await expressApi.patch(`/api/matches/${selectedMatch._id}/schedule`, { scheduledAt });
+      if (res.data.success) {
+        // Re-fetch all matches so bracket nodes update
+        expressApi.get(`/api/matches/tournament/${id}`).then(r => {
+          if (r.data.success) setMatches(r.data.data);
+        });
+        setSelectedMatch(res.data.data);
+        alert('Match schedule updated!');
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update schedule');
     }
   };
 
@@ -672,6 +699,12 @@ const TournamentBracket = () => {
 
                   <div className="text-center bg-slate-100 py-3 rounded-[4px] border border-slate-200">
                     <p className="text-text-secondary text-sm uppercase tracking-widest font-bold">Status: <span className={selectedMatch.status === 'live' ? 'text-primary' : 'text-text'}>{selectedMatch.status}</span></p>
+                    {selectedMatch.scheduledAt && selectedMatch.status === 'upcoming' && (
+                      <p className="text-text mt-2 font-medium text-[0.95rem]">
+                        <i className="fa-regular fa-calendar-check text-primary mr-2"></i>
+                        Scheduled for: {new Date(selectedMatch.scheduledAt).toLocaleString()}
+                      </p>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -724,6 +757,29 @@ const TournamentBracket = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
+                      
+                      {/* Match Scheduling Input */}
+                      {selectedMatch.status === 'upcoming' && (
+                        <div className="bg-slate-100 p-4 rounded-[4px] border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                          <div className="flex-1 w-full">
+                            <label className="block text-[0.7rem] font-bold text-text-secondary uppercase tracking-widest mb-1">Schedule Match Time</label>
+                            <input 
+                              type="datetime-local" 
+                              value={scheduledAt}
+                              onChange={(e) => setScheduledAt(e.target.value)}
+                              className="input-field w-full text-[0.9rem] py-2"
+                            />
+                          </div>
+                          <button 
+                            type="button" 
+                            onClick={handleScheduleUpdate}
+                            className="btn-outline whitespace-nowrap !py-2.5 mt-0 sm:mt-5 w-full sm:w-auto"
+                          >
+                            Save Time
+                          </button>
+                        </div>
+                      )}
+
                       {selectedMatch.teamA && selectedMatch.teamB && (
                         <div className="flex justify-end mb-2">
                           <button
