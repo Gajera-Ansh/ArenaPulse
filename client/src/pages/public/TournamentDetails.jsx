@@ -317,7 +317,7 @@ const TournamentDetails = () => {
             </div>
 
             <div className="p-6 sm:p-8 flex flex-col gap-5 bg-background border-t border-border">
-              <div className="flex items-center gap-4">
+              <Link to={tournament.organizer?._id ? `/profile/${tournament.organizer._id}` : '#'} className="flex items-center gap-4 hover:bg-white/5 p-2 -ml-2 rounded-lg transition-colors cursor-pointer">
                 <div className="w-12 h-12 bg-white/5 border border-border rounded-full flex items-center justify-center text-text-secondary text-xl overflow-hidden shrink-0">
                   {tournament.organizer?.avatar ? (
                     <img src={tournament.organizer.avatar} alt="Organizer" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -327,9 +327,9 @@ const TournamentDetails = () => {
                 </div>
                 <div>
                   <p className="text-[0.75rem] text-text-secondary font-bold uppercase tracking-widest mb-0.5">Organized By</p>
-                  <p className="text-[1rem] font-bold text-text">{tournament.organizer?.name || 'Unknown Commander'}</p>
+                  <p className="text-[1rem] font-bold text-text group-hover:text-primary transition-colors">{tournament.organizer?.name || 'Unknown Commander'}</p>
                 </div>
-              </div>
+              </Link>
 
               <div className="flex flex-wrap items-center gap-3">
                 {tournament.status !== 'open' && (

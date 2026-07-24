@@ -37,7 +37,7 @@ const OrganizerRatingTooltip = ({ active, payload }) => {
 const Profile = () => {
   const { user: authUser } = useAuth();
   const { id } = useParams();
-  
+
   const [profileUser, setProfileUser] = useState(null);
   const [teams, setTeams] = useState([]);
   const [organizedTournaments, setOrganizedTournaments] = useState([]);
@@ -45,10 +45,12 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('teams');
   const [historyFilter, setHistoryFilter] = useState('all');
+  const [organizerStatusFilter, setOrganizerStatusFilter] = useState('all');
+  const [organizerGameFilter, setOrganizerGameFilter] = useState('all');
   const [playerStats, setPlayerStats] = useState(null);
   const [selectedGame, setSelectedGame] = useState(SUPPORTED_GAMES[0]);
   const [analyticsData, setAnalyticsData] = useState([]);
-  
+
   // Reporting state
 
   const [showReportModal, setShowReportModal] = useState(false);
@@ -90,8 +92,8 @@ const Profile = () => {
       document.body.style.overflow = 'unset';
       document.documentElement.style.overflow = 'unset';
     }
-    return () => { 
-      document.body.style.overflow = 'unset'; 
+    return () => {
+      document.body.style.overflow = 'unset';
       document.documentElement.style.overflow = 'unset';
     };
   }, [showReportModal]);
@@ -100,9 +102,9 @@ const Profile = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         let targetUserId = authUser?.id;
-        
+
         let targetRole = authUser?.role;
         if (!isOwnProfile) {
           const userRes = await expressApi.get(`/api/users/${id}`);
@@ -111,7 +113,7 @@ const Profile = () => {
             targetUserId = id;
             targetRole = userRes.data.data.role;
           } else {
-             return;
+            return;
           }
         }
 
@@ -134,7 +136,7 @@ const Profile = () => {
           ];
 
           const [teamRes, histRes, statsRes, analyticsRes] = await Promise.all(endpoints);
-          
+
           if (teamRes.data.success) {
             setTeams(teamRes.data.data);
           }
@@ -160,9 +162,9 @@ const Profile = () => {
         setLoading(false);
       }
     };
-    
+
     if (authUser || id) {
-       fetchData();
+      fetchData();
     }
   }, [authUser, id, isOwnProfile, profileUser?.role]);
 
@@ -171,7 +173,7 @@ const Profile = () => {
     setReportLoading(true);
     setReportError('');
     setReportSuccess('');
-    
+
     try {
       const res = await expressApi.post('/api/reports', {
         reportedUserId: id,
@@ -293,7 +295,7 @@ const Profile = () => {
               <i className="fa-solid fa-pen-to-square mr-2"></i> Edit Profile
             </Link>
           ) : authUser && (
-            <button 
+            <button
               onClick={() => setShowReportModal(true)}
               className="block w-full mt-8 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 hover:border-red-500/50 rounded-[4px] text-sm font-bold transition-colors"
             >
@@ -312,8 +314,8 @@ const Profile = () => {
                 key={tab}
                 onClick={() => handleTabChange(tab)}
                 className={`whitespace-nowrap px-6 py-3 rounded-[4px] text-[0.85rem] font-bold uppercase tracking-widest transition-all ${activeTab === tab
-                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                    : 'bg-surface border border-border text-text-secondary hover:bg-white/5 hover:text-text'
+                  ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                  : 'bg-surface border border-border text-text-secondary hover:bg-white/5 hover:text-text'
                   }`}
               >
                 {tab === 'teams' ? <><i className="fa-solid fa-users mr-2"></i> Participations</> :
@@ -321,7 +323,7 @@ const Profile = () => {
                     tab === 'history' ? <><i className="fa-solid fa-clock-rotate-left mr-2"></i> Match History</> :
                       tab === 'tournaments' ? <><i className="fa-solid fa-sitemap mr-2"></i> Hosted Tournaments</> :
                         tab === 'overview' ? <><i className="fa-solid fa-shield-halved mr-2"></i> Overview</> :
-                        <><i className="fa-solid fa-chart-pie mr-2"></i> Organizer Analytics</>}
+                          <><i className="fa-solid fa-chart-pie mr-2"></i> Organizer Analytics</>}
               </button>
             ))}
           </div>
@@ -345,24 +347,69 @@ const Profile = () => {
             {/* Organizer: Tournaments Tab */}
             {activeTab === 'tournaments' && (
               <div className="animate-fade-in flex flex-col flex-grow">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-6">
                   <h3 className="text-xl font-bold text-text uppercase flex items-center gap-2">
                     <i className="fa-solid fa-sitemap text-primary"></i> Hosted Tournaments
                   </h3>
-                  {isOwnProfile && (
-                    <Link to="/tournaments/create" className="btn-primary text-xs py-2 px-4 w-full sm:w-auto whitespace-nowrap">
-                      <i className="fa-solid fa-plus mr-2"></i> Create New
-                    </Link>
-                  )}
+                  
+                  <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+                    {/* Game Filter */}
+                    <select
+                      value={organizerGameFilter}
+                      onChange={(e) => setOrganizerGameFilter(e.target.value)}
+                      className="bg-background border border-border text-text text-sm font-bold uppercase tracking-widest rounded-[4px] px-3 py-1.5 focus:outline-none focus:border-primary w-full sm:w-auto"
+                    >
+                      <option value="all">All Games</option>
+                      {SUPPORTED_GAMES.map(game => (
+                        <option key={game} value={game}>{game}</option>
+                      ))}
+                    </select>
+
+                    {/* Status Filter Controls */}
+                    <div className="flex bg-black/10 border border-border rounded-[4px] p-1 flex-wrap overflow-x-auto hide-scrollbar w-full sm:w-auto">
+                      <button
+                        onClick={() => setOrganizerStatusFilter('all')}
+                        className={`px-3 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap ${organizerStatusFilter === 'all' ? 'bg-surface shadow-sm text-text' : 'text-text-secondary hover:text-text'}`}
+                      >
+                        All Status
+                      </button>
+                      <button
+                        onClick={() => setOrganizerStatusFilter('open')}
+                        className={`px-3 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap ${organizerStatusFilter === 'open' ? 'bg-primary/10 text-primary shadow-sm' : 'text-text-secondary hover:text-primary'}`}
+                      >
+                        Open
+                      </button>
+                      <button
+                        onClick={() => setOrganizerStatusFilter('live')}
+                        className={`px-3 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap ${organizerStatusFilter === 'live' ? 'bg-red-500/10 text-red-500 shadow-sm' : 'text-text-secondary hover:text-red-500'}`}
+                      >
+                        Live
+                      </button>
+                      <button
+                        onClick={() => setOrganizerStatusFilter('completed')}
+                        className={`px-3 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap ${organizerStatusFilter === 'completed' ? 'bg-emerald-500/10 text-emerald-500 shadow-sm' : 'text-text-secondary hover:text-emerald-500'}`}
+                      >
+                        Completed
+                      </button>
+                    </div>
+
+                    {isOwnProfile && (
+                      <Link to="/tournaments/create" className="btn-primary text-xs py-2 px-4 w-full sm:w-auto whitespace-nowrap text-center">
+                        <i className="fa-solid fa-plus mr-2"></i> Create New
+                      </Link>
+                    )}
+                  </div>
                 </div>
 
                 {loading ? (
                   <div className="py-20 flex justify-center">
                     <i className="fa-solid fa-circle-notch fa-spin text-3xl text-primary"></i>
                   </div>
-                ) : organizedTournaments.length > 0 ? (
+                ) : organizedTournaments.filter(t => (organizerStatusFilter === 'all' ? true : t.status === organizerStatusFilter) && (organizerGameFilter === 'all' ? true : t.game === organizerGameFilter)).length > 0 ? (
                   <div className="space-y-4">
-                    {organizedTournaments.map(tournament => (
+                    {organizedTournaments
+                      .filter(t => (organizerStatusFilter === 'all' ? true : t.status === organizerStatusFilter) && (organizerGameFilter === 'all' ? true : t.game === organizerGameFilter))
+                      .map(tournament => (
                       <Link to={`/tournaments/${tournament._id}`} state={{ from: `${location.pathname}#${activeTab}`, label: 'Back to Profile' }} key={tournament._id} className={`block bg-black/10 border border-border rounded-[8px] p-5 transition-all hover:border-primary/50 group`}>
                         <div className="flex justify-between items-start mb-3">
                           <div>
@@ -370,8 +417,8 @@ const Profile = () => {
                             <div className="text-sm text-text-secondary mt-1">{tournament.game} • {tournament.bracketType === 'round-robin' ? 'Round Robin' : 'Single Elim'}</div>
                           </div>
                           <span className={`px-2 py-1 rounded-[4px] text-[0.7rem] font-bold uppercase tracking-wider ${tournament.status === 'live' ? 'bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]' :
-                              tournament.status === 'completed' ? 'bg-primary-light text-primary border border-[#BFDBFE]' :
-                                'bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]'
+                            tournament.status === 'completed' ? 'bg-primary-light text-primary border border-[#BFDBFE]' :
+                              'bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]'
                             }`}>
                             {tournament.status}
                           </span>
@@ -457,35 +504,35 @@ const Profile = () => {
                   {/* Rating Graph */}
                   <div className="bg-surface border border-border rounded-[8px] p-6 mb-4">
                     <h4 className="text-sm font-bold text-text-secondary uppercase tracking-widest mb-6 border-b border-border/50 pb-2">Tournament Rating History</h4>
-                    
+
                     {ratingData.length > 0 ? (
                       <div className="w-full overflow-x-auto custom-scrollbar pb-2">
                         <div className="h-[250px] min-w-[500px]">
                           <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={ratingData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
-                              <XAxis 
-                                dataKey="name" 
-                                stroke="#64748b" 
-                                fontSize={11} 
-                                tickLine={false} 
+                              <XAxis
+                                dataKey="name"
+                                stroke="#64748b"
+                                fontSize={11}
+                                tickLine={false}
                                 axisLine={false}
                                 dy={10}
                               />
-                              <YAxis 
-                                domain={[0, 5]} 
+                              <YAxis
+                                domain={[0, 5]}
                                 ticks={[1, 2, 3, 4, 5]}
-                                stroke="#64748b" 
+                                stroke="#64748b"
                                 fontSize={11}
-                                tickLine={false} 
+                                tickLine={false}
                                 axisLine={false}
                               />
                               <Tooltip content={<OrganizerRatingTooltip />} />
-                              <Line 
-                                type="monotone" 
-                                dataKey="rating" 
+                              <Line
+                                type="monotone"
+                                dataKey="rating"
                                 name="Avg Rating"
-                                stroke="#ea580c" 
+                                stroke="#ea580c"
                                 strokeWidth={3}
                                 dot={{ fill: '#ea580c', strokeWidth: 2, r: 4 }}
                                 activeDot={{ r: 6, fill: '#ea580c', stroke: '#fff', strokeWidth: 2 }}
@@ -519,38 +566,35 @@ const Profile = () => {
                 ) : teams.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {teams.map(team => (
-                      <Link 
-                        to={team.isFormerMember ? '#' : `/teams/${team._id}/edit`} 
-                        key={team._id} 
+                      <Link
+                        to={team.isFormerMember ? '#' : `/teams/${team._id}/edit`}
+                        key={team._id}
                         onClick={(e) => {
                           if (team.isFormerMember) {
                             e.preventDefault();
                             alert('You are no longer an active member of this team. You cannot view their private dashboard.');
                           }
                         }}
-                        className={`bg-black/10 border border-border rounded-[8px] p-5 transition-all ${
-                          isOwnProfile && !team.isFormerMember ? 'hover:border-primary/50 hover:-translate-y-1 group cursor-pointer' 
-                          : team.isFormerMember && isOwnProfile ? 'hover:bg-black/20 cursor-pointer opacity-75' 
-                          : 'pointer-events-none'
-                        }`}
+                        className={`bg-black/10 border border-border rounded-[8px] p-5 transition-all ${isOwnProfile && !team.isFormerMember ? 'hover:border-primary/50 hover:-translate-y-1 group cursor-pointer'
+                            : team.isFormerMember && isOwnProfile ? 'hover:bg-black/20 cursor-pointer opacity-75'
+                              : 'pointer-events-none'
+                          }`}
                       >
                         <div className="flex items-center gap-4 mb-4">
                           <img
                             src={team.logo ? (team.logo.startsWith('http') ? team.logo : `http://localhost:5000/${team.logo}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(team.tag || team.name)}&background=random&color=fff&size=200&bold=true`}
                             alt={`${team.name} Logo`}
-                            className={`w-12 h-12 rounded bg-surface border border-border object-cover shadow-sm transition-colors ${
-                              !team.isFormerMember && isOwnProfile ? 'group-hover:border-primary/50' 
-                              : team.isFormerMember ? 'grayscale' : ''
-                            }`}
+                            className={`w-12 h-12 rounded bg-surface border border-border object-cover shadow-sm transition-colors ${!team.isFormerMember && isOwnProfile ? 'group-hover:border-primary/50'
+                                : team.isFormerMember ? 'grayscale' : ''
+                              }`}
                           />
                           <div>
-                            <h4 className={`text-lg font-bold text-text leading-tight transition-colors ${
-                              !team.isFormerMember && isOwnProfile ? 'group-hover:text-primary' : ''
-                            }`}>{team.name}</h4>
+                            <h4 className={`text-lg font-bold text-text leading-tight transition-colors ${!team.isFormerMember && isOwnProfile ? 'group-hover:text-primary' : ''
+                              }`}>{team.name}</h4>
                             <div className="flex gap-2 items-center mt-1">
                               <span className="text-xs bg-primary/20 text-primary font-bold px-2 py-0.5 rounded uppercase tracking-wider">[{team.tag}]</span>
                               {team.isFormerMember && (
-                                 <span className="text-xs bg-red-500/10 text-red-500 font-bold px-2 py-0.5 rounded uppercase tracking-wider">Former Member</span>
+                                <span className="text-xs bg-red-500/10 text-red-500 font-bold px-2 py-0.5 rounded uppercase tracking-wider">Former Member</span>
                               )}
                             </div>
                           </div>
@@ -589,8 +633,8 @@ const Profile = () => {
                 return { kills: stats.kills || 0, deaths: stats.deaths || 0, assists: stats.assists || 0, damage: stats.damage || 0, kd };
               };
 
-                const currentStats = getDisplayStats();
-                const isBattleRoyale = selectedGame === 'BGMI' || selectedGame === 'Free Fire';
+              const currentStats = getDisplayStats();
+              const isBattleRoyale = selectedGame === 'BGMI' || selectedGame === 'Free Fire';
 
               return (
                 <div className="animate-fade-in flex flex-col flex-grow">
@@ -787,7 +831,7 @@ const Profile = () => {
             <button onClick={() => setShowReportModal(false)} className="absolute top-4 right-4 text-text-secondary hover:text-text">
               <i className="fa-solid fa-xmark text-xl"></i>
             </button>
-            
+
             <h3 className="text-xl font-bold text-text uppercase tracking-wide mb-2 flex items-center gap-2">
               <i className="fa-solid fa-flag text-red-500"></i> Report User
             </h3>
@@ -800,7 +844,7 @@ const Profile = () => {
                 {reportError}
               </div>
             )}
-            
+
             {reportSuccess && (
               <div className="bg-green-500/10 border border-green-500/20 text-green-500 rounded-[4px] p-3 mb-4 text-sm font-medium">
                 {reportSuccess}
@@ -810,9 +854,9 @@ const Profile = () => {
             <form onSubmit={submitReport} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-text-secondary uppercase tracking-widest mb-1">Reason</label>
-                <select 
+                <select
                   value={reportData.reason}
-                  onChange={(e) => setReportData({...reportData, reason: e.target.value})}
+                  onChange={(e) => setReportData({ ...reportData, reason: e.target.value })}
                   className="w-full bg-background border border-border rounded-[4px] px-4 py-2.5 text-text focus:outline-none focus:border-red-500"
                   required
                 >
@@ -826,9 +870,9 @@ const Profile = () => {
 
               <div>
                 <label className="block text-xs font-bold text-text-secondary uppercase tracking-widest mb-1">Description</label>
-                <textarea 
+                <textarea
                   value={reportData.description}
-                  onChange={(e) => setReportData({...reportData, description: e.target.value})}
+                  onChange={(e) => setReportData({ ...reportData, description: e.target.value })}
                   placeholder="Describe exactly what happened..."
                   className="w-full bg-background border border-border rounded-[4px] px-4 py-2.5 text-text focus:outline-none focus:border-red-500 min-h-[100px]"
                   required
@@ -837,10 +881,10 @@ const Profile = () => {
 
               <div>
                 <label className="block text-xs font-bold text-text-secondary uppercase tracking-widest mb-1">Evidence URL</label>
-                <input 
+                <input
                   type="url"
                   value={reportData.evidenceUrl}
-                  onChange={(e) => setReportData({...reportData, evidenceUrl: e.target.value})}
+                  onChange={(e) => setReportData({ ...reportData, evidenceUrl: e.target.value })}
                   placeholder="Link to YouTube, Twitch Clip, Streamable, etc."
                   className="w-full bg-background border border-border rounded-[4px] px-4 py-2.5 text-text focus:outline-none focus:border-red-500"
                   required
