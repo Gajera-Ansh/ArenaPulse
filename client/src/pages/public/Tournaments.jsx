@@ -57,26 +57,34 @@ const Tournaments = () => {
       {/* Header Section */}
       <div className="mb-8 sm:mb-10 text-center max-w-3xl mx-auto px-4">
         <h1 className="text-[2rem] sm:text-[2.5rem] font-bold text-text uppercase tracking-tight mb-2 sm:mb-4 drop-shadow-md leading-tight">
-          {filterStatus === 'completed' ? 'Completed Tournaments' : 'Tournament Board'}
+          {filterStatus === 'completed' ? 'Completed Tournaments' : filterStatus === 'in_progress' ? 'Live Tournaments' : 'Tournament Board'}
         </h1>
         <p className="text-text-secondary font-medium text-[0.95rem] sm:text-[1.1rem]">
           {filterStatus === 'completed' 
             ? 'Browse past tournaments to view final brackets and champions.'
+            : filterStatus === 'in_progress'
+            ? 'Watch live events currently in progress. Check brackets, live scores, and AI predictions.'
             : 'Browse active tournaments and find your next challenge. Enroll your team and dominate the arena.'}
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 mb-6 border-b border-border pb-1">
+      <div className="flex gap-4 mb-6 border-b border-border pb-1 overflow-x-auto hide-scrollbar">
         <button 
           onClick={() => setSearchParams({ status: 'open' })} 
-          className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'open' ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'}`}
+          className={`whitespace-nowrap pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'open' ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'}`}
         >
           <i className="fa-solid fa-door-open mr-2"></i> Open Registration
         </button>
         <button 
+          onClick={() => setSearchParams({ status: 'in_progress' })} 
+          className={`whitespace-nowrap pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'in_progress' ? 'text-red-500 border-b-2 border-red-500' : 'text-text-secondary hover:text-text'}`}
+        >
+          <i className={`fa-solid fa-tower-broadcast mr-2 ${filterStatus === 'in_progress' ? 'animate-pulse' : ''}`}></i> Live Events
+        </button>
+        <button 
           onClick={() => setSearchParams({ status: 'completed' })} 
-          className={`pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'completed' ? 'text-accent border-b-2 border-accent' : 'text-text-secondary hover:text-text'}`}
+          className={`whitespace-nowrap pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${filterStatus === 'completed' ? 'text-accent border-b-2 border-accent' : 'text-text-secondary hover:text-text'}`}
         >
           <i className="fa-solid fa-clock-rotate-left mr-2"></i> Past Events
         </button>
