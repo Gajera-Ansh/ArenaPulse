@@ -222,7 +222,7 @@ const Profile = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
         {/* Left Sidebar - Profile Card */}
-        <div className="bg-surface border border-border rounded-[8px] p-8 shadow-lg text-center relative overflow-hidden group">
+        <div className="lg:sticky lg:top-24 bg-surface border border-border rounded-[8px] p-8 shadow-lg text-center relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
 
           <div className="relative mx-auto mb-6" style={{ width: '120px', height: '120px' }}>
@@ -347,12 +347,12 @@ const Profile = () => {
             {/* Organizer: Tournaments Tab */}
             {activeTab === 'tournaments' && (
               <div className="animate-fade-in flex flex-col flex-grow">
-                <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-6">
-                  <h3 className="text-xl font-bold text-text uppercase flex items-center gap-2">
+                <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-6 flex-wrap">
+                  <h3 className="text-xl font-bold text-text uppercase flex items-center gap-2 whitespace-nowrap">
                     <i className="fa-solid fa-sitemap text-primary"></i> Hosted Tournaments
                   </h3>
                   
-                  <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+                  <div className="flex flex-col sm:flex-row flex-wrap xl:flex-nowrap gap-3 w-full xl:w-auto">
                     {/* Game Filter */}
                     <select
                       value={organizerGameFilter}
@@ -366,7 +366,7 @@ const Profile = () => {
                     </select>
 
                     {/* Status Filter Controls */}
-                    <div className="flex bg-black/10 border border-border rounded-[4px] p-1 flex-wrap overflow-x-auto hide-scrollbar w-full sm:w-auto">
+                    <div className="flex bg-black/10 border border-border rounded-[4px] p-1 flex-nowrap overflow-x-auto hide-scrollbar w-full sm:w-auto">
                       <button
                         onClick={() => setOrganizerStatusFilter('all')}
                         className={`px-3 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap ${organizerStatusFilter === 'all' ? 'bg-surface shadow-sm text-text' : 'text-text-secondary hover:text-text'}`}
