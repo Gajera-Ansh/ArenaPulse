@@ -126,7 +126,7 @@ const Navbar = () => {
                       )}
                     </div>
 
-                    <div className="max-h-[350px] overflow-y-auto hide-scrollbar">
+                    <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
                       {notifications.length === 0 ? (
                         <div className="p-6 text-center text-text-secondary text-[0.85rem]">
                           You have no notifications.
