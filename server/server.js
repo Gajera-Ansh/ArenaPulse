@@ -5,6 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import http from 'http';
 import { Server } from 'socket.io';
+import Message from './models/Message.js';
 
 // Load environment variables FIRST before any route or config imports
 dotenv.config();
@@ -25,6 +26,7 @@ import notificationRoutes from './routes/notification.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import playerstatRoutes from './routes/playerstat.routes.js';
 import reportRoutes from './routes/report.routes.js';
+import chatRoutes from './routes/chat.routes.js';
 
 // Initialize Express
 const app = express();
@@ -46,6 +48,46 @@ app.set('io', io);
 // Socket connection logic
 io.on('connection', (socket) => {
   console.log(`⚡ Client connected to socket: ${socket.id}`);
+
+  // Join a tournament lobby
+  socket.on('join_tournament', (tournamentId) => {
+    socket.join(`tournament_${tournamentId}`);
+  });
+
+  // Leave a tournament lobby
+  socket.on('leave_tournament', (tournamentId) => {
+    socket.leave(`tournament_${tournamentId}`);
+  });
+
+  // Handle incoming lobby chat messages
+  socket.on('send_message', async (data) => {
+    try {
+      const { tournamentId, senderId, senderName, senderRole, senderAvatar, text } = data;
+      
+      // Save to MongoDB
+      const newMessage = await Message.create({
+        tournament: tournamentId,
+        sender: senderId,
+        text: text
+      });
+
+      // Broadcast to everyone in the tournament room
+      io.to(`tournament_${tournamentId}`).emit('new_message', {
+        _id: newMessage._id,
+        tournament: tournamentId,
+        sender: {
+          _id: senderId,
+          name: senderName,
+          role: senderRole,
+          avatar: senderAvatar
+        },
+        text: text,
+        createdAt: newMessage.createdAt
+      });
+    } catch (error) {
+      console.error('Socket message error:', error);
+    }
+  });
 
   socket.on('disconnect', () => {
     console.log(`🔌 Client disconnected: ${socket.id}`);
@@ -79,6 +121,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/playerstats', playerstatRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);

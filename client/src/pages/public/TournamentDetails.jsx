@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { useAuth } from '../../context/AuthContext';
+import TournamentChat from '../../components/TournamentChat';
 
 const GAME_STATS_FIELDS = {
   'Valorant': ['kills', 'deaths', 'assists', 'headshots'],
@@ -832,6 +833,14 @@ const TournamentDetails = () => {
           </div>
         )
       }
+
+      {tournament && (
+        <TournamentChat 
+          tournamentId={tournament._id} 
+          status={tournament.status} 
+          organizerId={tournament.organizer?._id || tournament.organizer} 
+        />
+      )}
 
     </div >
   );

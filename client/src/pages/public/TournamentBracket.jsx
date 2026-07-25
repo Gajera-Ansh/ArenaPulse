@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import TournamentChat from '../../components/TournamentChat';
 import * as XLSX from 'xlsx';
 
 const getTeamLogo = (team) => {
@@ -286,6 +287,19 @@ const TournamentBracket = () => {
   const handleLiveScoreUpdate = async (e) => {
     e.preventDefault();
     if (!isOrganizer) return;
+
+    if (selectedMatch.status === 'upcoming' && selectedMatch.scheduledAt) {
+      const scheduledTime = new Date(selectedMatch.scheduledAt).getTime();
+      const currentTime = new Date().getTime();
+      
+      if (scheduledTime > currentTime) {
+        const confirmMsg = `This match is scheduled for ${new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(selectedMatch.scheduledAt))}.\n\nAre you sure you want to update the score early?`;
+        if (!window.confirm(confirmMsg)) {
+          return;
+        }
+      }
+    }
+
     setSubmitting('live');
     try {
       const res = await expressApi.patch(`/api/matches/${selectedMatch._id}/score`, {
@@ -327,6 +341,18 @@ const TournamentBracket = () => {
   const handleFinalSubmit = async (e) => {
     e.preventDefault();
     if (!isOrganizer) return;
+
+    if (selectedMatch.status === 'upcoming' && selectedMatch.scheduledAt) {
+      const scheduledTime = new Date(selectedMatch.scheduledAt).getTime();
+      const currentTime = new Date().getTime();
+      
+      if (scheduledTime > currentTime) {
+        const confirmMsg = `This match is scheduled for ${new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(selectedMatch.scheduledAt))}.\n\nAre you sure you want to submit the final result early?`;
+        if (!window.confirm(confirmMsg)) {
+          return;
+        }
+      }
+    }
 
     setSubmitting('final');
     try {
@@ -1063,6 +1089,14 @@ const TournamentBracket = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {tournament && (
+        <TournamentChat 
+          tournamentId={tournament._id} 
+          status={tournament.status} 
+          organizerId={tournament.organizer?._id || tournament.organizer} 
+        />
       )}
     </div>
   );

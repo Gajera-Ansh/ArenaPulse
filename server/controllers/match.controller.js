@@ -6,6 +6,7 @@ import Team from '../models/Team.js';
 import Tournament from '../models/Tournament.js';
 import Registration from '../models/Registration.js';
 import User from '../models/User.js';
+import Message from '../models/Message.js';
 import { sendRatingRequestEmail } from '../utils/emailService.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -14,6 +15,14 @@ const handleTournamentCompletion = async (tournamentId, winnerTeamId, io) => {
     status: 'completed',
     winner: winnerTeamId
   }, { new: true }).populate('organizer');
+
+  // Auto-delete all chat messages for this tournament to save space
+  try {
+    await Message.deleteMany({ tournament: tournamentId });
+    console.log(`🧹 Cleared lobby chat history for completed tournament ${tournamentId}`);
+  } catch (err) {
+    console.error('Failed to clear lobby chat history:', err);
+  }
 
   if (io) {
     const populatedWinner = await Team.findById(winnerTeamId).select('name tag');
