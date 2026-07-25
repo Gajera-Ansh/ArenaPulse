@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
+import { SUPPORTED_GAMES } from '../../utils/constants';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ const Dashboard = () => {
   const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [historyFilter, setHistoryFilter] = useState('all');
+  const [historyGameFilter, setHistoryGameFilter] = useState('all');
 
   // Rating Modal States
   const [pendingRatings, setPendingRatings] = useState([]);
@@ -344,42 +346,65 @@ const Dashboard = () => {
                     <i className="fa-solid fa-list-check text-primary"></i> Tournament History
                   </h3>
                   
-                  {/* Filter Controls (Only for players) */}
-                  {user?.role === 'player' && (
-                    <div className="flex bg-black/10 border border-border rounded-[4px] p-1">
-                      <button 
-                        onClick={() => setHistoryFilter('all')} 
-                        className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'all' ? 'bg-surface shadow-sm text-text' : 'text-text-secondary hover:text-text'}`}
+                  {/* Filter Controls */}
+                  <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto flex-wrap sm:flex-nowrap">
+                    {user?.role === 'organizer' && (
+                      <select
+                        value={historyGameFilter}
+                        onChange={(e) => setHistoryGameFilter(e.target.value)}
+                        className="bg-background border border-border text-text text-sm font-bold uppercase tracking-widest rounded-[4px] px-3 py-1.5 focus:outline-none focus:border-primary w-full sm:w-auto"
                       >
-                        All ({completedHistory.length})
-                      </button>
-                      <button 
-                        onClick={() => setHistoryFilter('win')} 
-                        className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'win' ? 'bg-emerald-500/10 text-emerald-500 shadow-sm' : 'text-text-secondary hover:text-emerald-500'}`}
-                      >
-                        Wins ({winCount})
-                      </button>
-                      <button 
-                        onClick={() => setHistoryFilter('loss')} 
-                        className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all ${historyFilter === 'loss' ? 'bg-red-500/10 text-red-500 shadow-sm' : 'text-text-secondary hover:text-red-500'}`}
-                      >
-                        Losses ({lossCount})
-                      </button>
-                    </div>
-                  )}
+                        <option value="all">All Games</option>
+                        {SUPPORTED_GAMES.map(game => (
+                          <option key={game} value={game}>{game}</option>
+                        ))}
+                      </select>
+                    )}
+
+                    {user?.role === 'player' && (
+                      <div className="flex bg-black/10 border border-border rounded-[4px] p-1 flex-nowrap overflow-x-auto hide-scrollbar w-full sm:w-auto">
+                        <button 
+                          onClick={() => setHistoryFilter('all')} 
+                          className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap ${historyFilter === 'all' ? 'bg-surface shadow-sm text-text' : 'text-text-secondary hover:text-text'}`}
+                        >
+                          All ({completedHistory.length})
+                        </button>
+                        <button 
+                          onClick={() => setHistoryFilter('win')} 
+                          className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap ${historyFilter === 'win' ? 'bg-emerald-500/10 text-emerald-500 shadow-sm' : 'text-text-secondary hover:text-emerald-500'}`}
+                        >
+                          Wins ({winCount})
+                        </button>
+                        <button 
+                          onClick={() => setHistoryFilter('loss')} 
+                          className={`px-4 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap ${historyFilter === 'loss' ? 'bg-red-500/10 text-red-500 shadow-sm' : 'text-text-secondary hover:text-red-500'}`}
+                        >
+                          Losses ({lossCount})
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {completedHistory.filter(t => (
-                  user?.role === 'organizer' || historyFilter === 'all' ? true : 
-                  historyFilter === 'win' ? String(t.winner) === String(t.myTeamId) : 
-                  String(t.winner) !== String(t.myTeamId)
-                )).length > 0 ? (
+                {completedHistory.filter(t => {
+                  if (user?.role === 'organizer' && historyGameFilter !== 'all' && t.game !== historyGameFilter) return false;
+                  if (user?.role === 'player' && historyFilter !== 'all') {
+                    const isWin = String(t.winner) === String(t.myTeamId);
+                    if (historyFilter === 'win' && !isWin) return false;
+                    if (historyFilter === 'loss' && isWin) return false;
+                  }
+                  return true;
+                }).length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {completedHistory.filter(t => (
-                      user?.role === 'organizer' || historyFilter === 'all' ? true : 
-                      historyFilter === 'win' ? String(t.winner) === String(t.myTeamId) : 
-                      String(t.winner) !== String(t.myTeamId)
-                    )).map((t) => {
+                    {completedHistory.filter(t => {
+                      if (user?.role === 'organizer' && historyGameFilter !== 'all' && t.game !== historyGameFilter) return false;
+                      if (user?.role === 'player' && historyFilter !== 'all') {
+                        const isWin = String(t.winner) === String(t.myTeamId);
+                        if (historyFilter === 'win' && !isWin) return false;
+                        if (historyFilter === 'loss' && isWin) return false;
+                      }
+                      return true;
+                    }).map((t) => {
                       const isWin = user?.role === 'player' ? String(t.winner) === String(t.myTeamId) : false;
                       return (
                       <div key={t._id} className={`bg-surface border ${user?.role === 'player' ? (isWin ? 'border-emerald-500/30' : 'border-red-500/30') : 'border-slate-300'} rounded-[8px] overflow-hidden hover:border-primary transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/20 group flex flex-col h-full opacity-70 hover:opacity-100`}>
