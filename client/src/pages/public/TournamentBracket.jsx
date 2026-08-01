@@ -119,6 +119,7 @@ const TournamentBracket = () => {
   const [summaryData, setSummaryData] = useState(null);
   const [loadingPrediction, setLoadingPrediction] = useState(false);
   const [loadingSummary, setLoadingSummary] = useState(false);
+  const [viewers, setViewers] = useState(1);
 
   // Player Stats Modal State
   const [showStatsModal, setShowStatsModal] = useState(false);
@@ -202,6 +203,28 @@ const TournamentBracket = () => {
       socket.off('tournament_completed', handleTournamentCompleted);
     };
   }, [socket, id]);
+
+  // Handle live viewer counting separately to avoid tearing down score listeners when tournament loads
+  useEffect(() => {
+    if (!socket || !id || !tournament) return;
+    
+    // Do not count the organizer as a viewer
+    const isOrganizer = user && (tournament.organizer?._id === user.id || tournament.organizer === user.id);
+    if (isOrganizer) return;
+
+    socket.emit('watch_tournament', id);
+    
+    const handleViewerUpdate = (count) => {
+      setViewers(count);
+    };
+    
+    socket.on('viewer_count_update', handleViewerUpdate);
+    
+    return () => {
+      socket.emit('stop_watching', id);
+      socket.off('viewer_count_update', handleViewerUpdate);
+    };
+  }, [socket, id, !!tournament, user?.id]);
 
   // Keep selectedMatch in sync when matches update via socket
   useEffect(() => {
@@ -563,12 +586,26 @@ const TournamentBracket = () => {
   return (
     <div className="container py-8 min-h-[calc(100vh-80px)]">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-10 pb-6 border-b border-border">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-10 pb-6 border-b border-black/20">
         <div>
           <Link to={`/tournaments/${id}`} className="text-primary hover:text-primary-hover font-bold text-[0.8rem] flex items-center gap-2 w-fit mb-2">
             <i className="fa-solid fa-arrow-left"></i> Back to Details
           </Link>
-          <h1 className="text-[1.5rem] sm:text-[2rem] font-bold text-text">{tournament.title} <span className="text-primary">Bracket</span></h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-[1.5rem] sm:text-[2rem] font-bold text-text">{tournament.title} <span className="text-primary">Bracket</span></h1>
+            {tournament.status === 'live' && (
+              <div className="hidden md:flex items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-500 px-3 py-1.5 rounded-full text-[0.75rem] font-bold backdrop-blur-sm shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                {viewers} {viewers === 1 ? 'Viewer' : 'Viewers'}
+              </div>
+            )}
+          </div>
+          {tournament.status === 'live' && (
+            <div className="md:hidden flex w-fit items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-500 px-3 py-1.5 rounded-full text-[0.75rem] font-bold backdrop-blur-sm shadow-sm mt-3">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+              {viewers} {viewers === 1 ? 'Viewer' : 'Viewers'}
+            </div>
+          )}
         </div>
         <div className="bg-surface border border-border px-5 py-2.5 rounded-[4px] text-text text-[0.85rem] font-bold shadow-sm flex items-center">
           <i className="fa-solid fa-gamepad mr-2"></i> {tournament.game}

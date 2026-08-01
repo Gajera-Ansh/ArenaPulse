@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import expressApi from '../../api/expressApi';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 import TournamentChat from '../../components/TournamentChat';
+import toast from 'react-hot-toast';
 
 const GAME_STATS_FIELDS = {
   'Valorant': ['kills', 'deaths', 'assists', 'headshots'],
@@ -18,9 +20,11 @@ const TournamentDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { socket } = useSocket();
   const [tournament, setTournament] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [viewers, setViewers] = useState(1);
 
   // Enrollment Modal States
   const [showModal, setShowModal] = useState(false);
@@ -207,6 +211,28 @@ const TournamentDetails = () => {
     };
   }, [showModal]);
 
+  // Handle live viewer counting
+  useEffect(() => {
+    if (!socket || !id || !tournament) return;
+    
+    // Do not count the organizer as a viewer
+    const isOrganizer = user && (tournament.organizer?._id === user.id || tournament.organizer === user.id);
+    if (isOrganizer) return;
+
+    socket.emit('watch_tournament', id);
+    
+    const handleViewerUpdate = (count) => {
+      setViewers(count);
+    };
+    
+    socket.on('viewer_count_update', handleViewerUpdate);
+    
+    return () => {
+      socket.emit('stop_watching', id);
+      socket.off('viewer_count_update', handleViewerUpdate);
+    };
+  }, [socket, id, !!tournament, user?.id]);
+
   const handleOrganizerAction = async (regId, status) => {
     try {
       setActionLoading(regId);
@@ -301,13 +327,20 @@ const TournamentDetails = () => {
               <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 12px)' }}></div>
               <div className="absolute right-0 top-0 w-2/3 h-full bg-gradient-to-l from-primary/20 to-transparent pointer-events-none"></div>
 
-              <div className="absolute top-4 right-4 z-10">
+              <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-2">
                 <span className={`px-4 py-1.5 rounded-[4px] text-[0.75rem] font-bold uppercase tracking-widest shadow-sm ${(tournament.status === 'open' && new Date(tournament.registrationDeadline) >= new Date()) ? 'bg-primary text-white' :
                   tournament.status === 'live' ? 'bg-red-500 text-white animate-pulse' :
                     'bg-background border border-border text-text-secondary'
                   }`}>
                   {tournament.status === 'open' && new Date(tournament.registrationDeadline) < new Date() ? 'closed' : tournament.status}
                 </span>
+                
+                {tournament.status === 'live' && (
+                  <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-500 px-3 py-1.5 rounded-full text-[0.75rem] font-bold backdrop-blur-sm shadow-sm">
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                    {viewers} {viewers === 1 ? 'Viewer' : 'Viewers'}
+                  </div>
+                )}
               </div>
               <div className="relative z-10">
                 <span className="inline-block bg-accent/10 border border-accent/20 px-3 py-1 rounded-[4px] text-[0.8rem] font-bold text-accent tracking-wider mb-3 shadow-sm backdrop-blur-sm">
@@ -373,6 +406,29 @@ const TournamentDetails = () => {
               </div>
             </div>
           </div>
+
+          {/* Organizer Live Notice */}
+          {isOrganizer && tournament.status === 'live' && (
+            <div className="bg-primary/10 border border-primary/30 rounded-[8px] p-4 flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 animate-fade-in shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+              <div>
+                <h4 className="text-primary font-bold text-[0.95rem] mb-1 flex items-center gap-2">
+                  <i className="fa-solid fa-tower-broadcast animate-pulse"></i> Tournament is Live!
+                </h4>
+                <p className="text-text-secondary text-[0.85rem]">
+                  Share this page's link with your community so they can view the live bracket and scores.
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success('Link copied to clipboard!');
+                }}
+                className="btn-primary whitespace-nowrap text-[0.85rem] py-2 px-4 shadow-none"
+              >
+                <i className="fa-solid fa-link"></i> Copy Link
+              </button>
+            </div>
+          )}
 
           {/* Tabs */}
           <div className="flex gap-4 border-b border-border mt-6">

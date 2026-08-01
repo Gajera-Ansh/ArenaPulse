@@ -110,6 +110,33 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Handle live viewer counting
+  const updateViewerCount = (tournamentId) => {
+    const roomName = `viewer_${tournamentId}`;
+    const count = io.sockets.adapter.rooms.get(roomName)?.size || 0;
+    io.to(roomName).emit('viewer_count_update', count);
+  };
+
+  socket.on('watch_tournament', (tournamentId) => {
+    socket.join(`viewer_${tournamentId}`);
+    updateViewerCount(tournamentId);
+  });
+
+  socket.on('stop_watching', (tournamentId) => {
+    socket.leave(`viewer_${tournamentId}`);
+    updateViewerCount(tournamentId);
+  });
+
+  socket.on('disconnecting', () => {
+    // If a user closes the tab, update the count for any viewer rooms they were in
+    socket.rooms.forEach(room => {
+      if (room.startsWith('viewer_')) {
+        const currentCount = io.sockets.adapter.rooms.get(room)?.size || 1;
+        io.to(room).emit('viewer_count_update', currentCount - 1);
+      }
+    });
+  });
+
   socket.on('disconnect', () => {
     console.log(`🔌 Client disconnected: ${socket.id}`);
   });
