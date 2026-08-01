@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import expressApi from '../api/expressApi';
+import toast from 'react-hot-toast';
 
 const TournamentChat = ({ tournamentId, status, organizerId }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,10 +44,16 @@ const TournamentChat = ({ tournamentId, status, organizerId }) => {
     };
 
     socket.on('new_message', handleNewMessage);
+    
+    const handleChatError = (err) => {
+      toast(err.message);
+    };
+    socket.on('chat_error', handleChatError);
 
     return () => {
       socket.emit('leave_tournament', tournamentId);
       socket.off('new_message', handleNewMessage);
+      socket.off('chat_error', handleChatError);
     };
   }, [socket, tournamentId]);
 

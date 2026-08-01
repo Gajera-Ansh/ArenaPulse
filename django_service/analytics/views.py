@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from .db import db
 import pandas as pd
 from .model import train_model, predict_match, generate_match_summary
-
+from profanity_check import predict as profanity_predict
 @api_view(['POST'])
 def trigger_training(request):
     success, msg = train_model()
@@ -189,3 +189,18 @@ def player_analytics(request, player_id):
 
     except Exception as e:
         return Response({"success": False, "error": str(e)}, status=500)
+
+@api_view(['POST'])
+def moderate_chat(request):
+    try:
+        message = request.data.get('message', '')
+        if not message:
+            return Response({'is_toxic': False})
+        
+        prediction = profanity_predict([message])
+        is_toxic = bool(prediction[0] == 1)
+        
+        return Response({'is_toxic': is_toxic})
+    except Exception as e:
+        print(f"Moderation error: {e}")
+        return Response({'is_toxic': False, 'error': str(e)})

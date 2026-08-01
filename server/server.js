@@ -64,6 +64,27 @@ io.on('connection', (socket) => {
     try {
       const { tournamentId, senderId, senderName, senderRole, senderAvatar, text } = data;
       
+      // Check for Toxicity via Django AI
+      try {
+        const djangoUrl = process.env.VITE_DJANGO_URL || 'http://localhost:8000';
+        const aiResponse = await fetch(`${djangoUrl}/analytics/moderate/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text })
+        });
+        
+        const aiData = await aiResponse.json();
+        
+        if (aiData.is_toxic) {
+          // Block message and alert user privately
+          socket.emit('chat_error', { message: "Your message was blocked by AI moderation for toxicity." });
+          return;
+        }
+      } catch (aiErr) {
+        console.error('AI Moderation error:', aiErr.message);
+        // Fallback: allow message if AI service is unreachable so chat doesn't break
+      }
+
       // Save to MongoDB
       const newMessage = await Message.create({
         tournament: tournamentId,

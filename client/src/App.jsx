@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
@@ -6,6 +5,7 @@ import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
+import { Toaster } from 'react-hot-toast';
 
 // Pages
 import Home from './pages/public/Home';
@@ -39,6 +39,10 @@ function App() {
             </div>
             
             <Navbar />
+            <Toaster position="top-right" toastOptions={{
+              className: 'bg-dark-100 text-text border border-white/10',
+              style: { background: '#13151A', color: '#fff' }
+            }} />
             <main className="flex-grow">
               <Routes>
                 <Route path="/" element={<Home />} />
