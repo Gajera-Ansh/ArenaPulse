@@ -20,7 +20,7 @@ import teamRoutes from './routes/team.routes.js';
 import tournamentRoutes from './routes/tournament.routes.js';
 import registrationRoutes from './routes/registration.routes.js';
 import matchRoutes from './routes/match.routes.js';
-import checkinRoutes from './routes/checkin.routes.js';
+
 import leaderboardRoutes from './routes/leaderboard.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import adminRoutes from './routes/admin.routes.js';
@@ -163,7 +163,6 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/matches', matchRoutes);
-app.use('/api/checkins', checkinRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);

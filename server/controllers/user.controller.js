@@ -2,7 +2,6 @@
 
 import User from '../models/User.js';
 import { sendOTPEmail } from '../utils/emailService.js';
-import crypto from 'crypto';
 
 // GET /api/users/:id
 export const getUserById = async (req, res, next) => {
