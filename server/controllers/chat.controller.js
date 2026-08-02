@@ -1,5 +1,4 @@
 import Message from '../models/Message.js';
-import Tournament from '../models/Tournament.js';
 
 export const getTournamentMessages = async (req, res, next) => {
   try {
