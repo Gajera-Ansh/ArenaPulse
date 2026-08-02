@@ -20,7 +20,6 @@ import teamRoutes from './routes/team.routes.js';
 import tournamentRoutes from './routes/tournament.routes.js';
 import registrationRoutes from './routes/registration.routes.js';
 import matchRoutes from './routes/match.routes.js';
-
 import leaderboardRoutes from './routes/leaderboard.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import adminRoutes from './routes/admin.routes.js';
