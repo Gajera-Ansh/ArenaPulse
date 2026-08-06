@@ -46,8 +46,9 @@ const Teams = () => {
   };
 
   const filteredTeams = teams.filter(t => 
-    t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    t.tag.toLowerCase().includes(searchQuery.toLowerCase())
+    !t.isFormerMember &&
+    (t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    t.tag.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
